@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeiQuan Chinese</title>
+
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+<script src="data.js" defer></script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="app-container">
+  <!-- Sidebar bên trái cố định -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <img src="logo.png" alt="WeiQuan Chinese Logo" class="logo-img">
+      <span class="logo-text">WeiQuan <span>Chinese</span></span>
+    </div>
+    
+    <nav class="sidebar-menu">
+      <a href="#" class="menu-item active" data-section="home">
+        <span class="menu-icon">🏠</span>
+        <span class="menu-text">Trang chủ</span>
+      </a>
+      <a href="#" class="menu-item" data-section="profile">
+        <span class="menu-icon">👤</span>
+        <span class="menu-text">Trang cá nhân</span>
+      </a>
+      <a href="#" class="menu-item" data-section="flash">
+        <span class="menu-icon">📇</span>
+        <span class="menu-text">Flashcard</span>
+      </a>
+      <a href="#" class="menu-item" data-section="quiz">
+        <span class="menu-icon">✏️</span>
+        <span class="menu-text">Trắc nghiệm</span>
+      </a>
+      <a href="#" class="menu-item" data-section="write">
+        <span class="menu-icon">🖌️</span>
+        <span class="menu-text">Nét chữ</span>
+      </a>
+      <a href="#" class="menu-item" data-section="stats">
+        <span class="menu-icon">📊</span>
+        <span class="menu-text">Thống kê</span>
+      </a>
+      <a href="#" class="menu-item" data-section="favorites">
+        <span class="menu-icon">❤️</span>
+        <span class="menu-text">Yêu thích</span>
+      </a>
+      <a href="#" class="menu-item" data-section="custom">
+        <span class="menu-icon">📝</span>
+        <span class="menu-text">Tự tạo</span>
+      </a>
+      <a href="#" class="menu-item" data-section="settings">
+        <span class="menu-icon">⚙️</span>
+        <span class="menu-text">Cài đặt</span>
+      </a>
+    </nav>
+    
+    <!-- <div class="sidebar-footer">
+      <a href="#" class="menu-item logout-btn-item" id="sidebarLogoutBtn">
+        <span class="menu-icon">🚪</span>
+        <span class="menu-text">Đăng xuất</span>
+      </a>
+    </div> -->
+  </aside>
+
+  <!-- Vùng Main Content bên phải -->
+  <div class="main-content-layout">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <h2 class="header-title" id="headerTitle">Trang chủ</h2>
+      </div>
+      
+      <div class="header-center">
+        <!-- Thanh tìm kiếm chung -->
+        <div class="search-wrapper">
+          <input type="text" id="searchInput" placeholder="Tìm kiếm từ, pinyin, nghĩa..." autocomplete="off">
+          <div class="search-suggestions" id="searchSuggestions"></div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Bộ chọn học tập (Ẩn mặc định, hiển thị khi ở các tab học Flashcard, Quiz, Write) -->
+        <div class="learn-selectors-wrapper" id="learnSelectorsWrapper" style="display: none;">
+          <div class="select-wrapper">
+            <select id="levelSel"></select>
+          </div>
+          <div class="select-wrapper">
+            <select id="rangeSel"></select>
+          </div>
+          <button class="btn" id="shuffleBtn" style="padding: 10px 14px; border-radius: 12px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+          </button>
+        </div>
+        
+        <!-- <div id="userMenuContainer"></div> -->
+        
+        <!-- Nút theme ẩn (giữ ID để JS không lỗi) -->
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle Theme" style="display: none;"></button>
+      </div>
+    </header>
+
+    <!-- Nút Yêu thích list cũ (ẩn đi) -->
+    <button id="favListBtn" style="display: none !important;"></button>
+
+    <!-- Tabs cũ ẩn đi để bảo toàn logic app.js -->
+    <div class="tabs" style="display: none !important;">
+      <div class="tab-indicator" id="tabIndicator"></div>
+      <div class="tab active" data-p="flash">📇 Flashcard</div>
+      <div class="tab" data-p="quiz">✏️ Trắc nghiệm</div>
+      <div class="tab" data-p="write">🖌️ Nét chữ</div>
+    </div>
+
+    <!-- Main Content App Sections -->
+    <main class="app-content">
+      
+      <!-- SECTION 1: TRANG CHỦ -->
+      <section class="app-section active" id="section-home">
+        <div class="welcome-banner">
+          <h1 id="welcomeUserText">Chào mừng bạn học tập! 👋</h1>
+          <p>Chúc bạn một ngày học tiếng Trung hiệu quả. Hãy chọn một phần học dưới đây hoặc xem tiến độ của mình.</p>
+        </div>
+        
+        <div class="dashboard-grid">
+          <!-- Card Streak -->
+          <div class="glass-card stat-highlight-card" style="max-width: 360px;">
+            <div class="card-icon">🔥</div>
+            <div class="card-info">
+              <h3>Chuỗi học tập</h3>
+              <div class="value" id="userStreakVal">1 ngày</div>
+              <p>Học hàng ngày để duy trì chuỗi!</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="section-subtitle">Chương trình học HSK</h3>
+        <div class="hsk-grid" id="homeHskGrid">
+          <!-- Các thẻ HSK 1 - HSK 6 sẽ được tạo tự động bằng JS -->
+        </div>
+      </section>
+
+      <!-- SECTION 2: TRANG CÁ NHÂN -->
+      <section class="app-section" id="section-profile">
+        <div id="profileModal" class="modal-section-flat">
+          <div class="modal-body" id="profileModalBody"></div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: FLASHCARD (panel #flash cũ) -->
+      <section class="app-section panel" id="flash">
+        <div class="statbar"><span id="fcCount"></span><span id="fcLevel"></span></div>
+        
+        <!-- Auto-play controls -->
+        <div class="autoplay-bar">
+          <button class="btn" id="autoplayBtn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 12px;">
+            <span id="autoplayBtnText">▶️ Tự động chạy</span>
+          </button>
+          <div class="autoplay-speed" style="display: none;">
+            <label for="autoplaySpeed">Thời gian:</label>
+            <select id="autoplaySpeed">
+              <option value="3000">3 giây</option>
+              <option value="5000" selected>5 giây</option>
+              <option value="8000">8 giây</option>
+            </select>
+          </div>
+          <div id="autoplayProgress" class="autoplay-progress"></div>
+        </div>
+
+        <div class="fc-wrap">
+          <div class="fc" id="fcCard">
+            <div class="fc-face fc-front">
+              <div class="fc-hanzi" id="fcHanzi"></div>
+              <div class="fc-pinyin" id="fcPinyin"></div>
+              <div class="fc-hint">Bấm để lật thẻ</div>
+            </div>
+            <div class="fc-face fc-back">
+              <div class="fc-mean" id="fcMean"></div>
+              <div class="fc-ex" id="fcEx"></div>
+              <div class="fc-hint">Bấm để lật lại</div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-nav">
+          <button class="icon-btn" id="fcPrev" aria-label="Previous">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button class="icon-btn" id="fcFav" aria-label="Favorite">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button class="icon-btn" id="fcAudio" aria-label="Speak">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          </button>
+          <button class="icon-btn" id="fcNext" aria-label="Next">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- SECTION 4: TRẮC NGHIỆM (panel #quiz cũ) -->
+      <section class="app-section panel" id="quiz">
+        <!-- Trang chọn bộ từ Quiz -->
+        <div id="quizDeckSelection" class="quiz-deck-selection">
+          <div class="welcome-banner" style="margin-bottom: 28px;">
+            <h2 style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 8px;">✏️ Chọn bộ từ để luyện tập</h2>
+            <p style="font-size: 0.95rem; color: var(--text-secondary);">Chọn cấp độ HSK hoặc bộ từ tự tạo để bắt đầu làm trắc nghiệm</p>
+          </div>
+
+          <!-- HSK Levels Grid -->
+          <h3 class="section-subtitle">Chương trình HSK</h3>
+          <div class="hsk-grid" id="quizHskGrid"></div>
+
+          <!-- Custom Decks -->
+          <div id="quizCustomDecksSection" style="margin-top: 36px;">
+            <h3 class="section-subtitle">📚 Bộ từ tự tạo</h3>
+            <div id="quizCustomDecksList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
+              <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">
+                Chưa có bộ từ tự tạo
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trang Quiz thực tế (ẩn ban đầu) -->
+        <div id="quizGameSection" style="display: none;">
+          <div class="statbar">
+            <button class="btn" id="qBackBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              Quay lại
+            </button>
+            <span id="qScore">Điểm: 0 / 0</span>
+            <span id="qLevel"></span>
+          </div>
+          
+          <!-- Quiz Modes Selector -->
+          <div class="quiz-modes">
+            <button class="quiz-mode-btn active" data-mode="hanzi-to-mean">Hán ➔ Nghĩa</button>
+            <button class="quiz-mode-btn" data-mode="mean-to-hanzi">Nghĩa ➔ Hán</button>
+            <button class="quiz-mode-btn" data-mode="hanzi-to-pinyin">Hán ➔ Pinyin</button>
+            <button class="quiz-mode-btn" data-mode="audio-to-mean">👂 Nghe ➔ Nghĩa</button>
+          </div>
+
+          <div class="q-box">
+            <div class="q-prompt">
+              <div class="q-hanzi" id="qHanzi"></div>
+              <div class="q-pinyin" id="qPinyin"></div>
+              <button class="icon-btn" id="qAudio" aria-label="Speak" style="margin-top:12px; display:inline-flex;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              </button>
+            </div>
+            <div class="q-opts" id="qOpts"></div>
+            <div class="q-result" id="qResult"></div>
+          </div>
+          <div class="fc-nav">
+            <button class="btn" id="qNext">
+              Câu tiếp
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: NÉT CHỮ (panel #write cũ) -->
+      <section class="app-section panel" id="write">
+        <div class="statbar"><span id="wWord"></span><span id="wLevel"></span></div>
+        <div class="w-wrap">
+          <div class="w-info"><div class="p" id="wPinyin"></div><div class="m" id="wMean"></div></div>
+          <div id="writer-target"></div>
+          <div class="fc-nav">
+            <button class="btn" id="wAnimate">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Xem nét
+            </button>
+            <button class="btn" id="wQuiz">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              Tập viết
+            </button>
+            <button class="icon-btn" id="wAudio" aria-label="Speak">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            </button>
+          </div>
+          <div class="w-char-pick" id="wPick"></div>
+        </div>
+      </section>
+
+
+
+      <!-- SECTION 7: THỐNG KÊ (Stats) -->
+      <section class="app-section" id="section-stats">
+        <div id="statsModal" class="modal-section-flat">
+          <div class="modal-body" id="statsModalBody"></div>
+        </div>
+      </section>
+
+      <!-- SECTION 8: YÊU THÍCH (Favorites) -->
+      <section class="app-section" id="section-favorites">
+        <div id="favModal" class="modal-section-flat">
+          <div class="modal-body" id="favModalList"></div>
+        </div>
+      </section>
+
+      <!-- SECTION 9: TỰ TẠO (Custom Deck) -->
+      <section class="app-section" id="section-custom">
+        <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+          <h3 style="font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 8px;">📝 Tự tạo bộ từ</h3>
+          <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">Nhập từ vựng tiếng Trung của bạn để tạo Flashcard học tập</p>
+          
+          <!-- Form nhập từ mới -->
+          <div class="custom-input-section">
+            <h4 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 16px;">Thêm từ mới</h4>
+            
+            <!-- Ô tìm kiếm với autocomplete -->
+            <div style="position: relative; margin-bottom: 16px;">
+              <input type="text" id="customSearchInput" placeholder="🔍 Tìm từ: Hán tự hoặc nghĩa tiếng Việt (vd: 你好 hoặc xin chào)" class="auth-input" style="width: 100%; padding-right: 40px;" autocomplete="off">
+              <button class="icon-btn" id="customSearchClearBtn" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; display: none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+              <div id="customSearchSuggestions" class="search-suggestions" style="display: none; max-height: 300px;"></div>
+            </div>
+
+            <!-- Thông tin từ đã chọn (ẩn ban đầu) -->
+            <div id="customSelectedWord" style="display: none;">
+              <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 16px; padding: 16px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                  <div>
+                    <div style="font-size: 1.8rem; font-weight: 700; color: #fff; font-family: 'PingFang SC', sans-serif;" id="selectedHanzi"></div>
+                    <div style="font-size: 1rem; color: var(--neon-cyan); font-weight: 600; margin-top: 4px;" id="selectedPinyin"></div>
+                  </div>
+                  <button class="btn" id="deselectWordBtn" style="padding: 6px 12px; border-radius: 10px; font-size: 0.8rem;">
+                    ✕ Hủy
+                  </button>
+                </div>
+                <div style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 8px;" id="selectedMeaning"></div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); font-style: italic;" id="selectedExample"></div>
+              </div>
+              <button class="btn" id="addSelectedWordBtn" style="width: 100%; justify-content: center; background: var(--accent-gradient); color: #fff; border: none; padding: 14px; border-radius: 14px; font-weight: 700; margin-bottom: 12px;">
+                ➕ Thêm từ này
+              </button>
+            </div>
+
+            <!-- Form nhập thủ công (fallback) -->
+            <details id="manualInputDetails" style="margin-top: 16px;">
+              <summary style="cursor: pointer; color: var(--text-secondary); font-size: 0.9rem; padding: 8px 0; user-select: none;">
+                📝 Hoặc nhập thủ công (nếu không tìm thấy từ)
+              </summary>
+              <div style="margin-top: 12px; padding: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--glass-border); border-radius: 14px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+                  <input type="text" id="customHanzi" placeholder="Hán tự (例: 你好)" class="auth-input" style="width: 100%;">
+                  <input type="text" id="customPinyin" placeholder="Pinyin (vd: nǐhǎo)" class="auth-input" style="width: 100%;">
+                </div>
+                <div style="display: grid; gap: 12px; margin-bottom: 12px;">
+                  <input type="text" id="customMeaning" placeholder="Nghĩa tiếng Việt (vd: Xin chào)" class="auth-input" style="width: 100%;">
+                  <textarea id="customExample" placeholder="Câu ví dụ (không bắt buộc)" class="auth-input" style="width: 100%; min-height: 60px; resize: vertical; font-family: inherit;"></textarea>
+                </div>
+                <button class="btn" id="addManualWordBtn" style="width: 100%; justify-content: center; background: var(--accent-gradient); color: #fff; border: none; padding: 12px; border-radius: 14px; font-weight: 700;">
+                  ➕ Thêm từ thủ công
+                </button>
+              </div>
+            </details>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 28px 0;">
+
+          <!-- Danh sách từ đã thêm -->
+          <div class="custom-words-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h4 style="font-size: 1rem; font-weight: 700; color: #fff;">Bộ từ hiện tại (<span id="customWordCount">0</span> từ)</h4>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn" id="saveCustomDeckBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: var(--neon-green);">
+                  💾 Lưu bộ từ
+                </button>
+                <button class="btn" id="studyCustomDeckBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; background: var(--accent-gradient); color: #fff; border: none;">
+                  🎯 Học ngay
+                </button>
+              </div>
+            </div>
+            <div id="customWordsList" style="display: flex; flex-direction: column; gap: 10px; max-height: 400px; overflow-y: auto; padding: 4px;">
+              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Chưa có từ nào. Hãy thêm từ mới ở trên! 👆
+              </div>
+            </div>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 28px 0;">
+
+          <!-- Lịch sử bộ từ đã lưu -->
+          <div class="custom-history-section">
+            <h4 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 16px;">📚 Lịch sử bộ từ đã lưu</h4>
+            <div id="customHistoryList" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                Chưa có lịch sử
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 10: CÀI ĐẶT (Settings) -->
+      <section class="app-section" id="section-settings">
+        <div class="glass-card settings-card">
+          <h3>⚙️ Cài đặt ứng dụng</h3>
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 16px 0;">
+          
+          <div class="settings-group">
+            <div class="settings-item">
+              <div class="settings-info">
+                <h4>Giao diện tối / sáng</h4>
+                <p>Chuyển đổi giao diện hệ thống cho phù hợp với môi trường của bạn.</p>
+              </div>
+              <button class="btn" id="settingsThemeBtn" style="padding: 10px 18px; border-radius: 12px; font-weight: 600;">
+                🌙 Chế độ tối
+              </button>
+            </div>
+            
+            <div class="settings-item">
+              <div class="settings-info">
+                <h4>Tốc độ chạy tự động (Flashcard)</h4>
+                <p>Khoảng thời gian chuyển từ khi bật tính năng Autoplay.</p>
+              </div>
+              <div class="select-wrapper" style="width: auto;">
+                <select id="settingsAutoplaySpeed" style="padding: 8px 16px; border-radius: 12px;">
+                  <option value="3000">3 giây</option>
+                  <option value="5000" selected>5 giây</option>
+                  <option value="8000">8 giây</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 16px 0;">
+          <div class="settings-group">
+            <div class="settings-item">
+              <div class="settings-info">
+                <h4 style="color: var(--neon-red);">Xóa dữ liệu tiến độ</h4>
+                <p>Khôi phục lại toàn bộ dữ liệu học tập về trạng thái ban đầu. Hành động này không thể hoàn tác.</p>
+              </div>
+              <button class="btn" id="resetProgressBtn" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.4); color: var(--neon-red); padding: 10px 18px; border-radius: 12px; font-weight: 600;">
+                🗑️ Xóa tiến trình
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+    
+    <div class="footer">Dữ liệu HSK 1–6 · Nét chữ bởi HanziWriter · Phát âm chất lượng cao</div>
+  </div>
+</div>
+
+<!-- Modal Authentication (Đăng nhập / Đăng ký) - TEMPORARILY DISABLED -->
+<!-- <div id="authModal" class="modal">
+
+<!-- Modal chọn chế độ học -->
+<div id="studyModeModal" class="modal">
+  <div class="modal-content" style="max-width: 480px;">
+    <div class="modal-header">
+      <h2>🎯 Chọn chế độ học</h2>
+      <span class="close-btn" id="closeStudyModeBtn">&times;</span>
+    </div>
+    <div class="modal-body" style="padding: 24px;">
+      <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">
+        Bạn muốn học bộ từ này theo cách nào?
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button class="btn study-mode-option" data-mode="flashcard" style="justify-content: flex-start; padding: 16px 20px; border-radius: 16px; gap: 16px;">
+          <span style="font-size: 1.8rem;">📇</span>
+          <div style="text-align: left; flex: 1;">
+            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Flashcard</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Xem và ghi nhớ từ vựng</div>
+          </div>
+        </button>
+
+        <button class="btn study-mode-option" data-mode="quiz" style="justify-content: flex-start; padding: 16px 20px; border-radius: 16px; gap: 16px;">
+          <span style="font-size: 1.8rem;">✏️</span>
+          <div style="text-align: left; flex: 1;">
+            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Trắc nghiệm</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary);">Kiểm tra kiến thức với câu hỏi</div>
+          </div>
+        </button>
+
+        <button class="btn study-mode-option" data-mode="both" style="justify-content: flex-start; padding: 16px 20px; border-radius: 16px; gap: 16px; background: var(--accent-gradient); color: #fff; border: none;">
+          <span style="font-size: 1.8rem;">🎓</span>
+          <div style="text-align: left; flex: 1;">
+            <div style="font-weight: 700; font-size: 1.05rem; margin-bottom: 4px;">Học đầy đủ</div>
+            <div style="font-size: 0.85rem; opacity: 0.9;">Flashcard → Trắc nghiệm (Khuyến nghị)</div>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Authentication (Đăng nhập / Đăng ký) - TEMPORARILY DISABLED -->
+<!-- <div id="authModal" class="modal">
+  <div class="modal-content auth-modal-content" style="max-width: 420px;">
+    <div class="modal-header" style="padding: 16px 24px 0; border: none;">
+      <div class="auth-tabs" style="display:flex; width:100%; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
+        <div class="auth-tab active" id="tabLoginBtn" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:700; color:var(--text-primary); border-bottom:2px solid var(--accent-purple);">Đăng nhập</div>
+        <div class="auth-tab" id="tabRegisterBtn" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:700; color:var(--text-secondary);">Đăng ký</div>
+      </div>
+      <span class="close-btn" id="closeAuthModalBtn" style="margin-left: 10px; align-self: flex-start; margin-top:-6px;">&times;</span>
+    </div>
+    <div class="modal-body" style="padding: 24px;">
+      <div id="formLogin" style="display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <input type="text" id="loginUsername" placeholder="Tên đăng nhập" class="auth-input">
+          <input type="password" id="loginPassword" placeholder="Mật khẩu" class="auth-input">
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.85rem; color:var(--text-secondary);">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
+            <input type="checkbox" id="loginRemember" style="accent-color:var(--accent-purple); width:16px; height:16px;">
+            Ghi nhớ đăng nhập
+          </label>
+        </div>
+        <button class="btn" id="submitLoginBtn" style="justify-content:center; background:var(--accent-gradient); color:#fff; border:none; padding:14px; border-radius:16px; font-weight:700; cursor:pointer;">
+          Đăng nhập
+        </button>
+      </div>
+      
+      <div id="formRegister" style="display:none; flex-direction:column; gap:16px;">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <input type="text" id="registerUsername" placeholder="Tên đăng nhập (≥4 ký tự)" class="auth-input">
+          <input type="password" id="registerPassword" placeholder="Mật khẩu (≥6 ký tự)" class="auth-input">
+          <input type="password" id="registerConfirmPassword" placeholder="Nhập lại mật khẩu" class="auth-input">
+        </div>
+        <button class="btn" id="submitRegisterBtn" style="justify-content:center; background:var(--accent-gradient); color:#fff; border:none; padding:14px; border-radius:16px; font-weight:700; cursor:pointer;">
+          Đăng ký tài khoản
+        </button>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+<script src="storage.js" defer></script>
+<!-- <script src="auth.js" defer></script> -->
+<!-- <script src="profile.js" defer></script> -->
+<script src="app.js" defer></script>
+
+</body>
+</html>

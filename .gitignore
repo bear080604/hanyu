@@ -1,0 +1,20 @@
+        # Dependencies
+node_modules/
+
+# IDE
+.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build files (nếu có)
+dist/
+build/

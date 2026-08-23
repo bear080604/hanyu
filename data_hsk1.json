@@ -1,0 +1,7532 @@
+[
+  {
+    "stt": 1,
+    "word": "爱",
+    "pinyin": "/ài/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Yêu; thương; yêu quý",
+        "example": "爸爸爱妈妈。",
+        "example_pinyin": "/Bàba ài māmā/",
+        "example_meaning": "Ba yêu mẹ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 2,
+    "word": "爱好",
+    "pinyin": "/àihào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Yêu thích; yêu chuộng",
+        "example": "我爱好打篮球。",
+        "example_pinyin": "/Wǒ àihào dǎ lánqiú/",
+        "example_meaning": "Tôi thích chơi bóng rổ.",
+        "is_approved": true
+      },
+      {
+        "pos": "Danh từ",
+        "meaning": "Sở thích",
+        "example": "我的爱好是听音乐。",
+        "example_pinyin": "/Wǒ de àihào shì tīng yīnyuè/",
+        "example_meaning": "Sở thích của tôi là nghe nhạc.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 3,
+    "word": "八",
+    "pinyin": "/ bā/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số tám",
+        "example": "他买了八个苹果。",
+        "example_pinyin": "/Tā mǎi le bā gè píngguǒ/",
+        "example_meaning": "Anh ấy đã mua tám quả táo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 4,
+    "word": "爸爸 | 爸",
+    "pinyin": "/bàba/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bố; ba",
+        "example": "他是我的爸爸。",
+        "example_pinyin": "/Tā shì wǒ de bàba/",
+        "example_meaning": "Ông ấy là ba của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 5,
+    "word": "吧",
+    "pinyin": "/ba/",
+    "meanings": [
+      {
+        "pos": "Trợ từ",
+        "meaning": "Nhé; chứ; nào; thôi",
+        "example": "我们去公园玩儿吧。",
+        "example_pinyin": "/Wǒmen qù gōngyuán wán er ba/",
+        "example_meaning": "Chúng mình đi công viên chơi nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 6,
+    "word": "白",
+    "pinyin": "/bái/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Trắng, màu trắng",
+        "example": "我姐姐的皮肤很白。",
+        "example_pinyin": "/Wǒ jiějiě de pífū hěn bái/",
+        "example_meaning": "Da của chị tôi rất trắng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 7,
+    "word": "白天",
+    "pinyin": "/báitiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ban ngày",
+        "example": "早睡吧，你白天还要去上课。",
+        "example_pinyin": "/Zǎo shuì ba, nǐ báitiān hái yào qù shàngkè/",
+        "example_meaning": "Ngủ sớm đi, bạn ban ngày còn phải đi học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 8,
+    "word": "百",
+    "pinyin": "/bǎi/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Một trăm; số 100",
+        "example": "我有一百块钱。",
+        "example_pinyin": "/Wǒ yǒu yībǎi kuài qián/",
+        "example_meaning": "Tôi có một trăm tệ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 9,
+    "word": "班",
+    "pinyin": "/bān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Lớp học",
+        "example": "我们班有四十五个学生。",
+        "example_pinyin": "/Wǒmen bān yǒu sìshíwǔ gè xuéshēng/",
+        "example_meaning": "Lớp của chúng tôi có 45 học sinh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 10,
+    "word": "半",
+    "pinyin": "/bàn/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Một nửa\n\ngiữa; trung gian",
+        "example": "现在六点半。\n\n我们在半路上遇到了他。",
+        "example_pinyin": "/Xiànzài liù diǎn bàn/\n\n/Wǒmen zài bàn lùshàng yù dàole tā/",
+        "example_meaning": "Bây giờ là 6 giờ rưỡi.\n\nChúng tôi đã gặp anh ấy giữa đường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 11,
+    "word": "半年",
+    "pinyin": "/bànnián/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nửa năm",
+        "example": "我来上海学习已经有半年了。",
+        "example_pinyin": "/Wǒ lái shànghǎi xuéxí yǐjīng yǒu bànnián le/",
+        "example_meaning": "Tôi đến Thượng Hải học đã được nửa năm.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 12,
+    "word": "半天",
+    "pinyin": "/bàntiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nửa ngày\n\ncả buổi; rất lâu",
+        "example": "我今天要工作半天。\n\n我在门口等了你半天。",
+        "example_pinyin": "/Wǒ jīntiān yào gōngzuò bàntiān/\n\n/Wǒ zài ménkǒu děng le nǐ bàntiān/",
+        "example_meaning": "Tôi hôm nay phải đi làm nửa ngày.\n\nAnh đã đứng trước cửa đợi em rất lâu.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 13,
+    "word": "帮",
+    "pinyin": "/bāng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Giúp đỡ, trợ giúp",
+        "example": "他经常帮我做家务。",
+        "example_pinyin": "/Tā jīngcháng bāng wǒ zuò jiāwù/",
+        "example_meaning": "Anh ấy thường giúp tôi làm việc nhà.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 14,
+    "word": "帮忙",
+    "pinyin": "/bāngmáng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Giúp, giúp đỡ",
+        "example": "你可以来帮忙吗？",
+        "example_pinyin": "/Nǐ kěyǐ lái bāngmáng ma?/",
+        "example_meaning": "Bạn có thể lại giúp đỡ không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 15,
+    "word": "包",
+    "pinyin": "/bāo/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Bao; gói; bọc; quấn",
+        "example": "妈妈在包饺子。",
+        "example_pinyin": "/Māma zài bāo jiǎozǐ/",
+        "example_meaning": "Mẹ đang gói sủi cảo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 16,
+    "word": "包子",
+    "pinyin": "/bāozǐ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bánh bao",
+        "example": "我今天早上吃了两个包子。",
+        "example_pinyin": "/Wǒ jīntiān zǎoshang chī le liǎng gè bāozǐ/",
+        "example_meaning": "Sáng nay tôi đã ăn 2 cái bánh bao.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 17,
+    "word": "杯",
+    "pinyin": "/bēi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ly; cốc\n\ncúp (giải thưởng)",
+        "example": "我喝了一杯奶茶。\n\n我们队赢得了冠军杯。",
+        "example_pinyin": "/Wǒ hēle yībēi nǎichá/\n\n/Wǒmen duì yíngdéle guànjūn bēi/",
+        "example_meaning": "Tôi đã uống 1 ly trà sữa.\n\nĐội chúng tôi đã giành được cúp vô địch.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 18,
+    "word": "杯子",
+    "pinyin": "/bēizi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ly; cốc; tách",
+        "example": "这个杯子太小了。",
+        "example_pinyin": "/Zhège bēizǐ tài xiǎole/",
+        "example_meaning": "Cái ly này quá nhỏ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 19,
+    "word": "北",
+    "pinyin": "/běi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bắc, phía bắc",
+        "example": "我们一直往北走吧。",
+        "example_pinyin": "/Wǒmen yīzhí wǎng běi zǒu ba/",
+        "example_meaning": "Chúng ta cứ đi về phía bắc đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 20,
+    "word": "北边",
+    "pinyin": "/běibian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía bắc",
+        "example": "北边的天气很冷。",
+        "example_pinyin": "/Běibian de tiānqì hěn lěng/",
+        "example_meaning": "Thời tiết của phương bắc rất lạnh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 21,
+    "word": "北京",
+    "pinyin": "/Běijīng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bắc kinh",
+        "example": "北京是中国的首都。",
+        "example_pinyin": "/Běijīng shì zhōngguó de shǒudū/",
+        "example_meaning": "Bắc Kinh là thủ đô của Trung Quốc.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 22,
+    "word": "本",
+    "pinyin": "/běn/",
+    "meanings": [
+      {
+        "pos": "Lượng từ",
+        "meaning": "Cuốn; tập; vở",
+        "example": "你读过这本书了吗？",
+        "example_pinyin": "/Nǐ dúguò zhè běn shū le ma?/",
+        "example_meaning": "Bạn đã đọc cuốn sách này chưa?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 23,
+    "word": "本子",
+    "pinyin": "/běnzǐ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cuốn; tập; vở\n\ngiấy phép; chứng chỉ",
+        "example": "这个歌剧的本子挺有意思的。\n\n在越南，满18周岁就可以考本子了。",
+        "example_pinyin": "/Zhège gējù de běnzi tǐng yǒuyìsi de/\n\n/Zài Yuènán, mǎn 18 zhōusuì jiù kěyǐ kǎo běnzǐ le/",
+        "example_meaning": "Bản nhạc kịch này thật thú vị.\n\nỞ Việt Nam, bạn đủ 18 tuổi đã có thể thi giấy phép lấy xe.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 24,
+    "word": "比",
+    "pinyin": "/bǐ/",
+    "meanings": [
+      {
+        "pos": "Giới từ",
+        "meaning": "Hơn, so, so với",
+        "example": "我哥哥比我高。",
+        "example_pinyin": "/Wǒ gēge bǐ wǒ gāo/",
+        "example_meaning": "Anh trai tôi cao hơn tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 25,
+    "word": "别",
+    "pinyin": "/bié/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Đừng; chớ\n\nhẳn là; hay là; lẽ nào",
+        "example": "在医院，大家别大声说话。\n\n他到现在还没来，别是忘了吗？",
+        "example_pinyin": "/Zài yīyuàn, dàjiā bié dàshēng shuōhuà/\n\n/Tā dào xiànzài hái méi lái, bié shì wàng le ma/",
+        "example_meaning": "Ở bệnh viện, mọi người đừng nói lớn tiếng.\n\nAnh ấy đến bây giờ vẫn chưa đến, lẽ nào anh ấy quên rồi sao?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 26,
+    "word": "别的",
+    "pinyin": "/bié de/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Khác; cái khác",
+        "example": "我不要别的，只要那支钢笔。",
+        "example_pinyin": "/Wǒ bùyào bié de, zhǐyào nà zhī gāngbǐ/",
+        "example_meaning": "Tôi không cần cái nào khác, chỉ cần cây bút đó.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 27,
+    "word": "别人",
+    "pinyin": "/biérén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Người khác; người ta",
+        "example": "这本书可能是别人的。",
+        "example_pinyin": "/Chúle Xiǎo Lì yǐwài, biérén dōu bù yuànyì qù/",
+        "example_meaning": "Ngoại trừ Tiểu Lệ ra, những người khác đều không muốn đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 28,
+    "word": "病",
+    "pinyin": "/bìng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bệnh; ốm",
+        "example": "我生病了。",
+        "example_pinyin": "/Wǒ shēng bìng le/",
+        "example_meaning": "Tôi bị bệnh rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 29,
+    "word": "病人",
+    "pinyin": "/bìngrén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bệnh nhân; người bệnh",
+        "example": "王医生每天都要看十到二十位病人。",
+        "example_pinyin": "/Wáng yīshēng měitiān dōu yào kàn shí dào èrshí wèi bìngrén/",
+        "example_meaning": "Bác sĩ Vương mỗi ngày đều phải khám từ 10 đến 20 bệnh nhân.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 30,
+    "word": "不大",
+    "pinyin": "/bù dà/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Không to; không lớn",
+        "example": "这个房间不大。",
+        "example_pinyin": "/Zhège fángjiān bù dà/",
+        "example_meaning": "Căn phòng này không lớn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 31,
+    "word": "不对",
+    "pinyin": "/bùduì/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Không đúng",
+        "example": "你的答案不对。",
+        "example_pinyin": "/Nǐ de dá'àn bù duì/",
+        "example_meaning": "Đáp án của bạn không đúng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 32,
+    "word": "不客气",
+    "pinyin": "/búkèqi/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Không có gì; đừng khách sáo",
+        "example": "A: 谢谢你！\nB: 不客气！",
+        "example_pinyin": "A: /Xièxiè nǐ/\nB: /Búkèqi/",
+        "example_meaning": "A: Cảm ơn bạn! \nB: Đừng khách sáo!",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 33,
+    "word": "不用",
+    "pinyin": "/búyòng/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Không cần; không phải",
+        "example": "你不用担心。",
+        "example_pinyin": "/Nǐ búyòng dānxīn/",
+        "example_meaning": "Bạn không cần phải lo lắng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 34,
+    "word": "不",
+    "pinyin": "/bù/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Không",
+        "example": "我不喜欢吃辣。",
+        "example_pinyin": "/Wǒ bù xǐhuān chī là/",
+        "example_meaning": "Tôi không thích ăn cay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 35,
+    "word": "菜",
+    "pinyin": "/cài/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Món ăn; đồ ăn",
+        "example": "今天的菜很好吃。",
+        "example_pinyin": "/Jīntiān de cài hěn hǎo chī/",
+        "example_meaning": "Món ăn của hôm nay rất ngon.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 36,
+    "word": "茶",
+    "pinyin": "/chá/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trà (đồ uống)",
+        "example": "我喜欢喝茶。",
+        "example_pinyin": "/Wǒ xǐhuān hē chá/",
+        "example_meaning": "Tôi thích uống trà.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 37,
+    "word": "差",
+    "pinyin": "/chà/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Kém; tệ; không đạt",
+        "example": "他今天状态很差。",
+        "example_pinyin": "/Tā jīntiān zhuàngtài hěn chà/",
+        "example_meaning": "Trạng thái của anh hôm nay rất tệ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 38,
+    "word": "常",
+    "pinyin": "/cháng/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Thường; thường xuyên",
+        "example": "我常去跑步。",
+        "example_pinyin": "/Wǒ cháng qù pǎobù/",
+        "example_meaning": "Tôi thường xuyên chạy bộ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 39,
+    "word": "尝尝",
+    "pinyin": "/cháng cháng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nếm; thử (ăn, uống)",
+        "example": "你尝尝这个菜。",
+        "example_pinyin": "/Nǐ cháng cháng zhège cài/",
+        "example_meaning": "Bạn hãy nếm thử món ăn này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 40,
+    "word": "唱",
+    "pinyin": "/chàng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Hát; ca",
+        "example": "她唱太好了，大家都起立鼓掌。",
+        "example_pinyin": "/Tā chàng tài hǎo le, dàjiā dōu qǐlì gǔzhǎng/",
+        "example_meaning": "Cô ấy hát rất hay, mọi người đều đứng dậy vỗ tay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 41,
+    "word": "唱歌",
+    "pinyin": "/chànggē/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Hát; ca hát",
+        "example": "我家邻居昨天一直不停地唱歌。",
+        "example_pinyin": "/Wǒjiā línjū zuótiān yīzhí bù tíng de chànggē/",
+        "example_meaning": "Ngày hôm qua hàng xóm của tôi ca hát không ngừng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 42,
+    "word": "车",
+    "pinyin": "/chē/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Xe",
+        "example": "我们开车去旅行。",
+        "example_pinyin": "/Wǒmen kāichē qù lǚxíng/",
+        "example_meaning": "Chúng tôi lái xe đi du lịch.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 43,
+    "word": "车票",
+    "pinyin": "/chēpiào/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Vé xe",
+        "example": "快过年了，你买火车票了吗？",
+        "example_pinyin": "/Kuài guò nián le, nǐ mǎi huǒchē piào huí jiā le ma?/",
+        "example_meaning": "Tết sắp đến rồi, bạn đã mua vé tàu về nhà chưa?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 44,
+    "word": "车上",
+    "pinyin": "/chē shàng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trên xe",
+        "example": "她在车上学英语。",
+        "example_pinyin": "/Tā zài chē shàng xué yīngyǔ/",
+        "example_meaning": "Cô ấy học tiếng Anh trên xe.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 45,
+    "word": "车站",
+    "pinyin": "/chēzhàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trạm xe",
+        "example": "车站离这里不远。",
+        "example_pinyin": "/Chēzhàn lí zhè lǐ bù yuǎn/",
+        "example_meaning": "Trạm xe cách đây không xa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 46,
+    "word": "吃",
+    "pinyin": "/chī/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ăn",
+        "example": "我喜欢吃苹果。",
+        "example_pinyin": "/Wǒ xǐhuan chī píngguǒ/",
+        "example_meaning": "Tôi thích ăn táo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 47,
+    "word": "吃饭",
+    "pinyin": "/chīfàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ăn cơm",
+        "example": "我们一起去吃饭吧。",
+        "example_pinyin": "/Wǒmen yīqǐ qù chīfàn ba/",
+        "example_meaning": "Chúng ta cùng nhau đi ăn cơm nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 48,
+    "word": "出",
+    "pinyin": "/chū/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi; xuất phát",
+        "example": "他出去买东西了。",
+        "example_pinyin": "/Tā chū qù mǎi dōngxi le/",
+        "example_meaning": "Anh ấy ra ngoài mua đồ ăn rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 49,
+    "word": "出来",
+    "pinyin": "/chūlái/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ra; ra đây",
+        "example": "你出来，我跟你说句话。",
+        "example_pinyin": "/Nǐ chūlái，wǒ gēn nǐ shuō jù huà/",
+        "example_meaning": "Anh ra đây tôi nói chuyện với anh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 50,
+    "word": "出去",
+    "pinyin": "/chūqù/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ra; ra ngoài",
+        "example": "我们一起出去玩儿吧。",
+        "example_pinyin": "/Wǒmen yīqǐ chūqù wánr ba/",
+        "example_meaning": "Chúng ta cùng nhau đi chơi đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 51,
+    "word": "穿",
+    "pinyin": "/chuān/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Mặc; đi; mang; đeo",
+        "example": "今天我穿了件新衣服。",
+        "example_pinyin": "/Jīntiān wǒ chuān le jiàn xīn yīfu/",
+        "example_meaning": "Hôm nay tôi mặc quần áo mới.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 52,
+    "word": "床",
+    "pinyin": "/chuáng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Giường",
+        "example": "我很累，想躺在床上。",
+        "example_pinyin": "/Wǒ hěn lèi, xiǎng tǎng zài chuáng shàng/",
+        "example_meaning": "Tôi rất mệt, muốn nằm trên giường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 53,
+    "word": "次",
+    "pinyin": "/cì/",
+    "meanings": [
+      {
+        "pos": "Lượng từ",
+        "meaning": "Lần; lượt; đợt",
+        "example": "这是我第一次来这里。",
+        "example_pinyin": "/Zhè shì wǒ dì yī cì lái zhè lǐ/",
+        "example_meaning": "Đây là lần đầu tiên tôi đến đây.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 54,
+    "word": "从",
+    "pinyin": "/cóng/",
+    "meanings": [
+      {
+        "pos": "Giới từ",
+        "meaning": "Từ; bắt đầu từ",
+        "example": "我从家里走到学校。",
+        "example_pinyin": "/Wǒ cóng jiālǐ zǒu dào xuéxiào/",
+        "example_meaning": "Tôi đi bộ từ nhà đến trường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 55,
+    "word": "错",
+    "pinyin": "/cuò/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Sai; nhầm; không đúng",
+        "example": "你做错了。",
+        "example_pinyin": "/Nǐ zuò cuò le/",
+        "example_meaning": "Bạn làm sai rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 56,
+    "word": "打",
+    "pinyin": "/dǎ/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Gõ; đánh; đập;...",
+        "example": "我弟弟在打篮球。",
+        "example_pinyin": "/Wǒ dìdi zài dǎqiú/",
+        "example_meaning": "Em trai tôi đang chơi bóng rổ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 57,
+    "word": "打车",
+    "pinyin": "/dǎchē/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Bắt xe; gọi xe (taxi)",
+        "example": "我们打车去机场。",
+        "example_pinyin": "/Wǒmen dǎ chē qù jīchǎng/",
+        "example_meaning": "Chúng ta bắt xe đến sân bay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 58,
+    "word": "打电话",
+    "pinyin": "/dǎ diànhuà/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Gọi điện thoại",
+        "example": "等一下，我要打电话问问。",
+        "example_pinyin": "/Děng yīxià, wǒ yào dǎ diànhuà wèn wèn/",
+        "example_meaning": "Đợi chút nha, tôi cần gọi điện thoại hỏi thăm.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 59,
+    "word": "打开",
+    "pinyin": "/dǎkāi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Mở ra",
+        "example": "请你把门打开。",
+        "example_pinyin": "/Qǐng nǐ bǎ mén dǎkāi/",
+        "example_meaning": "Xin bạn hãy mở cửa ra.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 60,
+    "word": "打球",
+    "pinyin": "/dǎqiú/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đánh bóng; chơi bóng",
+        "example": "他们很喜欢打球。",
+        "example_pinyin": "/Tā xǐhuān dǎ lánqiú/",
+        "example_meaning": "Cậu ấy thích chơi bóng rổ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 61,
+    "word": "大",
+    "pinyin": "/dà/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Lớn; to",
+        "example": "这个房子很大。",
+        "example_pinyin": "/Zhège fángzi hěn dà/",
+        "example_meaning": "Căn nhà này rất lớn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 62,
+    "word": "大学",
+    "pinyin": "/dàxué/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đại học",
+        "example": "他在北京大学学习。",
+        "example_pinyin": "/Tā zài Běijīng dàxué xuéxí/",
+        "example_meaning": "Anh ấy học ở Đại học Bắc Kinh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 63,
+    "word": "大学生",
+    "pinyin": "/dàxuéshēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Sinh viên đại học",
+        "example": "我是大学生。",
+        "example_pinyin": "/Wǒ shì dàxuéshēng/",
+        "example_meaning": "Tôi là sinh viên đại học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 64,
+    "word": "到",
+    "pinyin": "/dào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đến",
+        "example": "我们到达了目的地。",
+        "example_pinyin": "/Wǒmen dàodá le mùdìdì/",
+        "example_meaning": "Chúng ta đã đến nơi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 65,
+    "word": "得到",
+    "pinyin": "/dédào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đạt được; nhận được",
+        "example": "他得到了奖学金。",
+        "example_pinyin": "/Tā dédào le jiǎngxuéjīn/",
+        "example_meaning": "Anh ấy đã nhận được học bổng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 66,
+    "word": "地",
+    "pinyin": "/de/",
+    "meanings": [
+      {
+        "pos": "Trợ từ",
+        "meaning": "Mà, một cách",
+        "example": "孩子们快乐地唱歌。",
+        "example_pinyin": "/Háizimen kuàilè de chànggē/",
+        "example_meaning": "Mấy đứa nhỏ vui vẻ hát ca.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 67,
+    "word": "的",
+    "pinyin": "/de/",
+    "meanings": [
+      {
+        "pos": "Trợ từ",
+        "meaning": "Của (chỉ sở hữu)",
+        "example": "这是我的书。",
+        "example_pinyin": "/Zhè shì wǒ de shū/",
+        "example_meaning": "Đây là sách của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 68,
+    "word": "等",
+    "pinyin": "/děng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đợi; chờ; chờ đợi",
+        "example": "我在等她的电话。",
+        "example_pinyin": "/Wǒ zài děng tā de diànhuà/",
+        "example_meaning": "Tôi đang đợi cuộc gọi của cô ấy.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 69,
+    "word": "地",
+    "pinyin": "/dì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đất; trái đất",
+        "example": "地球上有许多不同的生物。",
+        "example_pinyin": "/Dìqiú shàng yǒu xǔduō bùtóng de shēngwù/",
+        "example_meaning": "Trên Trái Đất có rất nhiều sinh vật khác nhau.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 70,
+    "word": "地点",
+    "pinyin": "/dìdiǎn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Địa điểm; nơi chốn",
+        "example": "会议的地点已经确定了。",
+        "example_pinyin": "/Huìyì de dìdiǎn yǐjīng quèdìng le/",
+        "example_meaning": "Địa điểm cuộc họp đã được xác định.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 71,
+    "word": "地方",
+    "pinyin": "/dìfāng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bản xứ, bản địa",
+        "example": "他是这个地方的人。",
+        "example_pinyin": "/Tā shì zhège dìfāng de rén/",
+        "example_meaning": "Anh ấy là người bản địa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 72,
+    "word": "地上",
+    "pinyin": "/dìshàng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Mặt đất; dưới đất",
+        "example": "地上有很多树叶。",
+        "example_pinyin": "/Dìshàng yǒu hěnduō shùyè/",
+        "example_meaning": "Dưới đất có rất nhiều lá cây.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 73,
+    "word": "地图",
+    "pinyin": "/dìtú/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bản đồ",
+        "example": "这是世界地图。",
+        "example_pinyin": "/Zhè shì shìjiè dìtú/",
+        "example_meaning": "Đây là bản đồ thế giới.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 74,
+    "word": "弟弟 |  弟",
+    "pinyin": "/dìdi | dì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Em trai",
+        "example": "我有一个弟弟。",
+        "example_pinyin": "/Wǒ yǒu yīgè dìdi/",
+        "example_meaning": "Tôi có một người em trai.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 75,
+    "word": "第 （第二）",
+    "pinyin": "/dì (dì èr)/",
+    "meanings": [
+      {
+        "pos": "Tiền tố",
+        "meaning": "Thứ tự; thứ hạng",
+        "example": "这是第一个问题。",
+        "example_pinyin": "/Zhè shì dì yī gè wèntí/",
+        "example_meaning": "Đây là câu hỏi đầu tiên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 76,
+    "word": "点",
+    "pinyin": "/diǎn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nơi; chỗ; điểm",
+        "example": "我们去那个点看看。",
+        "example_pinyin": "/Wǒmen qù nàgè diǎn kàn kàn/",
+        "example_meaning": "Chúng ta đi đến chỗ đó xem thử.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 77,
+    "word": "电",
+    "pinyin": "/diàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Điện; pin; điện năng",
+        "example": "我的手机没电了。",
+        "example_pinyin": "/Wǒ de shǒujī méi diàn le/",
+        "example_meaning": "Điện thoại tôi hết pin rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 78,
+    "word": "电话",
+    "pinyin": "/diànhuà/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Điện thoại",
+        "example": "他正在打电话。",
+        "example_pinyin": "/Tā zhèngzài dǎ diànhuà/",
+        "example_meaning": "Anh ấy đang gọi điện thoại.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 79,
+    "word": "电脑",
+    "pinyin": "/diànnǎo/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Máy tính",
+        "example": "这个电脑非常贵。",
+        "example_pinyin": "/Zhège diànnǎo fēicháng guì/",
+        "example_meaning": "Máy tính này rất đắt.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 80,
+    "word": "电视 | 电视机",
+    "pinyin": "/diànshì | diànshì jī/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tivi",
+        "example": "爸爸在看电视。",
+        "example_pinyin": "/Bàba zài kàn diànshì/",
+        "example_meaning": "Bố đang xem tivi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 81,
+    "word": "",
+    "pinyin": "",
+    "meanings": []
+  },
+  {
+    "stt": 82,
+    "word": "电影",
+    "pinyin": "/diànyǐng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phim ảnh",
+        "example": "昨天我们看了一部电影。",
+        "example_pinyin": "/Zuótiān wǒmen kàn le yī bù diànyǐng/",
+        "example_meaning": "Hôm qua chúng tôi đã xem một bộ phim.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 83,
+    "word": "电影院",
+    "pinyin": "/diànyǐngyuàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Rạp chiếu phim",
+        "example": "我们去电影院看电影。",
+        "example_pinyin": "/Wǒmen qù diànyǐngyuàn kàn diànyǐng/",
+        "example_meaning": "Chúng tôi đi rạp chiếu phim để xem phim.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 84,
+    "word": "东",
+    "pinyin": "/dōng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đông; hướng đông",
+        "example": "学校在东边。",
+        "example_pinyin": "/Xuéxiào zài dōngbian/",
+        "example_meaning": "Trường học ở phía Đông.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 85,
+    "word": "东边",
+    "pinyin": "/dōngbian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía đông, hướng đông",
+        "example": "",
+        "example_pinyin": "",
+        "example_meaning": "",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 86,
+    "word": "东西",
+    "pinyin": "/dōngxi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đồ; vật; đồ ăn; đồ đạc",
+        "example": "吃东西的时候不要说话。",
+        "example_pinyin": "/Chī dōngxi de shíhòu bùyào shuōhuà/",
+        "example_meaning": "Không nên nói chuyện khi đang ăn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 87,
+    "word": "动",
+    "pinyin": "/dòng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Chuyển động; cử động",
+        "example": "她的眼睛动了一下。",
+        "example_pinyin": "/Tā de yǎnjīng dòng le yīxià/",
+        "example_meaning": "Mắt của cô ấy nhúc nhích một cái.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 88,
+    "word": "动作",
+    "pinyin": "/dòngzuò/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Động tác; hành động",
+        "example": "舞蹈的动作很优美。",
+        "example_pinyin": "/Wǔdǎo de dòngzuò hěn yōuměi/",
+        "example_meaning": "Động tác của điệu nhảy rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 89,
+    "word": "都",
+    "pinyin": "/dōu/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Đều, cả",
+        "example": "我们都很忙。",
+        "example_pinyin": "/Wǒmen dōu hěn máng/",
+        "example_meaning": "Chúng tôi đều rất bận.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 90,
+    "word": "读",
+    "pinyin": "/dú/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đọc; xem",
+        "example": "我正在读书。",
+        "example_pinyin": "/Wǒ zhèngzài dú shū/",
+        "example_meaning": "Tôi đang đọc sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 91,
+    "word": "读书",
+    "pinyin": "/dúshū/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Học bài",
+        "example": "他很努力读书。",
+        "example_pinyin": "/Tā hěn nǔ lì dú shū/",
+        "example_meaning": "Anh ấy rất chăm chỉ học bài.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 92,
+    "word": "对",
+    "pinyin": "/duì/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Đúng; chính xác",
+        "example": "你的答案是对的。",
+        "example_pinyin": "/Nǐ de dá'àn shì duì de/",
+        "example_meaning": "Câu trả lời của bạn là đúng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 93,
+    "word": "对不起",
+    "pinyin": "/duìbuqǐ/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Xin lỗi",
+        "example": "对不起，我迟到了。",
+        "example_pinyin": "/Duìbuqǐ, wǒ chídào le/",
+        "example_meaning": "Xin lỗi, tôi đã đến muộn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 94,
+    "word": "多",
+    "pinyin": "/duō/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Nhiều; rất nhiều",
+        "example": "今天的作业不太多。",
+        "example_pinyin": "/Jīntiān de zuòyè bù tài duō/",
+        "example_meaning": "Bài tập hôm nay không nhiều lắm.",
+        "is_approved": true
+      },
+      {
+        "pos": "Động từ",
+        "meaning": "Dư ra; thừa ra",
+        "example": "今天的水果多了一些。",
+        "example_pinyin": "/Jīntiān de shuǐguǒ duōle yīxiē/",
+        "example_meaning": "Hôm nay, trái cây còn dư một ít.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 95,
+    "word": "多少",
+    "pinyin": "/duōshǎo/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Bao nhiêu; mấy; mấy mươi",
+        "example": "这个多少钱？",
+        "example_pinyin": "/Zhège duōshǎo qián?/",
+        "example_meaning": "Cái này bao nhiêu tiền?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 96,
+    "word": "饿",
+    "pinyin": "/è/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đói; bị đói",
+        "example": "我现在很饿。",
+        "example_pinyin": "/Wǒ xiànzài hěn è/",
+        "example_meaning": "Bây giờ tôi rất đói.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 97,
+    "word": "儿子",
+    "pinyin": "/érzi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Con trai",
+        "example": "我有一个儿子。",
+        "example_pinyin": "/Wǒ yǒu yí gè érzi/",
+        "example_meaning": "Tôi có một cậu con trai.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 98,
+    "word": "二",
+    "pinyin": "/èr/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số hai",
+        "example": "我们班有二十人。",
+        "example_pinyin": "/Wǒmen bān yǒu èrshí rén/",
+        "example_meaning": "Lớp chúng ta có 20 người.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 99,
+    "word": "饭",
+    "pinyin": "/fàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cơm; bữa",
+        "example": "我还没吃晚饭呢。\n\n他每天都吃三顿饭。",
+        "example_pinyin": "/Wǒ hái méi chī wǎnfàn ne/\n\n/Tā měitiān dōu chī sān dùn fàn/",
+        "example_meaning": "Tôi vẫn chưa ăn cơm tối. \n\nMỗi ngày anh ấy đều ăn ba bữa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 100,
+    "word": "饭店",
+    "pinyin": "/fàndiàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Quán cơm; nhà hàng",
+        "example": "这家饭店的菜很好吃。",
+        "example_pinyin": "/Zhè jiā fàndiàn de cài hěn hǎochī/",
+        "example_meaning": "Đồ ăn của nhà hàng này rất ngon.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 101,
+    "word": "房间",
+    "pinyin": "/fángjiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Căn phòng",
+        "example": "这是我的房间。",
+        "example_pinyin": "/Zhè shì wǒ de fángjiān/",
+        "example_meaning": "Đây là phòng của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 102,
+    "word": "房子",
+    "pinyin": "/fángzi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Căn nhà; nhà",
+        "example": "他们买了一套新房子。",
+        "example_pinyin": "/Tāmen mǎi le yī tào xīn fángzi/",
+        "example_meaning": "Họ đã mua một căn nhà mới.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 103,
+    "word": "放",
+    "pinyin": "/fàng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đặt; để",
+        "example": "请把书放在桌子上。",
+        "example_pinyin": "/Qǐng bǎ shū fàng zài zhuōzi shàng/",
+        "example_meaning": "Vui lòng đặt quyển sách lên bàn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 104,
+    "word": "放假",
+    "pinyin": "/fàngjià/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nghỉ, nghỉ lễ",
+        "example": "放假了，我们一起去玩吧。",
+        "example_pinyin": "/Fàngjià le, wǒmen yīqǐ qù wán ba/",
+        "example_meaning": "Nghỉ lễ rồi, chúng ta cùng đi chơi nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 105,
+    "word": "放学",
+    "pinyin": "/fàngxué/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Tan học",
+        "example": "我们下午四点半放学。",
+        "example_pinyin": "/Wǒmen xiàwǔ sì diǎn bàn fàngxué/",
+        "example_meaning": "Chúng tôi tan học lúc 4 giờ 30 chiều.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 106,
+    "word": "飞",
+    "pinyin": "/fēi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Bay",
+        "example": "小鸟在天上飞得很快。",
+        "example_pinyin": "/Xiǎo niǎo zài tiān shàng fēi de hěn kuài/",
+        "example_meaning": "Con chim nhỏ bay rất nhanh trên trời.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 107,
+    "word": "飞机",
+    "pinyin": "/fēijī/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Máy bay",
+        "example": "我第一次坐飞机时特别开心。",
+        "example_pinyin": "/Wǒ dì yī cì zuò fēijī shí tèbié kāixīn/",
+        "example_meaning": "Lần đầu tiên tôi đi máy bay, tôi rất vui mừng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 108,
+    "word": "非常",
+    "pinyin": "/fēicháng/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Đặc biệt; rất; vô cùng",
+        "example": "这个地方非常漂亮。",
+        "example_pinyin": "/Zhège dìfāng fēicháng piàoliang/",
+        "example_meaning": "Nơi này cực kỳ đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 109,
+    "word": "分",
+    "pinyin": "/fēn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Điểm số",
+        "example": "这次考试我考了100分。",
+        "example_pinyin": "/Zhè cì kǎoshì wǒ kǎole 100 fēn/",
+        "example_meaning": "Kỳ thi lần này tôi thi được 100 điểm.",
+        "is_approved": true
+      },
+      {
+        "pos": "Lượng từ",
+        "meaning": "Phần\n\nphút",
+        "example": "这个蛋糕有八分。\n\n现在是三点十分。",
+        "example_pinyin": "/Zhège dàngāo yǒu bā fēn/ \n\n/Xiànzài shì sān diǎn shí fēn/",
+        "example_meaning": "Chiếc bánh này có tám phần.\n\nBây giờ là 3 giờ 10 phút.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 110,
+    "word": "风",
+    "pinyin": "/fēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Gió",
+        "example": "今天的风很大，不要出去。",
+        "example_pinyin": "/Jīntiān de fēng hěn dà, bù yào chūqù/",
+        "example_meaning": "Hôm nay gió lớn, đừng ra ngoài.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 111,
+    "word": "干",
+    "pinyin": "/gān/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Khô; cạn",
+        "example": "这件衣服干了，可以穿了。",
+        "example_pinyin": "/Zhè jiàn yīfu gān le, kěyǐ chuān le/",
+        "example_meaning": "Quần áo này khô rồi, có thể mặc rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 112,
+    "word": "干净",
+    "pinyin": "/gānjìng/",
+    "meanings": [
+      {
+        "pos": "",
+        "meaning": "Sạch sẽ, gọn gàng",
+        "example": "你的房间很干净。",
+        "example_pinyin": "/Nǐ de fángjiān hěn gānjìng/",
+        "example_meaning": "Phòng của bạn rất sạch sẽ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 113,
+    "word": "干",
+    "pinyin": "/gàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Quấy rầy; làm loạn\n\nuống cạn; uống sạch",
+        "example": "他总干乱我的计划。\n\n咱们干了这杯酒吧。",
+        "example_pinyin": "/Tā zǒng gān luàn wǒ de jìhuà/\n\n/Zánmen gān le zhè bēi jiǔ ba/",
+        "example_meaning": "Anh ấy luôn làm loạn kế hoạch của tôi.\n\nChúng ta uống cạn ly rượu này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 114,
+    "word": "干什么",
+    "pinyin": "/gàn shénme/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Làm gì thế; tại sao",
+        "example": "你干什么不早说呀?",
+        "example_pinyin": "/Nǐ gànshénme bù zǎo shuō ya/",
+        "example_meaning": "Tại sao bạn không nói sớm?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 115,
+    "word": "高",
+    "pinyin": "/gāo/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Cao",
+        "example": "你比我高一点儿。",
+        "example_pinyin": "/Nǐ bǐ wǒ gāo yìdiǎnr/",
+        "example_meaning": "Bạn cao hơn tôi một chút.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 116,
+    "word": "高兴",
+    "pinyin": "/gāoxìng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Vui mừng; háo hức",
+        "example": "今天我很高兴。",
+        "example_pinyin": "/Jīntiān wǒ hěn gāoxìng/",
+        "example_meaning": "Hôm nay tôi rất vui.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 117,
+    "word": "告诉",
+    "pinyin": "/gàosu/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nói; bày tỏ",
+        "example": "妈妈告诉我早点回家。",
+        "example_pinyin": "/Māma gàosu wǒ zǎodiǎn huíjiā/",
+        "example_meaning": "Mẹ bảo tôi về nhà sớm.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 118,
+    "word": "哥哥  | 哥",
+    "pinyin": "/gēge/  |  /gē/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Anh trai",
+        "example": "我的哥哥比我大五岁。",
+        "example_pinyin": "/Wǒ de gēge bǐ wǒ dà wǔ suì/",
+        "example_meaning": "Anh trai tôi lớn hơn tôi năm tuổi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 119,
+    "word": "歌",
+    "pinyin": "/gē/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Hát; ca",
+        "example": "这首歌很好听。",
+        "example_pinyin": "/Zhè shǒu gē hěn hǎotīng/",
+        "example_meaning": "Bài hát này rất hay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 120,
+    "word": "个",
+    "pinyin": "/gè/",
+    "meanings": [
+      {
+        "pos": "Lượng từ",
+        "meaning": "Cái này",
+        "example": "我买了一个新手机。",
+        "example_pinyin": "/Wǒ mǎi le yī gè xīn shǒujī/",
+        "example_meaning": "Tôi đã mua một chiếc điện thoại mới.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 121,
+    "word": "给",
+    "pinyin": "/gěi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đưa",
+        "example": "妈妈给我买了一本书。",
+        "example_pinyin": "/Māma gěi wǒ mǎi le yī běn shū/",
+        "example_meaning": "Mẹ đã mua cho tôi một quyển sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 122,
+    "word": "跟",
+    "pinyin": "/gēn/",
+    "meanings": [
+      {
+        "pos": "Giới từ",
+        "meaning": "Cùng; với",
+        "example": "我跟朋友一起去旅行。",
+        "example_pinyin": "/Wǒ gēn péngyǒu yīqǐ qù lǚxíng/",
+        "example_meaning": "Tôi đi du lịch cùng bạn bè.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 123,
+    "word": "工人",
+    "pinyin": "/gōngrén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Công nhân",
+        "example": "工人们每天都努力工作。",
+        "example_pinyin": "/Gōngrénmen měitiān dōu nǔlì gōngzuò/",
+        "example_meaning": "Những công nhân làm việc chăm chỉ mỗi ngày.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 124,
+    "word": "工作",
+    "pinyin": "/gōngzuò/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Công việc",
+        "example": "他的工作非常忙。",
+        "example_pinyin": "/Tā de gōngzuò fēicháng máng/",
+        "example_meaning": "Công việc của anh ấy rất bận.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 125,
+    "word": "关",
+    "pinyin": "/guān/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đóng; tắt",
+        "example": "睡觉前别忘了关灯。",
+        "example_pinyin": "/Shuìjiào qián bié wàngle guān dēng/",
+        "example_meaning": "Trước khi ngủ đừng quên tắt đèn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 126,
+    "word": "关上",
+    "pinyin": "/guān shàng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đóng; đóng vào; đóng lại",
+        "example": "请关上门，谢谢你！",
+        "example_pinyin": "/Qǐng guānshàng mén, xièxiè nǐ/",
+        "example_meaning": "Hãy đóng cửa lại, cảm ơn bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 127,
+    "word": "贵",
+    "pinyin": "/guì/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Đắt; mắc",
+        "example": "这件衣服太贵了。",
+        "example_pinyin": "/Zhè jiàn yīfu tài guì le/",
+        "example_meaning": "Bộ quần áo này quá đắt!",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 128,
+    "word": "国",
+    "pinyin": "/guó/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nước; quốc gia",
+        "example": "中国的美食非常有名。",
+        "example_pinyin": "/Zhōngguó de měishí fēicháng yǒumíng/",
+        "example_meaning": "Ẩm thực của Trung Quốc rất nổi tiếng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 129,
+    "word": "国家",
+    "pinyin": "/guó jiā/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Quốc gia",
+        "example": "我爱我的国家。",
+        "example_pinyin": "/Wǒ ài wǒ de guójiā/",
+        "example_meaning": "Tôi yêu đất nước của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 130,
+    "word": "国外",
+    "pinyin": "/guó wài/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nước ngoài",
+        "example": "他在国外上大学。",
+        "example_pinyin": "/Tā zài guówài shàng dàxué/",
+        "example_meaning": "Anh ấy học đại học ở nước ngoài.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 131,
+    "word": "过",
+    "pinyin": "/guò/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Qua; đi qua; vượt qua",
+        "example": "我去过中国三次。",
+        "example_pinyin": "/Wǒ qù guò Zhōngguó sān cì/",
+        "example_meaning": "Tôi đã đến Trung Quốc ba lần.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 132,
+    "word": "还",
+    "pinyin": "/hái/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Vẫn; còn; vẫn còn",
+        "example": "他有一个哥哥，还有一个妹妹。",
+        "example_pinyin": "/Tā yǒu yī gè gēge, hái yǒu yī gè mèimei/",
+        "example_meaning": "Cậu ấy có một anh trai, còn có một em gái nữa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 133,
+    "word": "还是",
+    "pinyin": "/hái shì/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Vẫn; còn; vẫn còn",
+        "example": "你想喝茶还是咖啡？",
+        "example_pinyin": "/Nǐ xiǎng hē chá háishì kāfēi?/",
+        "example_meaning": "Bạn muốn uống trà hay cà phê?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 134,
+    "word": "还有",
+    "pinyin": "/hái yǒu/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Vẫn; còn; vẫn còn",
+        "example": "我家里还有两只猫。",
+        "example_pinyin": "/Wǒ jiālǐ hái yǒu liǎng zhī māo/",
+        "example_meaning": "Nhà tôi còn có hai con mèo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 135,
+    "word": "孩子",
+    "pinyin": "/hái zi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Con; bọn trẻ; trẻ em",
+        "example": "孩子们在公园玩儿。",
+        "example_pinyin": "/Háizimen zài gōngyuán wánr/",
+        "example_meaning": "Mấy đứa trẻ đang chơi trong công viên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 136,
+    "word": "汉语",
+    "pinyin": "/Hàn yǔ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tiếng hán; hán ngữ",
+        "example": "他的汉语说得很好。",
+        "example_pinyin": "/Tā de Hànyǔ shuō de hěn hăo/",
+        "example_meaning": "Anh ấy nói tiếng Trung rất giỏi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 137,
+    "word": "汉字",
+    "pinyin": "/Hàn zì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Chữ hán",
+        "example": "我会写汉字。",
+        "example_pinyin": "/Wǒ huì xiě Hànzì/",
+        "example_meaning": "Tôi biết viết chữ Hán.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 138,
+    "word": "好",
+    "pinyin": "/hǎo/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Tốt; hay; ổn",
+        "example": "你身体好吗？",
+        "example_pinyin": "/Nǐ shēntǐ hǎo ma/",
+        "example_meaning": "Bạn có khỏe không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 139,
+    "word": "好吃",
+    "pinyin": "/hǎo chī/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Ngon; ngon miệng",
+        "example": "这家餐厅的菜非常好吃。",
+        "example_pinyin": "/Zhè jiā cāntīng de cài fēicháng hǎochī/",
+        "example_meaning": "Món ăn của nhà hàng này rất ngon.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 140,
+    "word": "好看",
+    "pinyin": "/hǎo kàn/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Đẹp; hay; thú vị",
+        "example": "这本书很好看，我喜欢。",
+        "example_pinyin": "/Zhè běn shū hěn hǎokàn, wǒ xǐhuān/",
+        "example_meaning": "Cuốn sách này rất hay, tôi thích.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 141,
+    "word": "好听",
+    "pinyin": "/hǎotīng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Hay; dễ nghe; êm tai (âm thanh)",
+        "example": "这首歌很好听。",
+        "example_pinyin": "/Zhè shǒu gē hěn hǎotīng/",
+        "example_meaning": "Bài hát này rất hay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 142,
+    "word": "好玩儿",
+    "pinyin": "/hǎowánr/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Hay; thú vị; thích thú",
+        "example": "这个游戏很好玩儿。",
+        "example_pinyin": "/Zhège yóuxì hěn hǎowánr/",
+        "example_meaning": "Trò chơi này rất vui.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 143,
+    "word": "号",
+    "pinyin": "/hào/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Số; số thứ tự",
+        "example": "你的房间号是多少？",
+        "example_pinyin": "/Nǐ de fángjiān hào shì duōshǎo/",
+        "example_meaning": "Số phòng của bạn là bao nhiêu?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 144,
+    "word": "喝",
+    "pinyin": "/hē/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Uống",
+        "example": "我每天早上都喝咖啡。",
+        "example_pinyin": "/Wǒ měitiān zǎoshang dōu hē kāfēi/",
+        "example_meaning": "Mỗi sáng tôi đều uống cà phê.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 145,
+    "word": "和",
+    "pinyin": "/hé/",
+    "meanings": [
+      {
+        "pos": "Liên từ",
+        "meaning": "Và; với",
+        "example": "我买了一本书和一件衣服。",
+        "example_pinyin": "/Wǒ mǎile yī běn shū hé yī jiàn yīfú/",
+        "example_meaning": "Tôi đã mua 1 cuốn sách và 1 bộ quần áo.",
+        "is_approved": true
+      },
+      {
+        "pos": "Giới từ",
+        "meaning": "Với; cùng",
+        "example": "我和他一起去公园散步。",
+        "example_pinyin": "/Wǒ hé tā yīqǐ qù gōngyuán sànbù/",
+        "example_meaning": "Tôi đi dạo với cậu ấy trong công viên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 146,
+    "word": "很",
+    "pinyin": "/hěn/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Rất, nhiều",
+        "example": "今天的课文很长， 生词很多。",
+        "example_pinyin": "/Jīntiān de kèwén hěn cháng, shēngcí hěnduō/",
+        "example_meaning": "Hôm nay bài khoá rất dài, nên từ mới rất nhiều.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 147,
+    "word": "后 | 后边",
+    "pinyin": "/hòu/ | /hòubian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Sau; phía sau",
+        "example": "书店在学校的后边。",
+        "example_pinyin": "/Shūdiàn zài xuéxiào de hòubian/",
+        "example_meaning": "Hiệu sách ở phía sau trường học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 148,
+    "word": "",
+    "pinyin": "",
+    "meanings": []
+  },
+  {
+    "stt": 149,
+    "word": "后天",
+    "pinyin": "/hòutiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ngày hôm sau",
+        "example": "我们后天去北京。",
+        "example_pinyin": "/Wǒmen hòutiān qù Běijīng/",
+        "example_meaning": "Chúng tôi sẽ đi Bắc Kinh vào ngày kia.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 150,
+    "word": "花",
+    "pinyin": "/huā/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Hoa; bông hoa",
+        "example": "花园里有很多花。",
+        "example_pinyin": "/Huāyuán lǐ yǒu hěn duō huā/",
+        "example_meaning": "Trong vườn có rất nhiều hoa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 151,
+    "word": "话",
+    "pinyin": "/huà/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Lời nói; ngôn từ",
+        "example": "她的话让我很高兴。",
+        "example_pinyin": "/Tā de huà ràng wǒ hěn gāoxìng/",
+        "example_meaning": "Lời của cô ấy làm tôi rất vui.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 152,
+    "word": "坏",
+    "pinyin": "/huài/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Hư; hư hỏng; xấu",
+        "example": "我的手机坏了，不能用。",
+        "example_pinyin": "/Wǒ de shǒujī huài le, bù néng yòng/",
+        "example_meaning": "Điện thoại của tôi bị hỏng, không thể dùng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 153,
+    "word": "还",
+    "pinyin": "/huán/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Trả lại",
+        "example": "她明天把书还给图书馆。",
+        "example_pinyin": "/Tā míngtiān bǎ shū huán gěi túshū guǎn/",
+        "example_meaning": "Ngày mai cô ấy sẽ đem sách trả lại cho thư viện",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 154,
+    "word": "回",
+    "pinyin": "/huí/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Quay lại; quay về",
+        "example": "我每天六点回家。",
+        "example_pinyin": "/Wǒ měitiān liù diǎn huí jiā/",
+        "example_meaning": "Tôi về nhà lúc 6 giờ mỗi ngày.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 155,
+    "word": "回答",
+    "pinyin": "/huídá/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Trả lời",
+        "example": "请回答我的问题。",
+        "example_pinyin": "/Qǐng huídá wǒ de wèntí/",
+        "example_meaning": "Hãy trả lời câu hỏi của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 156,
+    "word": "回到",
+    "pinyin": "/huídào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Về đến; trở về",
+        "example": "他回到家了。",
+        "example_pinyin": "/Tā huídào jiā le/",
+        "example_meaning": "Anh ấy đã về đến nhà rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 157,
+    "word": "回家",
+    "pinyin": "/huí jiā/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Về nhà; đến nhà",
+        "example": "朋友们都回家了。",
+        "example_pinyin": "/Péngyǒumen dōu huí jiā le/",
+        "example_meaning": "Các bạn tôi đều đã về nhà rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 158,
+    "word": "回来",
+    "pinyin": "/huí lái/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Trở lại",
+        "example": "他晚上七点回来。",
+        "example_pinyin": "/Tā wǎnshàng qī diǎn huí lái/",
+        "example_meaning": "Anh ấy sẽ quay lại lúc 7 giờ tối.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 159,
+    "word": "回去",
+    "pinyin": "/huí qù/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Về; trở lại; đi về",
+        "example": "我们早点回去吧。",
+        "example_pinyin": "/Wǒmen zǎodiǎn huí qù ba/",
+        "example_meaning": "Chúng ta về sớm một chút đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 160,
+    "word": "会",
+    "pinyin": "/huì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Sẽ; có; biết",
+        "example": "你会做中国菜吗？",
+        "example_pinyin": "/Nǐ huì zuò zhōngguó cài ma/",
+        "example_meaning": "Bạn biết nấu món Trung Quốc không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 161,
+    "word": "火车",
+    "pinyin": "/huǒchē/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tàu hỏa; xe lửa",
+        "example": "我坐火车去北京。",
+        "example_pinyin": "/Wǒ zuò huǒchē qù Běijīng/",
+        "example_meaning": "Tôi đi Bắc Kinh bằng tàu hỏa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 162,
+    "word": "机场",
+    "pinyin": "/jīchǎng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Sân bay",
+        "example": "他去机场接朋友。",
+        "example_pinyin": "/Tā qù jīchǎng jiē péngyǒu/",
+        "example_meaning": "Anh ấy đến sân bay đón bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 163,
+    "word": "机票",
+    "pinyin": "/jīpiào/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Vé máy bay",
+        "example": "你买机票了吗？",
+        "example_pinyin": "/Nǐ mǎi jīpiào le ma/",
+        "example_meaning": "Bạn đã mua vé máy bay chưa?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 164,
+    "word": "鸡蛋",
+    "pinyin": "/jīdàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trứng gà",
+        "example": "我买了一些鸡蛋。",
+        "example_pinyin": "/Wǒ mǎi le yīxiē jīdàn/",
+        "example_meaning": "Tôi đã mua một vài quả trứng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 165,
+    "word": "几",
+    "pinyin": "/jǐ/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Mấy; bao nhiêu",
+        "example": "你有几个兄弟姐妹？",
+        "example_pinyin": "/Nǐ yǒu jǐ gè xiōngdì jiěmèi/",
+        "example_meaning": "Bạn có mấy anh chị em?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 166,
+    "word": "记",
+    "pinyin": "/jì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nhớ",
+        "example": "我记不住这个汉字。",
+        "example_pinyin": "/Wǒ jì bù zhù zhège hànzì/",
+        "example_meaning": "Tôi không nhớ được chữ Hán này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 167,
+    "word": "记得",
+    "pinyin": "/jìde/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ghi nhớ",
+        "example": "你还记得他的生日吗？",
+        "example_pinyin": "/Nǐ hái jìdé tā de shēngrì ma/",
+        "example_meaning": "Bạn còn nhớ sinh nhật của anh ấy không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 168,
+    "word": "记住",
+    "pinyin": "/jìzhù/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nhớ; ghi nhớ",
+        "example": "请记住这个电话号码。",
+        "example_pinyin": "/Qǐng jìzhù zhège diànhuà hàomǎ/",
+        "example_meaning": "Hãy nhớ số điện thoại này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 169,
+    "word": "家",
+    "pinyin": "/jiā/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nhà",
+        "example": "我家在上海。",
+        "example_pinyin": "/Wǒ jiā zài Shànghǎi/",
+        "example_meaning": "Nhà tôi ở Thượng Hải.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 170,
+    "word": "家里",
+    "pinyin": "/jiā lǐ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trong nhà",
+        "example": "我家里有很多书。",
+        "example_pinyin": "/Wǒ jiālǐ yǒu hěn duō shū/",
+        "example_meaning": "Trong nhà tôi có rất nhiều sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 171,
+    "word": "家人",
+    "pinyin": "/jiārén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Người nhà",
+        "example": "我家人都喜欢吃中国菜。",
+        "example_pinyin": "/Wǒ jiārén dōu xǐhuan chī Zhōngguó cài/",
+        "example_meaning": "Cả nhà tôi đều thích ăn đồ ăn Trung Quốc.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 172,
+    "word": "间",
+    "pinyin": "/jiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Giữa, ở giữa",
+        "example": "他们之间的感情很好。",
+        "example_pinyin": "/Tāmen zhījiān de gǎnqíng hěn hǎo/",
+        "example_meaning": "Tình cảm giữa họ rất tốt.",
+        "is_approved": true
+      },
+      {
+        "pos": "Lượng từ",
+        "meaning": "Gian, buồng, phòng",
+        "example": "我家有三间卧室。",
+        "example_pinyin": "/Wǒjiā yǒu sān jiān wòshì/",
+        "example_meaning": "Nhà tôi có 3 phòng ngủ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 173,
+    "word": "见",
+    "pinyin": "/jiàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Gặp",
+        "example": "我在公园见到朋友。",
+        "example_pinyin": "/Wǒ zài gōngyuán jiàn dào péngyǒu/",
+        "example_meaning": "Tôi gặp bạn ở công viên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 174,
+    "word": "见面",
+    "pinyin": "/jiànmiàn/",
+    "meanings": [
+      {
+        "pos": "Động từ ly hợp",
+        "meaning": "Gặp mặt",
+        "example": "我很高兴和你见面。",
+        "example_pinyin": "/Wǒ hěn gāoxìng hé nǐ jiànmiàn/",
+        "example_meaning": "Tôi rất vui khi gặp bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 175,
+    "word": "教",
+    "pinyin": "/jiāo/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Dạy, chỉ dạy",
+        "example": "她教我们英语。",
+        "example_pinyin": "/Tā jiāo wǒmen Yīngyǔ/",
+        "example_meaning": "Cô ấy dạy chúng tôi tiếng Anh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 176,
+    "word": "叫",
+    "pinyin": "/jiào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Gọi, kêu",
+        "example": "妈妈叫我回家。",
+        "example_pinyin": "/Māmā jiào wǒ huí jiā/",
+        "example_meaning": "Mẹ gọi tôi về nhà.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 177,
+    "word": "教学楼",
+    "pinyin": "/jiàoxuélóu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tòa nhà giảng đường",
+        "example": "教学楼在图书馆东边。",
+        "example_pinyin": "/Jiàoxué lóu zài túshū guǎn dōngbian/",
+        "example_meaning": "Tòa nhà giảng dạy nằm ở phía đông của thư viện.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 178,
+    "word": "姐姐",
+    "pinyin": "/jiějie/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Chị gái",
+        "example": "她是我的姐姐。",
+        "example_pinyin": "/Tā shì wǒ de jiějie/",
+        "example_meaning": "Cô ấy là chị gái tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 179,
+    "word": "介绍",
+    "pinyin": "/jièshào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Giới thiệu",
+        "example": "我来介绍一下我的朋友。",
+        "example_pinyin": "/Wǒ lái jièshào yīxià wǒ de péngyou/",
+        "example_meaning": "Tôi giới thiệu chút về bạn của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 180,
+    "word": "今年",
+    "pinyin": "/jīnnián/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Năm nay",
+        "example": "今年是2025年。",
+        "example_pinyin": "/Jīnnián shì 2025 nián/",
+        "example_meaning": "Năm nay là năm 2025.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 181,
+    "word": "今天",
+    "pinyin": "/jīntiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Hôm nay",
+        "example": "今天的天气很好。",
+        "example_pinyin": "/Jīntiān de tiānqì hěn hǎo/",
+        "example_meaning": "Thời tiết hôm nay rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 182,
+    "word": "进",
+    "pinyin": "/jìn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Vào, tiến vào, đi vào",
+        "example": "请进！",
+        "example_pinyin": "/Qǐng jìn/",
+        "example_meaning": "Xin mời vào!",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 183,
+    "word": "进来",
+    "pinyin": "/jìn lái/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi vào (hướng về người nói)",
+        "example": "他刚刚进来了。",
+        "example_pinyin": "/Tā gānggāng jìn lái le/",
+        "example_meaning": "Anh ấy vừa mới vào.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 184,
+    "word": "进去",
+    "pinyin": "/jìn qù/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi vào (hướng xa người nói)",
+        "example": "你先进去，我马上来。",
+        "example_pinyin": "/Nǐ xiān jìn qù, wǒ mǎshàng lái/",
+        "example_meaning": "Bạn vào trước đi, tôi đến ngay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 185,
+    "word": "九",
+    "pinyin": "/jiǔ/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số chín",
+        "example": "这个班有九个学生。",
+        "example_pinyin": "/Zhège bān yǒu jiǔ gè xuéshēng/",
+        "example_meaning": "Lớp này có chín học sinh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 186,
+    "word": "就",
+    "pinyin": "/jiù/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Thì, liền, ngay lập tức",
+        "example": "他下班后就回家了。",
+        "example_pinyin": "/Tā xiàbān hòu jiù huíjiā le/",
+        "example_meaning": "Anh ấy tan làm liền về nhà.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 187,
+    "word": "觉得",
+    "pinyin": "/juéde/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Cảm thấy, cho rằng",
+        "example": "我觉得这本书很好看。",
+        "example_pinyin": "/Wǒ juéde zhè běn shū hěn hǎokàn/",
+        "example_meaning": "Tôi cảm thấy cuốn sách này rất hay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 188,
+    "word": "开",
+    "pinyin": "/kāi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Mở, bật, lái",
+        "example": "他正在学开车。",
+        "example_pinyin": "/Tā zhèngzài xué kāichē/",
+        "example_meaning": "Anh ấy đang học lái xe.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 189,
+    "word": "开车",
+    "pinyin": "/kāi chē/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Lái xe",
+        "example": "",
+        "example_pinyin": "",
+        "example_meaning": "",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 190,
+    "word": "开会",
+    "pinyin": "/kāi huì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Họp, tổ chức cuộc họp",
+        "example": "我下午三点要开会。",
+        "example_pinyin": "/Wǒ xiàwǔ sān diǎn yào kāi huì/",
+        "example_meaning": "Tôi có cuộc họp lúc 3 giờ chiều.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 191,
+    "word": "开玩笑",
+    "pinyin": "/kāi wánxiào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đùa, nói đùa",
+        "example": "别生气，我只是开玩笑。",
+        "example_pinyin": "/Bié shēngqì, wǒ zhǐshì kāi wánxiào/",
+        "example_meaning": "Đừng giận mà, tôi chỉ đùa thôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 192,
+    "word": "看",
+    "pinyin": "/kàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nhìn, xem, đọc",
+        "example": "这本书我看完了。",
+        "example_pinyin": "/Zhè běn shū wǒ kànwán le/",
+        "example_meaning": "Tôi đã đọc xong cuốn sách này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 193,
+    "word": "看病",
+    "pinyin": "/kàn bìng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Khám bệnh",
+        "example": "我今天去医院看病。",
+        "example_pinyin": "/Wǒ jīntiān qù yīyuàn kàn bìng/",
+        "example_meaning": "Hôm nay tôi đi bệnh viện khám bệnh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 194,
+    "word": "看到",
+    "pinyin": "/kàndào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nhìn thấy",
+        "example": "我在街上看到一只小猫。",
+        "example_pinyin": "/Wǒ zài jiē shàng kàndào yī zhī xiǎo māo/",
+        "example_meaning": "Tôi nhìn thấy một con mèo nhỏ trên đường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 195,
+    "word": "看见",
+    "pinyin": "/kànjiàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Thấy, trông thấy",
+        "example": "我看见一只小鸟在树上唱歌。",
+        "example_pinyin": "/Wǒ kànjiàn yī zhī xiǎo niǎo zài shù shàng chànggē/",
+        "example_meaning": "Tôi nhìn thấy một con chim đang hót trên cây.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 196,
+    "word": "考",
+    "pinyin": "/kǎo/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Thi, kiểm tra",
+        "example": "这次考试很难。",
+        "example_pinyin": "/Zhè cì kǎoshì hěn nán/",
+        "example_meaning": "Kỳ thi lần này rất khó.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 197,
+    "word": "考试",
+    "pinyin": "/kǎoshì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Kỳ thi, bài kiểm tra",
+        "example": "",
+        "example_pinyin": "",
+        "example_meaning": "",
+        "is_approved": false
+      }
+    ]
+  },
+  {
+    "stt": 198,
+    "word": "渴",
+    "pinyin": "/kě/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Khát",
+        "example": "我口渴了，想喝水。",
+        "example_pinyin": "/Wǒ kǒu kě le, xiǎng hē shuǐ/",
+        "example_meaning": "Tôi khát nước rồi, muốn uống nước.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 199,
+    "word": "课",
+    "pinyin": "/kè/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tiết học, bài học",
+        "example": "今天的汉语课很有意思。",
+        "example_pinyin": "/Jīntiān de Hànyǔ kè hěn yǒuyìsi/",
+        "example_meaning": "Bài học tiếng Trung hôm nay rất thú vị.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 200,
+    "word": "课本",
+    "pinyin": "/kèběn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Sách giáo khoa",
+        "example": "你带课本了吗？",
+        "example_pinyin": "/Nǐ dài kèběn le ma/",
+        "example_meaning": "Bạn có mang sách giáo khoa không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 201,
+    "word": "课文",
+    "pinyin": "/kèwén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bài khóa (trong sách)",
+        "example": "请大家朗读课文。",
+        "example_pinyin": "/Qǐng dàjiā lǎngdú kèwén/",
+        "example_meaning": "Mọi người vui lòng đọc to bài khóa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 202,
+    "word": "口",
+    "pinyin": "/kǒu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Miệng, mồm\n\ncửa, cổng",
+        "example": "我用盐水漱口。\n\n出口在左边，不要走错了。",
+        "example_pinyin": "/Wǒ yòng yánshuǐ shù kǒu/\n\n/Chūkǒu zài zuǒbiān, bùyào zǒu cuò le/",
+        "example_meaning": "Tôi dùng nước muối để súc miệng.\n\nCửa ra ở bên trái, đừng đi sai nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 203,
+    "word": "快",
+    "pinyin": "/kuài/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Nhanh, mau",
+        "example": "火车快要来了。",
+        "example_pinyin": "/Huǒchē kuài yào lái le/",
+        "example_meaning": "Tàu hỏa sắp đến rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 204,
+    "word": "块",
+    "pinyin": "/kuài/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Viên, thỏi, miếng",
+        "example": "我喜欢吃糖块儿。",
+        "example_pinyin": "/Wǒ xǐhuan chī táng kuàir/",
+        "example_meaning": "Tôi thích ăn kẹo viên.",
+        "is_approved": true
+      },
+      {
+        "pos": "Lượng từ",
+        "meaning": "Khối, miếng, chiếc\n\ntờ, đồng (tiền)",
+        "example": "他买了三块手表。\n\n这本书卖五块钱。",
+        "example_pinyin": "/Tā mǎi le sān kuài shǒubiǎo/\n\n/Zhè běn shū mài wǔ kuài qián/",
+        "example_meaning": "Anh ấy đã mua ba chiếc đồng hồ.\n\nQuyển sách này bán năm đồng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 205,
+    "word": "来",
+    "pinyin": "/lái/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đến, tới",
+        "example": "你什么时候来我家?",
+        "example_pinyin": "/Nǐ shénme shíhòu lái wǒ jiā/",
+        "example_meaning": "Khi nào bạn đến nhà tôi?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 206,
+    "word": "来到",
+    "pinyin": "/láidào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đến, đi đến",
+        "example": "他来到公司了。",
+        "example_pinyin": "/Tā láidào gōngsī le/",
+        "example_meaning": "Anh ấy đến công ty rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 207,
+    "word": "老",
+    "pinyin": "/lǎo/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Già, cũ",
+        "example": "这辆车太老了。",
+        "example_pinyin": "/Zhè liàng chē tài lǎo le/",
+        "example_meaning": "Chiếc xe này quá cũ rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 208,
+    "word": "老人",
+    "pinyin": "/lǎorén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Người già",
+        "example": "老人喜欢在公园散步。",
+        "example_pinyin": "/Lǎorén xǐhuan zài gōngyuán sànbù/",
+        "example_meaning": "Các cụ già thích đi dạo trong công viên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 209,
+    "word": "老师",
+    "pinyin": "/lǎoshī/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Giáo viên, thầy cô",
+        "example": "她是我们的汉语老师。",
+        "example_pinyin": "/Tā shì wǒmen de Hànyǔ lǎoshī/",
+        "example_meaning": "Cô ấy là giáo viên tiếng Trung của chúng tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 210,
+    "word": "了",
+    "pinyin": "/le/",
+    "meanings": [
+      {
+        "pos": "Trợ từ",
+        "meaning": "Rồi (biểu thị hành động đã hoàn thành)",
+        "example": "我吃了一个苹果。",
+        "example_pinyin": "/Wǒ chī le yīgè píngguǒ/",
+        "example_meaning": "Tôi đã ăn một quả táo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 211,
+    "word": "累",
+    "pinyin": "/lèi/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Mệt, mệt mỏi",
+        "example": "今天工作很累。",
+        "example_pinyin": "/Jīntiān gōngzuò hěn lèi/",
+        "example_meaning": "Hôm nay công việc rất mệt.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 212,
+    "word": "冷",
+    "pinyin": "/lěng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Lạnh",
+        "example": "外面很冷，多穿点衣服。",
+        "example_pinyin": "/Wàimiàn hěn lěng, duō chuān diǎn yīfu/",
+        "example_meaning": "Bên ngoài rất lạnh, mặc thêm áo vào.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 213,
+    "word": "里",
+    "pinyin": "/lǐ/",
+    "meanings": [
+      {
+        "pos": "Giới từ",
+        "meaning": "Trong, bên trong",
+        "example": "房间里有很多书。",
+        "example_pinyin": "/Fángjiān lǐ yǒu hěn duō shū/",
+        "example_meaning": "Trong phòng có rất nhiều sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 214,
+    "word": "里边",
+    "pinyin": "/lǐbian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bên trong",
+        "example": "你在里边等我。",
+        "example_pinyin": "/Nǐ zài lǐbiān děng wǒ/",
+        "example_meaning": "Bạn đợi tôi ở bên trong nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 215,
+    "word": "两",
+    "pinyin": "/liǎng/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Hai (chỉ số lượng)",
+        "example": "我有两个姐姐。",
+        "example_pinyin": "/Wǒ yǒu liǎng gè jiějie/",
+        "example_meaning": "Tôi có hai chị gái.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 216,
+    "word": "零",
+    "pinyin": "/líng/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số không",
+        "example": "这个数字是零。",
+        "example_pinyin": "/Zhège shùzì shì líng/",
+        "example_meaning": "Số này là số không.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 217,
+    "word": "六",
+    "pinyin": "/liù/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số sáu",
+        "example": "我家有六口人。",
+        "example_pinyin": "/Wǒ jiā yǒu liù kǒu rén/",
+        "example_meaning": "Nhà tôi có sáu người.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 218,
+    "word": "楼",
+    "pinyin": "/lóu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tòa nhà, lầu",
+        "example": "他们住在五楼。",
+        "example_pinyin": "/Tāmen zhù zài wǔ lóu/",
+        "example_meaning": "Họ sống ở tầng năm.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 219,
+    "word": "楼上",
+    "pinyin": "/lóu shàng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tầng trên",
+        "example": "我哥哥在楼上睡觉。",
+        "example_pinyin": "/Wǒ gēge zài lóu shàng shuìjiào/",
+        "example_meaning": "Anh trai tôi đang ngủ trên tầng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 220,
+    "word": "楼下",
+    "pinyin": "/lóu xià/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tầng dưới",
+        "example": "我在楼下等你。",
+        "example_pinyin": "/Wǒ zài lóu xià děng nǐ/",
+        "example_meaning": "Tôi đang đợi bạn ở tầng dưới.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 221,
+    "word": "路",
+    "pinyin": "/lù/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Con đường, đường phố",
+        "example": "这条路很长。",
+        "example_pinyin": "/Zhè tiáo lù hěn cháng/",
+        "example_meaning": "Con đường này rất dài.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 222,
+    "word": "路口",
+    "pinyin": "/lùkǒu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Giao lộ, ngã tư",
+        "example": "这个路口有很多车。",
+        "example_pinyin": "/Zhège lùkǒu yǒu hěn duō chē/",
+        "example_meaning": "Ngã tư này có rất nhiều xe.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 223,
+    "word": "路上",
+    "pinyin": "/lùshàng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trên đường",
+        "example": "我在路上，看见了你。",
+        "example_pinyin": "/Wǒ zài lùshàng, kànjiàn le nǐ/",
+        "example_meaning": "Tôi trên đường, nhìn thấy bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 224,
+    "word": "妈妈 | 妈",
+    "pinyin": "/māma | mā/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Mẹ, má",
+        "example": "我妈妈做饭很好吃。",
+        "example_pinyin": "/Wǒ māma zuò fàn hěn hǎo chī/",
+        "example_meaning": "Mẹ tôi nấu ăn rất ngon.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 225,
+    "word": "马路",
+    "pinyin": "/mǎlù/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đường cái, đường lớn",
+        "example": "这个马路很长。",
+        "example_pinyin": "/Zhège mǎlù hěn cháng/",
+        "example_meaning": "Con đường này rất dài.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 226,
+    "word": "马上",
+    "pinyin": "/mǎshàng/",
+    "meanings": [
+      {
+        "pos": "Trạng từ",
+        "meaning": "Ngay lập tức",
+        "example": "我马上回来。",
+        "example_pinyin": "/Wǒ mǎshàng huílái/",
+        "example_meaning": "Tôi sẽ quay lại ngay lập tức.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 227,
+    "word": "吗",
+    "pinyin": "/ma/",
+    "meanings": [
+      {
+        "pos": "Trợ từ",
+        "meaning": "Trợ từ nghi vấn",
+        "example": "你喜欢中国菜吗？",
+        "example_pinyin": "/Nǐ xǐhuan Zhōngguó cài ma/",
+        "example_meaning": "Bạn có thích món ăn Trung Quốc không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 228,
+    "word": "买",
+    "pinyin": "/mǎi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Mua",
+        "example": "我想买一件衣服。",
+        "example_pinyin": "/Wǒ xiǎng mǎi yí jiàn yīfu/",
+        "example_meaning": "Tôi muốn mua một cái áo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 229,
+    "word": "慢",
+    "pinyin": "/màn/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Chậm",
+        "example": "请说慢一点儿。",
+        "example_pinyin": "/Qǐng shuō màn yìdiǎnr/",
+        "example_meaning": "Xin hãy nói chậm một chút.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 230,
+    "word": "忙",
+    "pinyin": "/máng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Bận rộn",
+        "example": "他最近很忙。",
+        "example_pinyin": "/Tā zuìjìn hěn máng/",
+        "example_meaning": "Dạo này anh ấy rất bận.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 231,
+    "word": "毛",
+    "pinyin": "/máo/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Lông, tóc",
+        "example": "小狗的毛很软。",
+        "example_pinyin": "/Xiǎogǒu de máo hěn ruǎn/",
+        "example_meaning": "Lông của chú chó con rất mềm.",
+        "is_approved": true
+      },
+      {
+        "pos": "Lượng từ",
+        "meaning": "Hào (đơn vị tiền tệ trung quốc)",
+        "example": "我口袋里有一毛钱。",
+        "example_pinyin": "/Wǒ kǒudài lǐ yǒuyī máo qián/",
+        "example_meaning": "Trong túi tôi có một hào.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 232,
+    "word": "没",
+    "pinyin": "/méi/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Không có, chưa",
+        "example": "我今天没时间。",
+        "example_pinyin": "/Wǒ jīntiān méi shíjiān/",
+        "example_meaning": "Hôm nay tôi không có thời gian (không rảnh).",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 233,
+    "word": "没关系",
+    "pinyin": "/méi guānxi/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Không sao đâu",
+        "example": "没关系，我没生气。",
+        "example_pinyin": "/Méiguānxi, wǒ méi shēngqì/",
+        "example_meaning": "Không sao, tôi không giận đâu.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 234,
+    "word": "没什么",
+    "pinyin": "/méi shénme/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Không có gì",
+        "example": "没什么好担心的。",
+        "example_pinyin": "/Méi shénme hǎo dānxīn de/",
+        "example_meaning": "Không có gì đáng lo lắng cả.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 235,
+    "word": "没事儿",
+    "pinyin": "/méi shìr/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Không có chuyện gì, không sao đâu",
+        "example": "没事儿，我帮你。",
+        "example_pinyin": "/Méi shìr, wǒ bāng nǐ/",
+        "example_meaning": "Không sao đâu, tôi giúp bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 236,
+    "word": "没有",
+    "pinyin": "/méi yǒu/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Không có",
+        "example": "我没有钱。",
+        "example_pinyin": "/Wǒ méiyǒu qián/",
+        "example_meaning": "Tôi không có tiền.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 237,
+    "word": "妹妹 | 妹",
+    "pinyin": "/mèimei | mèi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Em gái",
+        "example": "我有一个妹妹。",
+        "example_pinyin": "/Wǒ yǒu yīgè mèimei/",
+        "example_meaning": "Tôi có một người em gái.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 238,
+    "word": "门",
+    "pinyin": "/mén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cửa",
+        "example": "我把门关上了。",
+        "example_pinyin": "/Wǒ bǎ mén guānshàng le/",
+        "example_meaning": "Tôi đã đóng cửa lại.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 239,
+    "word": "门口",
+    "pinyin": "/ménkǒu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cổng, cửa ra vào",
+        "example": "我在门口等你。",
+        "example_pinyin": "/Wǒ zài ménkǒu děng nǐ/",
+        "example_meaning": "Tôi đang đợi bạn ở cửa ra vào.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 240,
+    "word": "门票",
+    "pinyin": "/ménpiào/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Vé vào cửa",
+        "example": "这张门票多少钱？",
+        "example_pinyin": "/Zhè zhāng ménpiào duōshǎo qián/",
+        "example_meaning": "",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 241,
+    "word": "们（朋友们）",
+    "pinyin": "/men (péngyǒumen)/",
+    "meanings": [
+      {
+        "pos": "Hậu tố",
+        "meaning": "Dùng để chỉ số nhiều (các bạn, các anh...)",
+        "example": "我们是好朋友。",
+        "example_pinyin": "/Wǒmen shì hǎo péngyǒu/",
+        "example_meaning": "Chúng tôi là bạn tốt.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 242,
+    "word": "米饭",
+    "pinyin": "/mǐfàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cơm",
+        "example": "我每天都吃米饭。",
+        "example_pinyin": "/Wǒ měitiān dōu chī mǐfàn/",
+        "example_meaning": "Ngày nào tôi cũng ăn cơm.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 243,
+    "word": "面包",
+    "pinyin": "/miànbāo/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bánh mì",
+        "example": "你想吃面包吗？",
+        "example_pinyin": "/Nǐ xiǎng chī miànbāo ma/",
+        "example_meaning": "Bạn có muốn ăn bánh mì không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 244,
+    "word": "面条儿",
+    "pinyin": "/miàntiáor/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Mì sợi",
+        "example": "这碗面条儿很好吃。",
+        "example_pinyin": "/Zhè wǎn miàntiáor hěn hǎochī/",
+        "example_meaning": "Tô mì này rất ngon.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 245,
+    "word": "名字",
+    "pinyin": "/míngzi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tên gọi",
+        "example": "你的名字是什么？",
+        "example_pinyin": "/Nǐ de míngzi shì shénme/",
+        "example_meaning": "Tên của bạn là gì?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 246,
+    "word": "明白",
+    "pinyin": "/míngbai/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Hiểu rõ",
+        "example": "我明白你的意思。",
+        "example_pinyin": "/Wǒ míngbai nǐ de yìsi/",
+        "example_meaning": "Tôi hiểu ý của bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 247,
+    "word": "明年",
+    "pinyin": "/míngnián/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Năm sau",
+        "example": "明年我想去中国。",
+        "example_pinyin": "/Míngnián wǒ xiǎng qù Zhōngguó/",
+        "example_meaning": "Năm sau tôi muốn đi Trung Quốc.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 248,
+    "word": "明天",
+    "pinyin": "/míngtiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ngày mai",
+        "example": "明天是星期几？",
+        "example_pinyin": "/Míngtiān shì xīngqī jǐ/",
+        "example_meaning": "Ngày mai là thứ mấy?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 249,
+    "word": "拿",
+    "pinyin": "/ná/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Cầm, nắm, lấy",
+        "example": "请帮我拿一下。",
+        "example_pinyin": "/Qǐng bāng wǒ ná yíxià/",
+        "example_meaning": "Làm ơn giúp tôi cầm cái này một chút.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 250,
+    "word": "哪",
+    "pinyin": "/nǎ/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Nào",
+        "example": "你喜欢哪本书？",
+        "example_pinyin": "/Nǐ xǐhuān nǎ běn shū/",
+        "example_meaning": "Bạn thích quyển sách nào?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 251,
+    "word": "哪里",
+    "pinyin": "/nǎ lǐ/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Ở đâu",
+        "example": "你住在哪里？",
+        "example_pinyin": "/Nǐ zhù zài nǎlǐ/",
+        "example_meaning": "Bạn sống ở đâu?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 252,
+    "word": "哪儿",
+    "pinyin": "/nǎr/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Đâu, chỗ nào (phương ngữ bắc kinh)",
+        "example": "那部电影是在哪儿拍的？",
+        "example_pinyin": "/Nà bù diànyǐng shì zài nǎr pāi de/",
+        "example_meaning": "Bộ phim đó được quay ở đâu vậy?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 253,
+    "word": "哪些",
+    "pinyin": "/nǎxiē/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Những cái nào, người nào",
+        "example": "你见过哪些名人？",
+        "example_pinyin": "/Nǐ jiànguò nǎxiē míngrén/",
+        "example_meaning": "Bạn đã gặp những người nổi tiếng nào?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 254,
+    "word": "那",
+    "pinyin": "/nà/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Đó, kia",
+        "example": "那是我的书。",
+        "example_pinyin": "/Nà shì wǒ de shū/",
+        "example_meaning": "Đó là sách của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 255,
+    "word": "那边",
+    "pinyin": "/nàbiān/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Bên đó",
+        "example": "你看到那边的猫了吗？",
+        "example_pinyin": "/Nǐ kàn dào nà bian de māo le ma/",
+        "example_meaning": "Bạn có thấy con mèo bên đó không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 256,
+    "word": "那里",
+    "pinyin": "/nà lǐ/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Ở đó, chỗ đó, nơi đó",
+        "example": "我刚从那里回来。",
+        "example_pinyin": "/Wǒ gāng cóng nàlǐ húilái/",
+        "example_meaning": "Tôi vừa từ chỗ đó trở về.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 257,
+    "word": "那儿",
+    "pinyin": "/nàr/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Ở đó (phương ngữ bắc kinh)",
+        "example": "你要去那儿做什么？",
+        "example_pinyin": "/Nǐ yào qù nàr zuò shénme/",
+        "example_meaning": "Bạn muốn đến đó làm gì?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 258,
+    "word": "那些",
+    "pinyin": "/nàxiē/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Những cái đó",
+        "example": "那些书都送给你吧。",
+        "example_pinyin": "/Nàxiē shū dōu sòng gěi nǐ ba/",
+        "example_meaning": "Những cuốn sách này đều cho cậu.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 259,
+    "word": "奶奶 | 奶",
+    "pinyin": "/nǎinai | nǎi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bà nội",
+        "example": "我奶奶今年八十岁。",
+        "example_pinyin": "/Wǒ nǎinai jīnnián bāshí suì/",
+        "example_meaning": "Bà nội tôi năm nay 80 tuổi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 260,
+    "word": "男",
+    "pinyin": "/nán/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Nam, con trai",
+        "example": "我们班有很多男同学。",
+        "example_pinyin": "/Wǒmen bān yǒu hěnduō nán tóngxué/",
+        "example_meaning": "Lớp chúng tôi có rất nhiều bạn học sinh nam.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 261,
+    "word": "男孩儿",
+    "pinyin": "/nánháir/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bé trai",
+        "example": "男孩儿在公园里踢足球。",
+        "example_pinyin": "/Nánháir zài gōngyuán lǐ tī zúqiú/",
+        "example_meaning": "Cậu bé đang đá bóng trong công viên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 262,
+    "word": "男朋友",
+    "pinyin": "/nánpéngyou/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bạn trai",
+        "example": "她的男朋友很帅。",
+        "example_pinyin": "/Tā de nánpéngyou hěn shuài/",
+        "example_meaning": "Bạn trai của cô ấy rất đẹp trai.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 263,
+    "word": "男人",
+    "pinyin": "/nánrén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đàn ông",
+        "example": "那个男人在看手机。",
+        "example_pinyin": "/Nàgè nánrén zài kàn shǒujī/",
+        "example_meaning": "Người đàn ông đó đang xem điện thoại.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 264,
+    "word": "男生",
+    "pinyin": "/nánshēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nam sinh, học sinh nam",
+        "example": "这个班的男生比女生多。",
+        "example_pinyin": "/Zhège bān de nánshēng bǐ nǚshēng duō/",
+        "example_meaning": "Nam sinh trong lớp này nhiều hơn nữ sinh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 266,
+    "word": "南",
+    "pinyin": "/nán/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía nam",
+        "example": "我喜欢南方的美食。",
+        "example_pinyin": "/Wǒ xǐhuan nánfāng de měishí/",
+        "example_meaning": "Tôi thích ẩm thực miền Nam.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 267,
+    "word": "南边",
+    "pinyin": "/nánbiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía nam",
+        "example": "我家在学校南边。",
+        "example_pinyin": "/Wǒ jiā zài xuéxiào nánbiān/",
+        "example_meaning": "Nhà tôi ở phía nam của trường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 268,
+    "word": "难",
+    "pinyin": "/nán/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Khó",
+        "example": "这个问题很难回答。",
+        "example_pinyin": "/Zhège wèntí hěn nán huídá/",
+        "example_meaning": "Câu hỏi này rất khó trả lời.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 269,
+    "word": "呢",
+    "pinyin": "/ne/",
+    "meanings": [
+      {
+        "pos": "Trợ từ",
+        "meaning": "Thế, nhỉ, ư",
+        "example": "我是学生，你呢？",
+        "example_pinyin": "/Wǒ shì xuéshēng, nǐ ne/",
+        "example_meaning": "Tớ là học sinh, còn cậu thì sao?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 270,
+    "word": "能",
+    "pinyin": "/néng/",
+    "meanings": [
+      {
+        "pos": "Động từ năng nguyện",
+        "meaning": "Có thể",
+        "example": "咱们一定能完成任务。",
+        "example_pinyin": "/Zánmen yídìng néng wánchéng rènwù/",
+        "example_meaning": "Chúng ta nhất định có thể hoàn thành nhiệm vụ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 271,
+    "word": "你",
+    "pinyin": "/nǐ/",
+    "meanings": [
+      {
+        "pos": "Đại từ nhân xưng",
+        "meaning": "Bạn, anh, chị",
+        "example": "你喜欢吃什么？",
+        "example_pinyin": "/Nǐ xǐhuan chī shénme/",
+        "example_meaning": "Bạn thích ăn gì?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 272,
+    "word": "你们",
+    "pinyin": "/nǐmen/",
+    "meanings": [
+      {
+        "pos": "Đại từ nhân xưng (số nhiều)",
+        "meaning": "Các bạn, các anh, các chị",
+        "example": "你们要去哪儿？",
+        "example_pinyin": "/Nǐmen yào qù nǎr/",
+        "example_meaning": "Các bạn muốn đi đâu?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 273,
+    "word": "年级",
+    "pinyin": "/niánjí/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Niên khóa, cấp lớp",
+        "example": "你是几年级的学生？",
+        "example_pinyin": "/Nǐ shì jǐ niánjí de xuéshēng/",
+        "example_meaning": "Bạn là học sinh lớp mấy?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 274,
+    "word": "您",
+    "pinyin": "/nín/",
+    "meanings": [
+      {
+        "pos": "Đại từ nhân xưng",
+        "meaning": "Ngài, ông, bà",
+        "example": "您喜欢喝茶还是喝咖啡？",
+        "example_pinyin": "/Nín xǐhuan hē chá háishì hē kāfēi/",
+        "example_meaning": "Ngài thích uống trà hay cà phê?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 275,
+    "word": "牛奶",
+    "pinyin": "/niúnǎi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Sữa bò",
+        "example": "我喜欢喝牛奶。",
+        "example_pinyin": "/Wǒ xǐhuan hē niúnǎi/",
+        "example_meaning": "Tôi thích uống sữa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 276,
+    "word": "女",
+    "pinyin": "/nǚ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nữ, con gái",
+        "example": "我的女儿非常可爱。",
+        "example_pinyin": "/Wǒ de nǚ ér fēicháng kě ài/",
+        "example_meaning": "Con gái tôi rất dễ thương.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 277,
+    "word": "女儿",
+    "pinyin": "/nǚ’ér/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Con gái",
+        "example": "",
+        "example_pinyin": "",
+        "example_meaning": "",
+        "is_approved": false
+      }
+    ]
+  },
+  {
+    "stt": 278,
+    "word": "女孩儿",
+    "pinyin": "/nǚháir/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bé gái",
+        "example": "你家女孩儿几岁了？",
+        "example_pinyin": "/Nǐ jiā nǚháir jǐ suì le/",
+        "example_meaning": "Con gái nhà bạn mấy tuổi rồi?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 279,
+    "word": "女朋友",
+    "pinyin": "/nǚpéngyou/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bạn gái",
+        "example": "你有女朋友吗？",
+        "example_pinyin": "/Nǐ yǒu nǚ péngyǒu ma/",
+        "example_meaning": "Cậu có bạn gái chưa?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 280,
+    "word": "女人",
+    "pinyin": "/nǚrén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phụ nữ",
+        "example": "女人都喜欢买漂亮的衣服。",
+        "example_pinyin": "/Nǚrén dōu xǐhuān mǎi piàoliang de yīfu/",
+        "example_meaning": "Phụ nữ đều thích mua quần áo đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 281,
+    "word": "女生",
+    "pinyin": "/nǚshēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nữ sinh",
+        "example": "这些女生喜欢画画。",
+        "example_pinyin": "/Zhèxiē nǚshēng xǐhuān huà huà/",
+        "example_meaning": "Những nữ sinh này thích vẽ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 282,
+    "word": "旁边",
+    "pinyin": "/pángbiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cạnh, bên cạnh",
+        "example": "厨房在客厅的旁边。",
+        "example_pinyin": "/Chúfáng zài kètīng de pángbiān/",
+        "example_meaning": "Nhà bếp ở bên cạnh phòng khách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 283,
+    "word": "跑",
+    "pinyin": "/pǎo/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Chạy",
+        "example": "他每天早上都跑步。",
+        "example_pinyin": "/Tā měitiān zǎoshang dōu pǎobù/",
+        "example_meaning": "Anh ấy chạy bộ mỗi sáng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 284,
+    "word": "朋友",
+    "pinyin": "/péngyou/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bạn bè",
+        "example": "我有很多朋友。",
+        "example_pinyin": "/Wǒ yǒu hěn duō péngyou/",
+        "example_meaning": "Tôi có rất nhiều bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 285,
+    "word": "漂亮",
+    "pinyin": "/piàoliang/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Đẹp, xinh đẹp",
+        "example": "这件衣服很漂亮。",
+        "example_pinyin": "/Zhè jiàn yīfu hěn piàoliang/",
+        "example_meaning": "Bộ quần áo này rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 286,
+    "word": "七",
+    "pinyin": "/qī/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số bảy",
+        "example": "我有七本书。",
+        "example_pinyin": "/Wǒ yǒu qī běn shū/",
+        "example_meaning": "Tôi có bảy quyển sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 287,
+    "word": "起",
+    "pinyin": "/qǐ/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Dậy, thức dậy, đứng dậy",
+        "example": "今天睡到上午10点才起。",
+        "example_pinyin": "/Jīntiān shuì dào shàngwǔ 10 diǎn cái qǐ/",
+        "example_meaning": "Nay ngủ đến 10 giờ mới dậy.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 288,
+    "word": "起床",
+    "pinyin": "/qǐchuáng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Thức dậy (ra khỏi giường)",
+        "example": "我每天六点起床。",
+        "example_pinyin": "/Wǒ měitiān liù diǎn qǐchuáng/",
+        "example_meaning": "Mỗi ngày tôi thức dậy lúc 6 giờ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 289,
+    "word": "起来",
+    "pinyin": "/qǐlái/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đứng dậy, ngồi dậy, thức dậy",
+        "example": "他站起来了。",
+        "example_pinyin": "/Tā zhàn qǐlái le/",
+        "example_meaning": "Anh ấy đứng dậy rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 290,
+    "word": "汽车",
+    "pinyin": "/qìchē/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Xe hơi, ô tô",
+        "example": "这辆汽车是我爸爸的。",
+        "example_pinyin": "/Zhè liàng qìchē shì wǒ bàba de/",
+        "example_meaning": "Hai chiếc ô tô này là của bố tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 291,
+    "word": "前",
+    "pinyin": "/qián/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trước",
+        "example": "他12号前会回来。",
+        "example_pinyin": "/Tā 12 hào qián huì huílái/",
+        "example_meaning": "Anh ấy sẽ trở lại trước ngày 12.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 292,
+    "word": "前边",
+    "pinyin": "/qiánbiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía trước",
+        "example": "学校就在前边。",
+        "example_pinyin": "/Xuéxiào jiù zài qiánbiān/",
+        "example_meaning": "Trường học ở ngay phía trước.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 293,
+    "word": "前天",
+    "pinyin": "/qiántiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Hôm kia",
+        "example": "我前天去了上海。",
+        "example_pinyin": "/Wǒ qiántiān qù le Shànghǎi/",
+        "example_meaning": "Hôm kia tôi đã đi Thượng Hải.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 294,
+    "word": "钱",
+    "pinyin": "/qián/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tiền",
+        "example": "我没钱。",
+        "example_pinyin": "/Wǒ méi qián/",
+        "example_meaning": "Tôi không có tiền.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 295,
+    "word": "钱包",
+    "pinyin": "/qiánbāo/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ví tiền, bóp tiền",
+        "example": "我的钱包不见了。",
+        "example_pinyin": "/Wǒ de qiánbāo bú jiàn le/",
+        "example_meaning": "Ví tiền của tôi bị mất rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 296,
+    "word": "请",
+    "pinyin": "/qǐng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Mời, xin vui lòng",
+        "example": "请给我一杯水。",
+        "example_pinyin": "/Qǐng gěi wǒ yì bēi shuǐ/",
+        "example_meaning": "Xin hãy cho tôi một cốc nước.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 297,
+    "word": "请假",
+    "pinyin": "/qǐngjià/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Xin nghỉ phép",
+        "example": "老师，今天我想请假。",
+        "example_pinyin": "/Lǎoshī, jīntiān wǒ xiǎng qǐngjià/",
+        "example_meaning": "Thầy ơi, hôm nay em muốn xin nghỉ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 298,
+    "word": "请进",
+    "pinyin": "/qǐng jìn/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Mời vào",
+        "example": "请进，大家都在等你。",
+        "example_pinyin": "/Qǐng jìn, dàjiā dōu zài děng nǐ/",
+        "example_meaning": "Mời vào, mọi người đang chờ bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 299,
+    "word": "请问",
+    "pinyin": "/qǐngwèn/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Xin hỏi",
+        "example": "请问您有空吗？",
+        "example_pinyin": "/Qǐngwèn nín yǒu kòng ma/",
+        "example_meaning": "Xin hỏi anh có rảnh không ạ?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 300,
+    "word": "请坐",
+    "pinyin": "/qǐng zuò/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Mời ngồi",
+        "example": "欢迎光临，请坐。",
+        "example_pinyin": "/Huānyíng guānglín, qǐng zuò/",
+        "example_meaning": "Chào mừng quý khách, mời ngồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 301,
+    "word": "球",
+    "pinyin": "/qiú/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Quả bóng",
+        "example": "他喜欢踢足球。",
+        "example_pinyin": "/Tā xǐhuan tī zúqiú/",
+        "example_meaning": "Anh ấy thích đá bóng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 302,
+    "word": "去",
+    "pinyin": "/qù/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi, rời đi, rời khỏi",
+        "example": "他吃完饭就去了。",
+        "example_pinyin": "/Tā chī wán fàn jiù qù le/",
+        "example_meaning": "Anh ấy ăn xong rồi đi ngay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 303,
+    "word": "去年",
+    "pinyin": "/qùnián/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Năm ngoái",
+        "example": "去年我买了一辆新车。",
+        "example_pinyin": "/Qùnián wǒ mǎi le yī liàng xīnchē/",
+        "example_meaning": "Năm ngoái tôi đã mua một chiếc xe mới.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 304,
+    "word": "热",
+    "pinyin": "/rè/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Nóng",
+        "example": "今天的天气很热。",
+        "example_pinyin": "/Jīntiān de tiānqì hěn rè/",
+        "example_meaning": "Thời tiết của hôm nay rất nóng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 305,
+    "word": "人",
+    "pinyin": "/rén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Người",
+        "example": "这个世界上有很多好人。",
+        "example_pinyin": "/Zhège shìjiè shàng yǒu hěn duō hǎorén/",
+        "example_meaning": "Trên thế giới này có rất nhiều người tốt.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 306,
+    "word": "认识",
+    "pinyin": "/rènshi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Quen biết",
+        "example": "我认识他。",
+        "example_pinyin": "/Wǒ rènshi tā/",
+        "example_meaning": "Tôi quen biết anh ấy.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 307,
+    "word": "认真",
+    "pinyin": "/rènzhēn/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Chăm chỉ, nghiêm túc",
+        "example": "他学习很认真。",
+        "example_pinyin": "/Tā xuéxí hěn rènzhēn/",
+        "example_meaning": "Anh ấy học rất chăm chỉ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 308,
+    "word": "日",
+    "pinyin": "/rì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ngày, mỗi ngày\n\nmặt trời",
+        "example": "他的生日在六月。\n\n日出的时候很美。",
+        "example_pinyin": "/Tā de shēngrì zài liù yuè/\n\n/Rì chū de shíhòu hěn měi/",
+        "example_meaning": "Ngày sinh nhật của anh ấy vào tháng sáu.\n\nLúc mặt trời mọc rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 309,
+    "word": "日期",
+    "pinyin": "/rìqī/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ngày tháng, thời gian",
+        "example": "文件的日期写错了。",
+        "example_pinyin": "/Wénjiàn de rìqí xiě cuò le/",
+        "example_meaning": "Ngày tháng trên tài liệu bị sai rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 310,
+    "word": "肉",
+    "pinyin": "/ròu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Thịt",
+        "example": "我喜欢吃鸡肉。",
+        "example_pinyin": "/Wǒ xǐhuan chī jīròu/",
+        "example_meaning": "Tôi thích ăn thịt gà.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 311,
+    "word": "三",
+    "pinyin": "/sān/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số ba",
+        "example": "我有三个好朋友。",
+        "example_pinyin": "/Wǒ yǒu sān gè hǎo péngyǒu/",
+        "example_meaning": "Tôi có ba người bạn tốt.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 312,
+    "word": "山",
+    "pinyin": "/shān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Núi",
+        "example": "那座山很高。",
+        "example_pinyin": "/Nà zuò shān hěn gāo/",
+        "example_meaning": "Ngọn núi đó rất cao.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 313,
+    "word": "商场",
+    "pinyin": "/shāngchǎng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trung tâm thương mại",
+        "example": "我们去商场买衣服吧。",
+        "example_pinyin": "/Wǒmen qù shāngchǎng mǎi yīfú ba/",
+        "example_meaning": "Chúng ta đi trung tâm thương mại mua quần áo đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 314,
+    "word": "商店",
+    "pinyin": "/shāngdiàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cửa hàng",
+        "example": "这个商店很大。",
+        "example_pinyin": "/Zhège shāngdiàn hěn dà/",
+        "example_meaning": "Cửa hàng này rất lớn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 315,
+    "word": "上",
+    "pinyin": "/shàng/",
+    "meanings": [
+      {
+        "pos": "Giới từ",
+        "meaning": "Trên, lên",
+        "example": "书在桌子上。",
+        "example_pinyin": "/Shū zài zhuōzi shàng/",
+        "example_meaning": "Quyển sách ở trên bàn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 316,
+    "word": "上班",
+    "pinyin": "/shàngbān/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi làm",
+        "example": "他每天八点上班。",
+        "example_pinyin": "/Tā měitiān bā diǎn shàngbān/",
+        "example_meaning": "Mỗi ngày anh ấy đi làm lúc 8 giờ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 317,
+    "word": "上边",
+    "pinyin": "/shàngbiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía trên",
+        "example": "笔在书的上边。",
+        "example_pinyin": "/Bǐ zài shū de shàngbiān/",
+        "example_meaning": "Cây bút ở phía trên quyển sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 318,
+    "word": "上车",
+    "pinyin": "/shàng chē/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Lên xe",
+        "example": "我们快上车吧。",
+        "example_pinyin": "/Wǒmen kuài shàng chē ba/",
+        "example_meaning": "Chúng ta mau lên xe đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 319,
+    "word": "上次",
+    "pinyin": "/shàng cì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Lần trước",
+        "example": "上次我们去上海了。",
+        "example_pinyin": "/Shàng cì wǒmen qù Shànghǎi le/",
+        "example_meaning": "Lần trước chúng tôi đã đi Thượng Hải.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 320,
+    "word": "上课",
+    "pinyin": "/shàng kè/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Lên lớp, đi học",
+        "example": "现在是上课时间。",
+        "example_pinyin": "/Xiànzài shì shàngkè shíjiān/",
+        "example_meaning": "Bây giờ là thời gian lên lớp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 321,
+    "word": "上网",
+    "pinyin": "/shàng wǎng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Lên mạng",
+        "example": "他喜欢上网买东西。",
+        "example_pinyin": "/Tā xǐhuan shàng wǎng mǎi dōngxi/",
+        "example_meaning": "Anh ấy thích mua hàng online.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 322,
+    "word": "上午",
+    "pinyin": "/shàngwǔ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Buổi sáng",
+        "example": "我上午有一个会议。",
+        "example_pinyin": "/Wǒ shàngwǔ yǒu yī gè huìyì/",
+        "example_meaning": "Tôi có một cuộc họp vào buổi sáng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 323,
+    "word": "上学",
+    "pinyin": "/shàng xué/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi học",
+        "example": "孩子们七点上学。",
+        "example_pinyin": "/Háizimen qī diǎn shàng xué/",
+        "example_meaning": "Bọn trẻ đi học lúc 7 giờ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 324,
+    "word": "少",
+    "pinyin": "/shǎo/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Ít",
+        "example": "这里的人很少。",
+        "example_pinyin": "/Zhèlǐ de rén hěn shǎo/",
+        "example_meaning": "Ở đây rất ít người.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 325,
+    "word": "谁",
+    "pinyin": "/shéi/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Ai",
+        "example": "这是谁的书？",
+        "example_pinyin": "/Zhè shì shéi de shū/",
+        "example_meaning": "Đây là sách của ai?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 326,
+    "word": "身上",
+    "pinyin": "/shēnshang/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trên người",
+        "example": "你身上有钱吗？",
+        "example_pinyin": "/Nǐ shēnshang yǒu qián ma/",
+        "example_meaning": "Bạn có tiền trong người không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 327,
+    "word": "身体",
+    "pinyin": "/shēntǐ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cơ thể, sức khỏe",
+        "example": "你身体好吗？",
+        "example_pinyin": "/Nǐ shēntǐ hǎo ma/",
+        "example_meaning": "Sức khỏe của bạn có tốt không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 328,
+    "word": "什么",
+    "pinyin": "/shénme/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Gì, cái gì",
+        "example": "你想吃什么？",
+        "example_pinyin": "/Nǐ xiǎng chī shénme/",
+        "example_meaning": "Bạn muốn ăn gì?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 329,
+    "word": "生病",
+    "pinyin": "/shēng bìng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Bị bệnh",
+        "example": "他昨天生病了。",
+        "example_pinyin": "/Tā zuótiān shēng bìng le/",
+        "example_meaning": "Hôm qua anh ấy bị bệnh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 330,
+    "word": "生气",
+    "pinyin": "/shēng qì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Giận, tức giận",
+        "example": "妈妈生气了。",
+        "example_pinyin": "/Māmā shēngqì le/",
+        "example_meaning": "Mẹ giận rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 331,
+    "word": "生日",
+    "pinyin": "/shēngrì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Sinh nhật",
+        "example": "你的生日是几月几号？",
+        "example_pinyin": "/Nǐ de shēngrì shì jǐ yuè jǐ hào/",
+        "example_meaning": "Sinh nhật của bạn là ngày mấy tháng mấy?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 332,
+    "word": "十",
+    "pinyin": "/shí/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số mười",
+        "example": "他十岁就会游泳。",
+        "example_pinyin": "/Tā shí suì jiù huì yóuyǒng/",
+        "example_meaning": "Anh ấy mười tuổi đã biết bơi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 333,
+    "word": "时候",
+    "pinyin": "/shíhou/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Thời gian, lúc",
+        "example": "你什么时候去北京？",
+        "example_pinyin": "/Nǐ shénme shíhòu qù Běijīng/",
+        "example_meaning": "Khi nào bạn đi Bắc Kinh?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 334,
+    "word": "时间",
+    "pinyin": "/shíjiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Thời gian",
+        "example": "时间过得真快。",
+        "example_pinyin": "/Shíjiān guò dé zhēn kuài/",
+        "example_meaning": "Thời gian trôi qua thật nhanh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 335,
+    "word": "事",
+    "pinyin": "/shì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Việc, sự việc",
+        "example": "这是一件重要的事。",
+        "example_pinyin": "/Zhè shì yī jiàn zhòngyào de shì/",
+        "example_meaning": "Đây là một việc quan trọng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 336,
+    "word": "试",
+    "pinyin": "/shì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Thử, thử nghiệm",
+        "example": "我可以试一试吗？",
+        "example_pinyin": "/Wǒ kěyǐ shì yī shì ma?/",
+        "example_meaning": "Tôi có thể thử một chút không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 337,
+    "word": "是",
+    "pinyin": "/shì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Là",
+        "example": "他是我的好朋友。",
+        "example_pinyin": "/Tā shì wǒ de hǎo péngyǒu/",
+        "example_meaning": "Anh ấy là bạn tốt của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 338,
+    "word": "是不是",
+    "pinyin": "/shì bùshì/",
+    "meanings": [
+      {
+        "pos": "Câu hỏi",
+        "meaning": "Có phải không?",
+        "example": "这件事是不是你做的？",
+        "example_pinyin": "/Zhè jiàn shì shì bùshì nǐ zuò de/",
+        "example_meaning": "Việc này có phải cậu làm không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 339,
+    "word": "手",
+    "pinyin": "/shǒu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tay",
+        "example": "请把手洗干净。",
+        "example_pinyin": "/Qǐng bǎ shǒu xǐ gānjìng/",
+        "example_meaning": "Hãy rửa tay sạch sẽ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 340,
+    "word": "手机",
+    "pinyin": "/shǒujī/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Điện thoại di động",
+        "example": "我的手机在那里。",
+        "example_pinyin": "/Wǒ de shǒujī zài nàlǐ/",
+        "example_meaning": "Điện thoại của tôi ở đằng kia.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 341,
+    "word": "书",
+    "pinyin": "/shū/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Sách",
+        "example": "我喜欢看书。",
+        "example_pinyin": "/Wǒ xǐhuan kàn shū/",
+        "example_meaning": "Tôi thích đọc sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 342,
+    "word": "书包",
+    "pinyin": "/shūbāo/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cặp sách",
+        "example": "我的书包里有苹果。",
+        "example_pinyin": "/Wǒ de shūbāo lǐ yǒu píngguǒ/",
+        "example_meaning": "Trong cặp sách của tôi có một quả táo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 343,
+    "word": "书店",
+    "pinyin": "/shūdiàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Hiệu sách",
+        "example": "我喜欢去书店。",
+        "example_pinyin": "/Wǒ xǐhuan qù shūdiàn/",
+        "example_meaning": "Tôi thích đi nhà sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 344,
+    "word": "树",
+    "pinyin": "/shù/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cây, cây cối",
+        "example": "这里有一棵大树。",
+        "example_pinyin": "/Zhè lǐ yǒu yī kē dà shù/",
+        "example_meaning": "Ở đây có một cái cây lớn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 345,
+    "word": "水",
+    "pinyin": "/shuǐ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nước",
+        "example": "我想喝水。",
+        "example_pinyin": "/Wǒ xiǎng hē shuǐ/",
+        "example_meaning": "Tôi muốn uống nước.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 346,
+    "word": "水果",
+    "pinyin": "/shuǐguǒ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trái cây",
+        "example": "我每天都吃水果。",
+        "example_pinyin": "/Wǒ měitiān dōu chī shuǐguǒ/",
+        "example_meaning": "Tôi ăn trái cây mỗi ngày.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 347,
+    "word": "睡",
+    "pinyin": "/shuì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ngủ",
+        "example": "他昨天晚上睡得很早。",
+        "example_pinyin": "/Tā zuótiān wǎnshàng shuì de hěn zǎo/",
+        "example_meaning": "Tối qua anh ấy ngủ rất sớm.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 348,
+    "word": "睡觉",
+    "pinyin": "/shuìjiào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ngủ",
+        "example": "孩子们都去睡觉了。",
+        "example_pinyin": "/Háizǐmen dōu qù shuìjiào le/",
+        "example_meaning": "Bọn trẻ đều đi ngủ rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 349,
+    "word": "说",
+    "pinyin": "/shuō/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nói",
+        "example": "我会说汉语。",
+        "example_pinyin": "/Wǒ huì shuō Hànyǔ/",
+        "example_meaning": "Tôi biết nói tiếng Trung.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 350,
+    "word": "说话",
+    "pinyin": "/shuōhuà/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nói chuyện",
+        "example": "请不要大声说话。",
+        "example_pinyin": "/Qǐng bùyào dàshēng shuōhuà/",
+        "example_meaning": "Vui lòng đừng nói chuyện lớn tiếng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 351,
+    "word": "四",
+    "pinyin": "/sì/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số bốn",
+        "example": "他家有四口人。",
+        "example_pinyin": "/Tā jiā yǒu sì kǒu rén/",
+        "example_meaning": "Gia đình anh ấy có bốn người.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 352,
+    "word": "送",
+    "pinyin": "/sòng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Tặng, đưa",
+        "example": "我送你一本书。",
+        "example_pinyin": "/Wǒ sòng nǐ yī běn shū/",
+        "example_meaning": "Tôi tặng bạn một quyển sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 353,
+    "word": "岁",
+    "pinyin": "/suì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tuổi",
+        "example": "她今年二十岁了。",
+        "example_pinyin": "/Tā jīnnián èrshí suì le/",
+        "example_meaning": "Cô ấy năm nay 20 tuổi rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 354,
+    "word": "他",
+    "pinyin": "/tā/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Anh ấy, ông ấy",
+        "example": "他是我的朋友。",
+        "example_pinyin": "/Tā shì wǒ de péngyǒu/",
+        "example_meaning": "Anh ấy là bạn của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 355,
+    "word": "他们",
+    "pinyin": "/tāmen/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Họ, bọn họ (nam)",
+        "example": "他们在学校学习。",
+        "example_pinyin": "/Tāmen zài xuéxiào xuéxí/",
+        "example_meaning": "Họ đang học ở trường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 356,
+    "word": "她",
+    "pinyin": "/tā/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Cô ấy, bà ấy",
+        "example": "她喜欢听音乐。",
+        "example_pinyin": "/Tā xǐhuan tīng yīnyuè/",
+        "example_meaning": "Cô ấy thích nghe nhạc.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 357,
+    "word": "她们",
+    "pinyin": "/tāmen/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Họ, bọn họ (nữ)",
+        "example": "她们正在看书。",
+        "example_pinyin": "/Tāmen zhèngzài kàn shū/",
+        "example_meaning": "Họ đang đọc sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 358,
+    "word": "太",
+    "pinyin": "/tài/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Quá, rất",
+        "example": "这个菜太好吃了。",
+        "example_pinyin": "/Zhège cài tài hǎochī le/",
+        "example_meaning": "Món ăn này quá ngon.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 359,
+    "word": "天",
+    "pinyin": "/tiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ngày\n\ntrời, bầu trời",
+        "example": "今天是星期天。\n\n我喜欢看天上的星星。",
+        "example_pinyin": "/Jīntiān shì xīngqītiān/\n\n/Wǒ xǐhuān kàn tiānshàng de xīngxīng/",
+        "example_meaning": "Hôm nay là Chủ nhật.\n\nTôi thích ngắm sao trên trời.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 360,
+    "word": "天气",
+    "pinyin": "/tiānqì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Thời tiết",
+        "example": "今天天气很好。",
+        "example_pinyin": "/Jīntiān tiānqì hěn hǎo/",
+        "example_meaning": "Hôm nay thời tiết rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 361,
+    "word": "听",
+    "pinyin": "/tīng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nghe",
+        "example": "他在听歌。",
+        "example_pinyin": "/Tā zài tīng gē/",
+        "example_meaning": "Anh ấy đang nghe nhạc.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 362,
+    "word": "听到",
+    "pinyin": "/tīngdào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nghe thấy",
+        "example": "我听到了你的声音。",
+        "example_pinyin": "/Wǒ tīngdào le nǐ de shēngyīn/",
+        "example_meaning": "Tôi đã nghe thấy giọng của bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 363,
+    "word": "听见",
+    "pinyin": "/tīngjiàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nghe được",
+        "example": "你听见了吗？",
+        "example_pinyin": "/Nǐ tīngjiàn le ma/",
+        "example_meaning": "Bạn có nghe thấy không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 364,
+    "word": "听写",
+    "pinyin": "/tīngxiě/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nghe viết (chính tả)",
+        "example": "我们今天有听写考试。",
+        "example_pinyin": "/Wǒmen jīntiān yǒu tīngxiě kǎoshì/",
+        "example_meaning": "Hôm nay chúng tôi có bài kiểm tra chính tả.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 365,
+    "word": "同学",
+    "pinyin": "/tóngxué/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bạn học",
+        "example": "这是我的同学。",
+        "example_pinyin": "/Zhè shì wǒ de tóngxué/",
+        "example_meaning": "Đây là bạn học của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 366,
+    "word": "图书馆",
+    "pinyin": "/túshūguǎn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Thư viện",
+        "example": "学校里有三个图书馆。",
+        "example_pinyin": "/Xuéxiào li yǒu sān gè túshū guǎn/",
+        "example_meaning": "Trường có ba thư viện.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 367,
+    "word": "外",
+    "pinyin": "/wài/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bên ngoài",
+        "example": "我们去外面吃饭吧。",
+        "example_pinyin": "/Wǒmen qù wàimiàn chīfàn ba/",
+        "example_meaning": "Chúng ta ra ngoài ăn đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 368,
+    "word": "外边",
+    "pinyin": "/wàibian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bên ngoài",
+        "example": "外边有很多漂亮的花。",
+        "example_pinyin": "/Wàibian yǒu hěnduō piàoliang de huā/",
+        "example_meaning": "Bên ngoài có rất nhiều hoa đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 369,
+    "word": "外国",
+    "pinyin": "/wàiguó/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nước ngoài",
+        "example": "他是外国人。",
+        "example_pinyin": "/Tā shì wàiguó rén/",
+        "example_meaning": "Anh ấy là người nước ngoài.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 370,
+    "word": "外语",
+    "pinyin": "/wàiyǔ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ngoại ngữ",
+        "example": "你会说几种外语？",
+        "example_pinyin": "/Nǐ huì shuō jǐ zhǒng wàiyǔ/",
+        "example_meaning": "Bạn biết nói mấy thứ tiếng nước ngoài?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 371,
+    "word": "玩儿",
+    "pinyin": "/wánr/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Chơi",
+        "example": "孩子们喜欢玩儿游戏。",
+        "example_pinyin": "/Háizimen xǐhuān wánr yóuxì/",
+        "example_meaning": "Bọn trẻ thích chơi trò chơi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 372,
+    "word": "晚",
+    "pinyin": "/wǎn/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Muộn, trễ",
+        "example": "现在太晚了，快睡吧。",
+        "example_pinyin": "/Xiànzài tài wǎn le, kuài shuì ba/",
+        "example_meaning": "Bây giờ quá muộn rồi, mau ngủ đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 373,
+    "word": "晚饭",
+    "pinyin": "/wǎnfàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bữa tối",
+        "example": "我们一起吃晚饭吧。",
+        "example_pinyin": "/Wǒmen yìqǐ chī wǎnfàn ba/",
+        "example_meaning": "Chúng ta cùng đi ăn tối nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 374,
+    "word": "晚上",
+    "pinyin": "/wǎnshàng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Buổi tối",
+        "example": "晚上我们一起去看电影吧。",
+        "example_pinyin": "/Wǎnshàng wǒmen yìqǐ qù kàn diànyǐng ba/",
+        "example_meaning": "Buổi tối chúng ta cùng đi xem phim nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 375,
+    "word": "网上",
+    "pinyin": "/wǎngshàng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trên mạng",
+        "example": "现在很多人喜欢在网上买东西。",
+        "example_pinyin": "/Xiànzài hěnduō rén xǐhuān zài wǎngshàng mǎi dōngxī/",
+        "example_meaning": "Hiện nay nhiều người thích mua đồ trên mạng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 376,
+    "word": "网友",
+    "pinyin": "/wǎngyǒu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bạn trên mạng",
+        "example": "我有很多网友。",
+        "example_pinyin": "/Wǒ yǒu hěnduō wǎngyǒu/",
+        "example_meaning": "Tôi có nhiều bạn trên mạng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 377,
+    "word": "忘",
+    "pinyin": "/wàng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Quên",
+        "example": "我忘了带钱包。",
+        "example_pinyin": "/Wǒ wàng le dài qiánbāo/",
+        "example_meaning": "Tôi quên mang ví tiền rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 378,
+    "word": "忘记",
+    "pinyin": "/wàngjì/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Quên",
+        "example": "请不要忘记明天的会议。",
+        "example_pinyin": "/Qǐng bú yào wàngjì míngtiān de huìyì/",
+        "example_meaning": "Xin đừng quên cuộc họp ngày mai.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 379,
+    "word": "问",
+    "pinyin": "/wèn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Hỏi",
+        "example": "你可以问问老师这个问题。",
+        "example_pinyin": "/Nǐ kěyǐ wèn wèn lǎoshī zhège wèntí/",
+        "example_meaning": "Bạn có thể hỏi giáo viên câu hỏi này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 380,
+    "word": "我",
+    "pinyin": "/wǒ/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Tôi, mình",
+        "example": "我是学生。",
+        "example_pinyin": "/Wǒ shì xuéshēng/",
+        "example_meaning": "Tôi là học sinh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 381,
+    "word": "我们",
+    "pinyin": "/wǒmen/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Chúng tôi, chúng ta",
+        "example": "我们是好朋友。",
+        "example_pinyin": "/Wǒmen shì hǎo péngyǒu/",
+        "example_meaning": "Chúng tôi là bạn tốt của nhau.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 382,
+    "word": "五",
+    "pinyin": "/wǔ/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Số năm",
+        "example": "她今天买了五个苹果。",
+        "example_pinyin": "/Tā jīntiān mǎi le wǔ gè píngguǒ/",
+        "example_meaning": "Hôm nay cô ấy đã mua năm quả táo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 383,
+    "word": "午饭",
+    "pinyin": "/wǔfàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bữa trưa",
+        "example": "我们一起去吃午饭吧。",
+        "example_pinyin": "/Wǒmen yīqǐ qù chī wǔfàn ba/",
+        "example_meaning": "Chúng ta cùng đi ăn trưa nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 384,
+    "word": "西",
+    "pinyin": "/xī/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía tây",
+        "example": "我家在学校西边。",
+        "example_pinyin": "/Wǒ jiā zài xuéxiào xībiān/",
+        "example_meaning": "Nhà tôi ở phía tây của trường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 385,
+    "word": "西边",
+    "pinyin": "/xībiān/",
+    "meanings": []
+  },
+  {
+    "stt": 386,
+    "word": "洗",
+    "pinyin": "/xǐ/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Giặt, rửa, tắm",
+        "example": "现在我要洗衣服。",
+        "example_pinyin": "/Xiànzài wǒ yào xǐ yīfu/",
+        "example_meaning": "Bây giờ tôi phải giặt quần áo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 387,
+    "word": "洗手间",
+    "pinyin": "/xǐshǒujiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Nhà vệ sinh",
+        "example": "请问，洗手间在哪里？",
+        "example_pinyin": "/Qǐngwèn, xǐshǒujiān zài nǎlǐ/",
+        "example_meaning": "Xin hỏi, nhà vệ sinh ở đâu?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 388,
+    "word": "喜欢",
+    "pinyin": "/xǐhuan/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Thích",
+        "example": "我很喜欢吃中国菜。",
+        "example_pinyin": "/Wǒ hěn xǐhuan chī Zhōngguó cài/",
+        "example_meaning": "Tôi rất thích ăn món Trung Quốc.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 389,
+    "word": "下",
+    "pinyin": "/xià/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Dưới, phía dưới, bên dưới",
+        "example": "上有父母，下有儿女。",
+        "example_pinyin": "/Shàng yǒu fùmǔ, xià yǒu érnǚ/",
+        "example_meaning": "Trên có cha mẹ, dưới có con cái.",
+        "is_approved": true
+      },
+      {
+        "pos": "Động từ",
+        "meaning": "Xuống",
+        "example": "下课后一起去吃饭吧。",
+        "example_pinyin": "/Xiàkè hòu yīqǐ qù chīfàn ba/",
+        "example_meaning": "Tan học xong cùng đi ăn nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 390,
+    "word": "下班",
+    "pinyin": "/xiàbān/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Tan làm",
+        "example": "我今晚八点下班。",
+        "example_pinyin": "/Wǒ jīn wǎn bā diǎn xiàbān/",
+        "example_meaning": "Tối nay tôi tan làm lúc 8 giờ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 391,
+    "word": "下边",
+    "pinyin": "/xiàbian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bên dưới",
+        "example": "桌子下边有一只猫。",
+        "example_pinyin": "/Zhuōzi xiàbian yǒu yī zhī māo/",
+        "example_meaning": "Dưới bàn có một con mèo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 392,
+    "word": "下车",
+    "pinyin": "/xià chē/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Xuống xe",
+        "example": "我要在这一站下车。",
+        "example_pinyin": "/Wǒ yào zài zhè yí zhàn xià chē/",
+        "example_meaning": "Tôi muốn xuống xe ở trạm này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 393,
+    "word": "下次",
+    "pinyin": "/xià cì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Lần sau",
+        "example": "下次我们一起去看电影吧。",
+        "example_pinyin": "/Xià cì wǒmen yīqǐ qù kàn diànyǐng ba/",
+        "example_meaning": "Lần sau chúng ta cùng đi xem phim nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 394,
+    "word": "下课",
+    "pinyin": "/xiàkè/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Tan học",
+        "example": "下课后，我们去喝奶茶吧。",
+        "example_pinyin": "/Xiàkè hòu, wǒmen qù hē nǎichá ba/",
+        "example_meaning": "Tan học xong, chúng ta đi uống trà sữa nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 395,
+    "word": "下午",
+    "pinyin": "/xiàwǔ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Buổi chiều",
+        "example": "我下午三点有个会议。",
+        "example_pinyin": "/Wǒ xiàwǔ sān diǎn yǒu gè huìyì/",
+        "example_meaning": "Tôi có một cuộc họp vào lúc 3 giờ chiều.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 396,
+    "word": "下雨",
+    "pinyin": "/xià yǔ/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Mưa rơi",
+        "example": "今天会下雨，你带伞了吗？",
+        "example_pinyin": "/Jīntiān huì xiàyǔ, nǐ dài sǎn le ma/",
+        "example_meaning": "Hôm nay trời sẽ mưa, bạn đã mang ô chưa?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 397,
+    "word": "先",
+    "pinyin": "/xiān/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Trước tiên",
+        "example": "你先去，我等一下再去。",
+        "example_pinyin": "/Nǐ xiān qù, wǒ děng yīxià zài qù/",
+        "example_meaning": "Bạn đi trước đi, tôi sẽ đi sau.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 398,
+    "word": "先生",
+    "pinyin": "/xiānsheng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ông, thầy, tiên sinh",
+        "example": "这位是李先生。",
+        "example_pinyin": "/Zhè wèi shì Lǐ xiānsheng/",
+        "example_meaning": "Đây là ông Lý.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 399,
+    "word": "现在",
+    "pinyin": "/xiànzài/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Bây giờ",
+        "example": "我现在就去做。",
+        "example_pinyin": "/Wǒ xiànzài jiù qù zuò/",
+        "example_meaning": "Tôi đi làm bây giờ đây.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 400,
+    "word": "想",
+    "pinyin": "/xiǎng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nghĩ, muốn",
+        "example": "我想去日本旅游。",
+        "example_pinyin": "/Wǒ xiǎng qù Rìběn lǚyóu/",
+        "example_meaning": "Tôi muốn đi du lịch Nhật Bản.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 401,
+    "word": "小",
+    "pinyin": "/xiǎo/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Nhỏ, bé",
+        "example": "这只狗很小，很可爱。",
+        "example_pinyin": "/Zhè zhī gǒu hěn xiǎo, hěn kě'ài/",
+        "example_meaning": "Con chó này rất nhỏ, rất đáng yêu.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 402,
+    "word": "小孩儿",
+    "pinyin": "/xiǎoháir/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đứa trẻ",
+        "example": "小孩儿喜欢玩游戏。",
+        "example_pinyin": "/Xiǎoháir xǐhuan wán yóuxì/",
+        "example_meaning": "Trẻ con thích chơi trò chơi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 403,
+    "word": "小姐",
+    "pinyin": "/xiǎojiě/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tiểu thư, cô gái",
+        "example": "王小姐是我的同事。",
+        "example_pinyin": "/Wáng xiǎojiě shì wǒ de tóngshì/",
+        "example_meaning": "Cô Vương là đồng nghiệp của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 404,
+    "word": "小朋友",
+    "pinyin": "/xiǎopéngyǒu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bạn nhỏ, trẻ em",
+        "example": "小朋友们都喜欢听故事。",
+        "example_pinyin": "/Xiǎopéngyǒu men dōu xǐhuan tīng gùshì/",
+        "example_meaning": "Các bạn nhỏ đều thích nghe kể chuyện.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 405,
+    "word": "小时",
+    "pinyin": "/xiǎoshí/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Giờ (đơn vị thời gian)",
+        "example": "我等了一个小时。",
+        "example_pinyin": "/Wǒ děng le yí gè xiǎoshí/",
+        "example_meaning": "Tôi đã đợi 1 tiếng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 406,
+    "word": "小学",
+    "pinyin": "/xiǎoxué/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trường tiểu học",
+        "example": "我弟弟上小学二年级。",
+        "example_pinyin": "/Wǒ dìdi shàng xiǎoxué èr niánjí/",
+        "example_meaning": "Em trai tôi học lớp 2 tiểu học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 407,
+    "word": "小学生",
+    "pinyin": "/xiǎoxuéshēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Học sinh tiểu học",
+        "example": "她是个聪明的小学生。",
+        "example_pinyin": "/Tā shì gè cōngmíng de xiǎoxuéshēng/",
+        "example_meaning": "Cô bé ấy là một học sinh tiểu học thông minh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 408,
+    "word": "笑",
+    "pinyin": "/xiào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Cười",
+        "example": "她的笑容很美。",
+        "example_pinyin": "/Tā de xiàoróng hěn měi/",
+        "example_meaning": "Nụ cười của cô ấy rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 409,
+    "word": "写",
+    "pinyin": "/xiě/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Viết",
+        "example": "请写下你的名字。",
+        "example_pinyin": "/Qǐng xiě xià nǐ de míngzi/",
+        "example_meaning": "Vui lòng viết tên của bạn xuống.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 410,
+    "word": "谢谢",
+    "pinyin": "/xièxie/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Cảm ơn",
+        "example": "谢谢你的帮助。",
+        "example_pinyin": "/Xièxie nǐ de bāngzhù/",
+        "example_meaning": "Cảm ơn sự giúp đỡ của bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 411,
+    "word": "新",
+    "pinyin": "/xīn/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Mới",
+        "example": "我买了一件新衣服。",
+        "example_pinyin": "/Wǒ mǎi le yí jiàn xīn yīfú/",
+        "example_meaning": "Tôi đã mua một bộ quần áo mới.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 412,
+    "word": "新年",
+    "pinyin": "/xīnnián/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Năm mới",
+        "example": "新年快乐！",
+        "example_pinyin": "/Xīnnián kuài lè/",
+        "example_meaning": "Năm mới vui vẻ!",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 413,
+    "word": "星期",
+    "pinyin": "/xīngqī/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tuần",
+        "example": "这个星期很忙。",
+        "example_pinyin": "/Zhège xīngqī hěn máng/",
+        "example_meaning": "Tuần này rất bận.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 414,
+    "word": "星期日",
+    "pinyin": "/xīngqīrì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Chủ nhật",
+        "example": "星期日我们去公园吧。",
+        "example_pinyin": "/Xīngqīrì wǒmen qù gōngyuán ba/",
+        "example_meaning": "Chủ nhật chúng ta đi công viên nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 415,
+    "word": "星期天",
+    "pinyin": "/xīngqītiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Chủ nhật",
+        "example": "星期天我喜欢睡懒觉。",
+        "example_pinyin": "/Xīngqītiān wǒ xǐhuan shuì lǎnjiào/",
+        "example_meaning": "Chủ nhật tôi thích ngủ nướng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 416,
+    "word": "行",
+    "pinyin": "/xíng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Được, ổn",
+        "example": "这样做行不行？",
+        "example_pinyin": "/Zhèyàng zuò xíng bù xíng/",
+        "example_meaning": "Làm như thế này được không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 417,
+    "word": "休息",
+    "pinyin": "/xiūxi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Nghỉ ngơi",
+        "example": "我每天都要休息一小时。",
+        "example_pinyin": "/Wǒ měitiān dōu yào xiūxi yī xiǎoshí/",
+        "example_meaning": "Tôi phải nghỉ ngơi một giờ mỗi ngày.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 418,
+    "word": "学",
+    "pinyin": "/xué/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Học",
+        "example": "我在学汉语。",
+        "example_pinyin": "/Wǒ zài xué Hànyǔ/",
+        "example_meaning": "Tôi đang học tiếng Trung.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 419,
+    "word": "学生",
+    "pinyin": "/xuéshēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Học sinh",
+        "example": "她是我的学生。",
+        "example_pinyin": "/Tā shì wǒ de xuéshēng/",
+        "example_meaning": "Cô ấy là học sinh của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 420,
+    "word": "学习",
+    "pinyin": "/xuéxí/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Học tập",
+        "example": "我们应该认真学习。",
+        "example_pinyin": "/Wǒmen yīnggāi rènzhēn xuéxí/",
+        "example_meaning": "Chúng ta nên học tập chăm chỉ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 421,
+    "word": "学校",
+    "pinyin": "/xuéxiào/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trường học",
+        "example": "我们学校很大。",
+        "example_pinyin": "/Wǒmen xuéxiào hěn dà/",
+        "example_meaning": "Trường của chúng tôi rất lớn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 422,
+    "word": "学院",
+    "pinyin": "/xuéyuàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Học viện",
+        "example": "这个学院很大很漂亮。",
+        "example_pinyin": "/Zhège xuéyuàn hěn dà hěn piàoliang/",
+        "example_meaning": "Học viện này rất lớn và đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 423,
+    "word": "要（动）",
+    "pinyin": "/yào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Muốn, cần",
+        "example": "我想要一杯咖啡。",
+        "example_pinyin": "/Wǒ xiǎng yào yī bēi kāfēi/",
+        "example_meaning": "Tôi muốn một ly cà phê.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 424,
+    "word": "爷爷",
+    "pinyin": "/yéye/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ông nội",
+        "example": "我爷爷每天去公园散步。",
+        "example_pinyin": "/Wǒ yéye měitiān qù gōngyuán sànbù/",
+        "example_meaning": "Mỗi ngày ông nội tôi đi dạo trong công viên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 425,
+    "word": "也",
+    "pinyin": "/yě/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Cũng",
+        "example": "我也喜欢吃苹果。",
+        "example_pinyin": "/Wǒ yě xǐhuan chī píngguǒ/",
+        "example_meaning": "Tôi cũng thích ăn táo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 426,
+    "word": "页",
+    "pinyin": "/yè/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trang (sách, giấy)",
+        "example": "请翻到第五页。",
+        "example_pinyin": "/Qǐng fān dào dì wǔ yè/",
+        "example_meaning": "Vui lòng lật đến trang 5.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 427,
+    "word": "一",
+    "pinyin": "/yī/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Một",
+        "example": "我只有一个妹妹。",
+        "example_pinyin": "/Wǒ zhǐ yǒu yī gè mèimei/",
+        "example_meaning": "Tôi chỉ có một em gái.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 428,
+    "word": "衣服",
+    "pinyin": "/yīfu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Quần áo",
+        "example": "这件衣服很漂亮。",
+        "example_pinyin": "/Zhè jiàn yīfu hěn piàoliang/",
+        "example_meaning": "Bộ quần áo này rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 429,
+    "word": "医生",
+    "pinyin": "/yīshēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bác sĩ",
+        "example": "我爸爸是一名医生。",
+        "example_pinyin": "/Wǒ bàba shì yī míng yīshēng/",
+        "example_meaning": "Bố tôi là một bác sĩ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 430,
+    "word": "医院",
+    "pinyin": "/yīyuàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bệnh viện",
+        "example": "他生病了，要去医院。",
+        "example_pinyin": "/Tā shēngbìng le, yào qù yīyuàn/",
+        "example_meaning": "Anh ấy bị ốm, cần đến bệnh viện.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 431,
+    "word": "一半",
+    "pinyin": "/yíbàn/",
+    "meanings": [
+      {
+        "pos": "Số từ",
+        "meaning": "Một nửa",
+        "example": "我们班一半是男生。",
+        "example_pinyin": "/Wǒmen bān yíbàn shì nánshēng/",
+        "example_meaning": "Một nửa lớp chúng tôi là nam sinh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 432,
+    "word": "一会儿",
+    "pinyin": "/yíhuìr/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Một lát, một chút",
+        "example": "请等我一会儿。",
+        "example_pinyin": "/Qǐng děng wǒ yíhuìr/",
+        "example_meaning": "Vui lòng đợi tôi một lát.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 433,
+    "word": "一块儿",
+    "pinyin": "/yíkuàir/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Cùng nhau",
+        "example": "我们一块儿去公园吧。",
+        "example_pinyin": "/Wǒmen yíkuàir qù gōngyuán ba/",
+        "example_meaning": "Chúng ta cùng đi công viên nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 434,
+    "word": "一下儿",
+    "pinyin": "/yíxiàr/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Một chút, một lát",
+        "example": "你等我一下儿。",
+        "example_pinyin": "/Nǐ děng wǒ yíxiàr/",
+        "example_meaning": "Đợi tôi một chút.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 435,
+    "word": "一样",
+    "pinyin": "/yíyàng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Giống nhau",
+        "example": "这两件衣服一样。",
+        "example_pinyin": "/Zhè liǎng jiàn yīfu yíyàng/",
+        "example_meaning": "Hai bộ quần áo này giống nhau.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 436,
+    "word": "一边",
+    "pinyin": "/yìbiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Một phía, một bên",
+        "example": "她一边吃饭，一边看书。",
+        "example_pinyin": "/Tā yìbiān chīfàn, yìbiān kànshū/",
+        "example_meaning": "Cô ấy vừa ăn vừa đọc sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 437,
+    "word": "一点儿",
+    "pinyin": "/yìdiǎnr/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Một chút, một ít",
+        "example": "我想喝一点儿水。",
+        "example_pinyin": "/Wǒ xiǎng hē yìdiǎnr shuǐ/",
+        "example_meaning": "Tôi muốn uống một chút nước.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 438,
+    "word": "一起",
+    "pinyin": "/yìqǐ/",
+    "meanings": [
+      {
+        "pos": "Trạng từ",
+        "meaning": "Cùng nhau",
+        "example": "我们一起去看电影吧。",
+        "example_pinyin": "/Wǒmen yìqǐ qù kàn diànyǐng ba/",
+        "example_meaning": "Chúng ta cùng đi xem phim nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 439,
+    "word": "一些",
+    "pinyin": "/yìxiē/",
+    "meanings": [
+      {
+        "pos": "Lượng từ",
+        "meaning": "Một số, một ít",
+        "example": "这里有一些苹果。",
+        "example_pinyin": "/Zhèlǐ yǒu yìxiē píngguǒ/",
+        "example_meaning": "Ở đây có một vài quả táo.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 440,
+    "word": "用",
+    "pinyin": "/yòng/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Dùng, sử dụng",
+        "example": "你可以用我的手机。",
+        "example_pinyin": "/Nǐ kěyǐ yòng wǒ de shǒujī/",
+        "example_meaning": "Bạn có thể dùng điện thoại của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 441,
+    "word": "有",
+    "pinyin": "/yǒu/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Có, tồn tại",
+        "example": "我有一个好朋友。",
+        "example_pinyin": "/Wǒ yǒu yī gè hǎo péngyǒu/",
+        "example_meaning": "Tôi có một người bạn tốt.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 442,
+    "word": "有的",
+    "pinyin": "/yǒude/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Một số, có cái thì…",
+        "example": "有的人喜欢喝咖啡,有的人喜欢喝茶。",
+        "example_pinyin": "/Yǒude rén xǐhuan hē kāfēi，yǒude rén xǐhuan hē chá/",
+        "example_meaning": "Có người thích uống cà phê, có người thích uống trà.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 443,
+    "word": "有名",
+    "pinyin": "/yǒumíng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Nổi tiếng",
+        "example": "这家餐厅很有名。",
+        "example_pinyin": "/Zhè jiā cāntīng hěn yǒumíng/",
+        "example_meaning": "Nhà hàng này rất nổi tiếng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 444,
+    "word": "有时候 | 有时",
+    "pinyin": "/yǒu shíhòu |yǒu shí/",
+    "meanings": [
+      {
+        "pos": "Trạng từ",
+        "meaning": "Đôi khi, có lúc",
+        "example": "我有时候去图书馆学习。",
+        "example_pinyin": "/Wǒ yǒu shíhòu qù túshūguǎn xuéxí/",
+        "example_meaning": "Đôi khi tôi đến thư viện học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 445,
+    "word": "有（一）些",
+    "pinyin": "/yǒu (yì) xiē/",
+    "meanings": [
+      {
+        "pos": "Lượng từ",
+        "meaning": "Một vài, một số",
+        "example": "这里有一些书。",
+        "example_pinyin": "/Zhèlǐ yǒu yìxiē shū/",
+        "example_meaning": "Ở đây có một vài cuốn sách.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 446,
+    "word": "有用",
+    "pinyin": "/yǒuyòng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Hữu ích, có ích",
+        "example": "这本书很有用。",
+        "example_pinyin": "/Zhè běn shū hěn yǒuyòng/",
+        "example_meaning": "Cuốn sách này rất hữu ích.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 447,
+    "word": "右",
+    "pinyin": "/yòu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bên phải",
+        "example": "商店在银行的右边。",
+        "example_pinyin": "/Shāngdiàn zài yínháng de yòubian/",
+        "example_meaning": "Cửa hàng ở bên phải ngân hàng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 448,
+    "word": "右边",
+    "pinyin": "/yòubian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía bên phải",
+        "example": "",
+        "example_pinyin": "",
+        "example_meaning": "",
+        "is_approved": false
+      }
+    ]
+  },
+  {
+    "stt": 449,
+    "word": "雨",
+    "pinyin": "/yǔ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Mưa",
+        "example": "今天下雨了。",
+        "example_pinyin": "/Jīntiān xià yǔ le/",
+        "example_meaning": "Hôm nay trời mưa rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 450,
+    "word": "元",
+    "pinyin": "/yuán/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Đồng (đơn vị tiền tệ)",
+        "example": "这本书五十元。",
+        "example_pinyin": "/Zhè běn shū wǔshí yuán/",
+        "example_meaning": "Cuốn sách này giá 50 tệ.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 451,
+    "word": "远",
+    "pinyin": "/yuǎn/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Xa",
+        "example": "我家离学校很远。",
+        "example_pinyin": "/Wǒ jiā lí xuéxiào hěn yuǎn/",
+        "example_meaning": "Nhà tôi cách trường học rất xa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 452,
+    "word": "月",
+    "pinyin": "/yuè/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tháng\n\n mặt trăng",
+        "example": "今年的二月有二十九天。\n\n今天的月亮很漂亮。",
+        "example_pinyin": "/Jīnnián de èryuè yǒu èrshíjiǔ tiān/\n\n/Jīntiān de yuèliàng hěn piàoliang/",
+        "example_meaning": "Tháng Hai năm nay có 29 ngày.\n\nMặt trăng hôm nay rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 453,
+    "word": "再",
+    "pinyin": "/zài/",
+    "meanings": [
+      {
+        "pos": "Trạng từ",
+        "meaning": "Lại, lần nữa",
+        "example": "请再说一遍。",
+        "example_pinyin": "/Qǐng zài shuō yí biàn/",
+        "example_meaning": "Xin hãy nói lại một lần nữa.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 454,
+    "word": "再见",
+    "pinyin": "/zàijiàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Tạm biệt",
+        "example": "A: 明天见！\nB: 再见！",
+        "example_pinyin": "A:/Míngtiān jiàn!/ \nB: /Zàijiàn!/",
+        "example_meaning": "A: Hẹn gặp lại ngày mai! \nB: Tạm biệt!",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 455,
+    "word": "在",
+    "pinyin": "/zài/",
+    "meanings": [
+      {
+        "pos": "Giới từ",
+        "meaning": "Ở, tại",
+        "example": "我在家看电视。",
+        "example_pinyin": "/Wǒ zài jiā kàn diànshì/",
+        "example_meaning": "Tôi ở nhà xem tivi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 456,
+    "word": "在家",
+    "pinyin": "/zàijiā/",
+    "meanings": [
+      {
+        "pos": "Trạng từ",
+        "meaning": "Ở nhà",
+        "example": "周末我一般在家休息。",
+        "example_pinyin": "/Zhōumò wǒ yībān zàijiā xiūxi/",
+        "example_meaning": "Cuối tuần tôi thường ở nhà nghỉ ngơi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 457,
+    "word": "早",
+    "pinyin": "/zǎo/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Sớm",
+        "example": "今天你起得很早。",
+        "example_pinyin": "/Jīntiān nǐ qǐ de hěn zǎo/",
+        "example_meaning": "Hôm nay bạn dậy rất sớm.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 458,
+    "word": "早饭",
+    "pinyin": "/zǎofàn/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bữa sáng",
+        "example": "你今天吃早饭了吗？",
+        "example_pinyin": "/Nǐ jīntiān chī zǎofàn le ma/",
+        "example_meaning": "Hôm nay bạn đã ăn sáng chưa?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 459,
+    "word": "早上",
+    "pinyin": "/zǎoshang/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Buổi sáng",
+        "example": "早上空气很好。",
+        "example_pinyin": "/Zǎoshang kōngqì hěn hǎo/",
+        "example_meaning": "Không khí buổi sáng rất tốt.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 460,
+    "word": "怎么",
+    "pinyin": "/zěnme/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Như thế nào",
+        "example": "你怎么来学校的？",
+        "example_pinyin": "/Nǐ zěnme lái xuéxiào de/",
+        "example_meaning": "Bạn đến trường bằng cách nào?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 461,
+    "word": "站",
+    "pinyin": "/zhàn/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đứng",
+        "example": "请站在这儿。",
+        "example_pinyin": "/Qǐng zhàn zài zhèr/",
+        "example_meaning": "Xin hãy đứng ở đây.",
+        "is_approved": true
+      },
+      {
+        "pos": "Danh từ",
+        "meaning": "Trạm, ga",
+        "example": "我要去北京站。",
+        "example_pinyin": "/Wǒ yào qù Běijīng zhàn/",
+        "example_meaning": "Tôi muốn đi đến Ga Bắc Kinh.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 462,
+    "word": "找",
+    "pinyin": "/zhǎo/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Tìm kiếm",
+        "example": "我在找我的手机。",
+        "example_pinyin": "/Wǒ zài zhǎo wǒ de shǒujī/",
+        "example_meaning": "Tôi đang tìm điện thoại của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 463,
+    "word": "找到",
+    "pinyin": "/zhǎodào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Tìm thấy",
+        "example": "我找到钥匙了。",
+        "example_pinyin": "/Wǒ zhǎodào yàoshi le/",
+        "example_meaning": "Tôi tìm thấy chìa khóa rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 464,
+    "word": "这",
+    "pinyin": "/zhè/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Này, đây",
+        "example": "这是我的书。",
+        "example_pinyin": "/Zhè shì wǒ de shū/",
+        "example_meaning": "Đây là sách của tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 465,
+    "word": "这边",
+    "pinyin": "/zhèbiān/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Bên này, phía này",
+        "example": "你坐这边吧。",
+        "example_pinyin": "/Nǐ zuò zhèbiān ba/",
+        "example_meaning": "Bạn ngồi bên này đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 466,
+    "word": "这里",
+    "pinyin": "/zhè lǐ/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Ở đây, chỗ này",
+        "example": "这里的风景很美。",
+        "example_pinyin": "/Zhè lǐ de fēngjǐng hěn měi/",
+        "example_meaning": "Phong cảnh ở đây rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 467,
+    "word": "这儿",
+    "pinyin": "/zhèr/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Ở đây",
+        "example": "你来这儿看看吧。",
+        "example_pinyin": "/Nǐ lái zhèr kànkan ba/",
+        "example_meaning": "Bạn đến chỗ này xem thử đi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 468,
+    "word": "这些",
+    "pinyin": "/zhèxiē/",
+    "meanings": [
+      {
+        "pos": "Đại từ",
+        "meaning": "Những cái này",
+        "example": "这些水果很好吃。",
+        "example_pinyin": "/Zhèxiē shuǐguǒ hěn hǎochī/",
+        "example_meaning": "Những loại trái cây này rất ngon.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 469,
+    "word": "着",
+    "pinyin": "/zhe/",
+    "meanings": [
+      {
+        "pos": "Trợ từ",
+        "meaning": "Đang (dùng để chỉ trạng thái tiếp diễn)",
+        "example": "他笑着说话。",
+        "example_pinyin": "/Tā xiào zhe shuōhuà/",
+        "example_meaning": "Anh ấy vừa cười vừa nói.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 470,
+    "word": "真",
+    "pinyin": "/zhēn/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Thật, rất",
+        "example": "这个地方真美。",
+        "example_pinyin": "/Zhège dìfāng zhēn měi/",
+        "example_meaning": "Nơi này thật đẹp!",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 471,
+    "word": "真的",
+    "pinyin": "/zhēn de/",
+    "meanings": [
+      {
+        "pos": "Cụm từ",
+        "meaning": "Thật sự, thực sự",
+        "example": "你真的要去吗？",
+        "example_pinyin": "/Nǐ zhēnde yào qù ma/",
+        "example_meaning": "Bạn thật sự muốn đi à?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 472,
+    "word": "正",
+    "pinyin": "/zhèng/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "vừa hay, đúng lúc",
+        "example": "我正好要去找你。",
+        "example_pinyin": "/Wǒ zhènghǎo yào qù zhǎo nǐ/",
+        "example_meaning": "Tôi vừa hay định đi tìm bạn.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 473,
+    "word": "正在",
+    "pinyin": "/zhèngzài/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Đang (chỉ hành động xảy ra trong hiện tại)",
+        "example": "我正在写作业。",
+        "example_pinyin": "/Wǒ zhèngzài xiě zuòyè/",
+        "example_meaning": "Tôi đang làm bài tập.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 474,
+    "word": "知道",
+    "pinyin": "/zhī dào/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Biết, hiểu biết",
+        "example": "你知道他的名字吗？",
+        "example_pinyin": "/Nǐ zhīdào tā de míngzi ma?/",
+        "example_meaning": "Bạn có biết tên của anh ấy không?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 475,
+    "word": "知识",
+    "pinyin": "/zhīshi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Kiến thức",
+        "example": "学习知识很重要。",
+        "example_pinyin": "/Xuéxí zhīshi hěn zhòngyào/",
+        "example_meaning": "Việc học rất quan trọng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 476,
+    "word": "中",
+    "pinyin": "/zhōng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ở giữa, trung tâm",
+        "example": "她站在房间中间。",
+        "example_pinyin": "/Tā zhàn zài fángjiān de zhōngjiān/",
+        "example_meaning": "Cô ấy đứng ở giữa phòng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 477,
+    "word": "中国",
+    "pinyin": "/Zhōngguó/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trung quốc",
+        "example": "中国是一个美丽的国家。",
+        "example_pinyin": "/Zhōngguó shì yī gè měilì de guójiā/",
+        "example_meaning": "Trung Quốc là một đất nước xinh đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 478,
+    "word": "中间",
+    "pinyin": "/zhōngjiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Ở giữa, trung gian",
+        "example": "我家在学校和公司中间。",
+        "example_pinyin": "/Wǒ jiā zài xuéxiào hé gōngsī zhōngjiān/",
+        "example_meaning": "Nhà tôi nằm giữa trường học và công ty.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 479,
+    "word": "中文",
+    "pinyin": "/Zhōngwén/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Tiếng trung quốc",
+        "example": "你的中文很好。",
+        "example_pinyin": "/Nǐ de Zhōngwén hěn hǎo/",
+        "example_meaning": "Tiếng Trung của bạn rất tốt",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 480,
+    "word": "中午",
+    "pinyin": "/zhōngwǔ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Buổi trưa",
+        "example": "我们中午去吃饭吧。",
+        "example_pinyin": "/Wǒmen zhōngwǔ qù chīfàn ba/",
+        "example_meaning": "Chúng ta đi ăn trưa nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 481,
+    "word": "中学",
+    "pinyin": "/zhōngxué/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Trường trung học",
+        "example": "他是我中学同学。",
+        "example_pinyin": "/Tā shì wǒ zhōngxué tóngxué/",
+        "example_meaning": "Anh ấy là bạn học của tôi ở trường trung học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 482,
+    "word": "中学生",
+    "pinyin": "/zhōngxuéshēng/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Học sinh trung học",
+        "example": "他是一个中学生。",
+        "example_pinyin": "/Tā shì yí gè zhōngxuéshēng/",
+        "example_meaning": "Cậu ấy là một học sinh trung học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 483,
+    "word": "重",
+    "pinyin": "/zhòng/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Nặng\n\ntrọng yếu, quan trọng",
+        "example": "这个箱子很重。\n\n这是个重大决定。",
+        "example_pinyin": "/Zhège xiāngzi hěn zhòng/\n\n/Zhè shìgè zhòngdà juédìng/",
+        "example_meaning": "Chiếc hộp này rất nặng.\n\nĐây là một quyết định quan trọng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 484,
+    "word": "重要",
+    "pinyin": "/zhòngyào/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Quan trọng",
+        "example": "学习汉语对我来说很重要。",
+        "example_pinyin": "/Xuéxí Hànyǔ duì wǒ lái shuō hěn zhòngyào/",
+        "example_meaning": "Học tiếng Trung rất quan trọng đối với tôi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 485,
+    "word": "住",
+    "pinyin": "/zhù/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ở, cư trú, sống",
+        "example": "你住在哪个城市？",
+        "example_pinyin": "/Nǐ zhù zài nǎge chéngshì/",
+        "example_meaning": "Bạn sống ở thành phố nào?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 486,
+    "word": "准备",
+    "pinyin": "/zhǔnbèi/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Chuẩn bị",
+        "example": "A: 你准备好了吗？\nB: 我们要出发了。",
+        "example_pinyin": "A: /Nǐ zhǔnbèi hǎo le ma/\nB: /Wǒmen yào chūfā le/",
+        "example_meaning": "A: Bạn chuẩn bị xong chưa? \nB: Chúng ta sắp xuất phát rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 487,
+    "word": "桌子",
+    "pinyin": "/zhuōzi/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cái bàn",
+        "example": "书在桌子上，你看见了吗？",
+        "example_pinyin": "/Shū zài zhuōzi shàng, nǐ kànjiàn le ma/",
+        "example_meaning": "Quyển sách ở trên bàn, bạn thấy chưa?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 488,
+    "word": "字",
+    "pinyin": "/zì/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Chữ, từ",
+        "example": "我不认识这个字。",
+        "example_pinyin": "/Wǒ bù rènshi zhège zì/",
+        "example_meaning": "Tôi không biết chữ này.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 489,
+    "word": "子（桌子）",
+    "pinyin": "/zi (zhuōzi)/",
+    "meanings": [
+      {
+        "pos": "Hậu tố",
+        "meaning": "Hậu tố dùng trong danh từ",
+        "example": "你的桌子很大，很好看。",
+        "example_pinyin": "/Nǐ de zhuōzi hěn dà, hěn hǎokàn/",
+        "example_meaning": "Cái bàn của bạn rất lớn, rất đẹp.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 490,
+    "word": "走",
+    "pinyin": "/zǒu/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi, rời đi",
+        "example": "我们一起走吧，太晚了。",
+        "example_pinyin": "/Wǒmen yīqǐ zǒu ba, tài wǎn le/",
+        "example_meaning": "Chúng ta cùng đi thôi, trễ quá rồi.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 491,
+    "word": "走路",
+    "pinyin": "/zǒu lù/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Đi bộ",
+        "example": "他每天早上都走路去学校。",
+        "example_pinyin": "/Tā měitiān zǎoshang dōu zǒulù qù xuéxiào/",
+        "example_meaning": "Mỗi sáng anh ấy đều đi bộ đến trường.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 492,
+    "word": "最",
+    "pinyin": "/zuì/",
+    "meanings": [
+      {
+        "pos": "Phó từ",
+        "meaning": "Nhất (chỉ mức độ cao nhất)",
+        "example": "你最喜欢吃什么水果？",
+        "example_pinyin": "/Nǐ zuì xǐhuan chī shénme shuǐguǒ/",
+        "example_meaning": "Bạn thích ăn loại trái cây nào nhất?",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 493,
+    "word": "最好",
+    "pinyin": "/zuìhǎo/",
+    "meanings": [
+      {
+        "pos": "Tính từ",
+        "meaning": "Tốt nhất",
+        "example": "下雨了，你最好带伞。",
+        "example_pinyin": "/Xiàyǔ le, nǐ zuìhǎo dài sǎn/",
+        "example_meaning": "Trời mưa rồi, tốt nhất bạn nên mang ô.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 494,
+    "word": "最后",
+    "pinyin": "/zuìhòu/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Cuối cùng",
+        "example": "最后一个问题，你听好了。",
+        "example_pinyin": "/Zuìhòu yī gè wèntí, nǐ tīng hǎo le/",
+        "example_meaning": "Câu hỏi cuối cùng, bạn nghe kỹ nhé.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 495,
+    "word": "昨天",
+    "pinyin": "/zuótiān/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Hôm qua",
+        "example": "昨天天气很好，我们去公园了。",
+        "example_pinyin": "/Zuótiān tiānqì hěn hǎo, wǒmen qù gōngyuán le/",
+        "example_meaning": "Hôm qua thời tiết rất đẹp, chúng tôi đã đi công viên.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 496,
+    "word": "左",
+    "pinyin": "/zuǒ/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Bên trái",
+        "example": "请往左走，那边有商店。",
+        "example_pinyin": "/Qǐng wǎng zuǒ zǒu, nàbiān yǒu shāngdiàn/",
+        "example_meaning": "Hãy đi về bên trái, bên đó có cửa hàng.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 497,
+    "word": "左边",
+    "pinyin": "/zuǒbian/",
+    "meanings": [
+      {
+        "pos": "Danh từ",
+        "meaning": "Phía bên trái",
+        "example": "我家在学校左边。",
+        "example_pinyin": "/Wǒ jiā zài xuéxiào zuǒbian/",
+        "example_meaning": "Nhà tôi ở bên trái trường học.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 498,
+    "word": "坐",
+    "pinyin": "/zuò/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ngồi",
+        "example": "请坐这里，老师马上来。",
+        "example_pinyin": "/Qǐng zuò zhèlǐ, lǎoshī mǎshàng lái/",
+        "example_meaning": "Mời ngồi đây, thầy giáo sẽ đến ngay.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 499,
+    "word": "坐下",
+    "pinyin": "/zuòxia/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Ngồi xuống",
+        "example": "咱们坐下谈吧。",
+        "example_pinyin": "/Zánmen zuòxia tán ba/",
+        "example_meaning": "Chúng ta ngồi xuống nói chuyện.",
+        "is_approved": true
+      }
+    ]
+  },
+  {
+    "stt": 500,
+    "word": "做",
+    "pinyin": "/zuò/",
+    "meanings": [
+      {
+        "pos": "Động từ",
+        "meaning": "Làm, thực hiện",
+        "example": "我妈做中国菜非常好吃。",
+        "example_pinyin": "/Wǒ mā zuò Zhōngguó cài fēicháng hǎochī/",
+        "example_meaning": "Mẹ tôi làm đồ ăn Trung Quốc rất ngon.",
+        "is_approved": true
+      }
+    ]
+  }
+]
