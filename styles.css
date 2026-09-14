@@ -2455,6 +2455,91 @@ details[open] summary {
   box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
 }
 
+/* Import JSON Modal Styles */
+#importJsonModal pre {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--neon-cyan);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#importJsonModal details[open] summary {
+  color: var(--accent-purple);
+  margin-bottom: 12px;
+}
+
+#importJsonModal .auth-input[type="file"] {
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+#importJsonModal .auth-input[type="file"]:hover {
+  border-color: var(--accent-purple);
+  box-shadow: var(--shadow-neon);
+}
+
+:root.light-theme #importJsonModal pre {
+  color: #0284c7;
+  background: rgba(0, 0, 0, 0.04) !important;
+}
+
+:root.light-theme #importJsonModal details {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Duplicate Confirm Modal */
+#duplicateConfirmModal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+#duplicateList::-webkit-scrollbar {
+  width: 6px;
+}
+
+#duplicateList::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+}
+
+#duplicateList::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 3px;
+}
+
+#duplicateList::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-pink);
+}
+
+#skipDuplicatesBtn:hover {
+  background: rgba(16, 185, 129, 0.25) !important;
+  border-color: rgba(16, 185, 129, 0.6) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+#overwriteDuplicatesBtn:hover {
+  background: rgba(249, 115, 22, 0.25) !important;
+  border-color: rgba(249, 115, 22, 0.6) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+}
+
+#cancelDuplicateBtn:hover {
+  transform: translateY(-2px);
+}
+
+:root.light-theme #duplicateSummary {
+  background: rgba(255, 193, 7, 0.08) !important;
+  border-color: rgba(255, 193, 7, 0.25) !important;
+}
+
+:root.light-theme #duplicateList {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
 
 /* Quiz Deck Selection */
 .quiz-deck-selection {

@@ -1,6 +1,6 @@
 // ---------- state ----------
 let level='HSK1', deck=[], fcIdx=0, qScore=0, qTotal=0, writer=null, wIdx=0, wChars=[];
-let userId = 'default_user'; // Fixed user ID for single user app
+let userId = localStorage.getItem('wq_user_id') || 'guest_' + Date.now();
 localStorage.setItem('wq_user_id', userId);
 
 let favorites = JSON.parse(localStorage.getItem('wq_favorites_' + userId)) || [];
@@ -14,9 +14,10 @@ let quizAskedWords = []; // Các từ đã hỏi trong session
 const $=id=>document.getElementById(id);
 
 // ---------- API INTEGRATION ----------
-// DATA is already declared by data.js as const, just use it
+// DATA is already declared by data.js, just use it
+// If data.js not loaded, initialize it
 if (typeof DATA === 'undefined') {
-  window.DATA = {}; // Fallback if data.js not loaded
+  window.DATA = {};
 }
 let API_ENABLED = false; // Flag to check if API is available
 
@@ -43,13 +44,9 @@ async function loadDataFromAPI() {
       e: item.example || ''
     }));
     
-    // Update DATA properties instead of reassigning (DATA is const from data.js)
+    // Update DATA properties instead of reassigning (DATA is const)
     DATA['HSK 1'] = hsk1Data;
     DATA['HSK 2'] = hsk2Data;
-    DATA['HSK 3'] = DATA['HSK 3'] || [];
-    DATA['HSK 4'] = DATA['HSK 4'] || [];
-    DATA['HSK 5'] = DATA['HSK 5'] || [];
-    DATA['HSK 6'] = DATA['HSK 6'] || [];
     
     console.log('✅ Loaded from API:', hsk1Data.length + hsk2Data.length, 'words');
     API_ENABLED = true;
@@ -60,10 +57,10 @@ async function loadDataFromAPI() {
     }
     
   } catch (error) {
-    console.warn('⚠️ API not available for HSK data, falling back to embedded data:', error);
-    // Don't set API_ENABLED to false here - it might still work for custom decks
+    console.warn('⚠️ API not available, falling back to embedded data:', error);
+    API_ENABLED = false;
     
-    // DATA from data.js is already loaded, no need to reassign
+    // DATA already has embedded data from data.js, no need to reassign
     console.log('✅ Using embedded data:', Object.keys(DATA).length, 'levels');
     
     // Init UI with fallback data
@@ -76,18 +73,11 @@ async function loadDataFromAPI() {
 // Try to load from API after a short delay to ensure api-client.js is loaded
 setTimeout(() => {
   if (window.WeiQuanAPI) {
-    // Set API_ENABLED immediately if API client exists
-    API_ENABLED = true;
-    console.log('✅ API client available, API_ENABLED = true');
-    
     loadDataFromAPI().catch(err => {
-      console.error('Failed to load HSK data from API:', err);
-      // Keep API_ENABLED = true for custom deck sync
-      console.log('⚠️ HSK data load failed but API still available for custom decks');
+      console.error('Failed to load from API:', err);
     });
   } else {
     console.warn('⚠️ API client not available, using embedded data only');
-    API_ENABLED = false;
     // Still init UI with embedded data
     if (typeof initUIWithData === 'function' && DATA && Object.keys(DATA).length > 0) {
       console.log('✅ Initializing UI with embedded data');
@@ -307,9 +297,12 @@ function initUIWithData() {
 // Init when DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   console.log('📄 DOM Content Loaded');
+  console.log('🔍 Checking DATA:', typeof DATA, DATA);
+  console.log('🔍 DATA keys:', DATA ? Object.keys(DATA) : 'undefined');
+  console.log('🔍 DATA["HSK 1"]:', DATA ? DATA['HSK 1']?.length : 'undefined');
+  
   lvlSel = $('levelSel');
   console.log('🔍 lvlSel element:', lvlSel);
-  console.log('🔍 DATA available:', typeof DATA, DATA ? Object.keys(DATA).length : 0);
   
   if (typeof DATA !== 'undefined' && Object.keys(DATA).length > 0) {
     console.log('✅ Calling initUIWithData...');
@@ -317,9 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.warn('⚠️ DATA not ready yet, will wait for API load');
   }
-  
-  // Load saved progress after UI is initialized
-  loadProgress();
 });
 
 function updateFavOptionText() {
@@ -943,14 +933,22 @@ function loadProgress() {
   const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
   const username = currentUser ? currentUser.username : null;
   const saved = WQStorage.getUserDataField(username, 'progress', 'wq_progress');
+  
+  // Check if elements exist
+  if (!lvlSel) {
+    console.warn('⚠️ loadProgress: lvlSel not ready yet');
+    return;
+  }
+  
   if (saved) {
     if (saved.level) {
       level = saved.level;
       lvlSel.value = level;
     }
     buildRanges();
-    if (saved.rangeVal) {
-      $('rangeSel').value = saved.rangeVal;
+    const rangeSel = $('rangeSel');
+    if (saved.rangeVal && rangeSel) {
+      rangeSel.value = saved.rangeVal;
     }
     applyRange();
     if (saved.fcIdx !== undefined && saved.fcIdx < deck.length) {
@@ -1010,13 +1008,18 @@ window.WQSyncData = function(username) {
   }
 };
 
-// Khởi chạy Auth (nhưng không load progress ngay - đợi DOM ready)
-if (typeof DATA !== 'undefined') {
-  if (window.WQAuth) {
-    window.WQAuth.init();
+// Khởi chạy - wait for DOM
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof DATA !== 'undefined') {
+    if (window.WQAuth) {
+      window.WQAuth.init();
+    }
+    // Load progress after lvlSel is ready
+    setTimeout(() => {
+      if (lvlSel) loadProgress();
+    }, 100);
   }
-  // loadProgress() sẽ được gọi trong DOMContentLoaded
-}
+});
 
 // ---------- SEARCH FUNCTIONALITY ----------
 function removePinyinTones(str) {
@@ -1524,64 +1527,14 @@ window.addEventListener('click', (e) => {
   let selectedWord = null; // Từ được chọn từ database
 
   // Load lịch sử từ localStorage
-  // Load lịch sử từ localStorage và server
-  async function loadCustomHistory() {
+  function loadCustomHistory() {
     const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
     const username = currentUser ? currentUser.username : null;
     
-    console.log('🔍 loadCustomHistory called, userId:', userId, 'username:', username);
-    
-    // Load from localStorage first
     if (username) {
       customHistory = WQStorage.getUserDataField(username, 'customDecks', '') || [];
     } else {
       customHistory = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
-    }
-    
-    console.log('📦 Loaded from localStorage:', customHistory.length, 'decks');
-
-    // Then sync from server if API available
-    if (API_ENABLED && window.WeiQuanAPI) {
-      try {
-        console.log('☁️ Loading custom decks from server for userId:', userId);
-        const response = await window.WeiQuanAPI.getDecks(userId);
-        console.log('📡 Server response:', response);
-        
-        if (response.success && response.data.length > 0) {
-          // Merge server data with local data
-          const serverDecks = response.data.map(deck => ({
-            id: deck.id,
-            name: deck.name,
-            words: [], // Words will be loaded on demand
-            createdAt: deck.created_at ? deck.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
-            wordCount: deck.word_count || 0,
-            fromServer: true,
-            serverId: deck.id
-          }));
-
-          console.log('🔗 Server decks:', serverDecks);
-
-          // Replace all with server data (server is source of truth)
-          customHistory = serverDecks;
-          
-          console.log(`✅ Loaded ${serverDecks.length} decks from server`);
-          
-          // Save to localStorage as cache
-          saveCustomHistory();
-          
-          // Re-render UI to show server data
-          if (typeof renderCustomHistory === 'function') {
-            renderCustomHistory();
-            console.log('🔄 UI updated with server data');
-          }
-        } else {
-          console.log('⚠️ No decks found on server');
-        }
-      } catch (error) {
-        console.warn('⚠️ Failed to load from server:', error);
-      }
-    } else {
-      console.warn('⚠️ API not enabled, cannot load from server. API_ENABLED:', API_ENABLED);
     }
   }
 
@@ -2078,23 +2031,12 @@ window.addEventListener('click', (e) => {
   function renderCustomHistory() {
     const list = $('customHistoryList');
     
-    console.log('🎨 renderCustomHistory called');
-    console.log('  - customHistory.length:', customHistory.length);
-    console.log('  - list element:', list);
-    
-    if (!list) {
-      console.error('❌ customHistoryList element not found!');
-      return;
-    }
-    
     if (customHistory.length === 0) {
       list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Chưa có lịch sử</div>';
-      console.log('  - Rendered: empty state');
       return;
     }
 
     list.innerHTML = '';
-    console.log('  - Rendering', customHistory.length, 'decks...');
     customHistory.forEach((deck, index) => {
       const item = document.createElement('div');
       item.className = 'custom-deck-history-item';
@@ -2121,31 +2063,8 @@ window.addEventListener('click', (e) => {
         </div>
       `;
 
-      item.querySelector('[data-action="load"]').onclick = async (e) => {
+      item.querySelector('[data-action="load"]').onclick = (e) => {
         e.stopPropagation();
-        
-        // If deck from server and no words loaded yet, fetch from API
-        if (deck.fromServer && (!deck.words || deck.words.length === 0)) {
-          try {
-            if (window.showToast) {
-              window.showToast('⏳ Đang tải từ server...', 'info');
-            }
-            
-            const response = await window.WeiQuanAPI.getDeck(deck.id);
-            if (response.success && response.data.words) {
-              deck.words = response.data.words;
-              // Update localStorage cache
-              saveCustomHistory();
-            }
-          } catch (error) {
-            console.error('Failed to load deck from server:', error);
-            if (window.showToast) {
-              window.showToast('❌ Không thể tải từ server', 'error');
-            }
-            return;
-          }
-        }
-        
         currentCustomWords = [...deck.words];
         renderCustomWordsList();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2154,47 +2073,14 @@ window.addEventListener('click', (e) => {
         }
       };
 
-      item.querySelector('[data-action="study"]').onclick = async (e) => {
+      item.querySelector('[data-action="study"]').onclick = (e) => {
         e.stopPropagation();
-        
-        // If deck from server and no words loaded yet, fetch from API
-        if (deck.fromServer && (!deck.words || deck.words.length === 0)) {
-          try {
-            if (window.showToast) {
-              window.showToast('⏳ Đang tải từ server...', 'info');
-            }
-            
-            const response = await window.WeiQuanAPI.getDeck(deck.id);
-            if (response.success && response.data.words) {
-              deck.words = response.data.words;
-              // Update localStorage cache
-              saveCustomHistory();
-            }
-          } catch (error) {
-            console.error('Failed to load deck from server:', error);
-            if (window.showToast) {
-              window.showToast('❌ Không thể tải từ server', 'error');
-            }
-            return;
-          }
-        }
-        
         showStudyModeModal(deck.name, [...deck.words]);
       };
 
-      item.querySelector('[data-action="delete"]').onclick = async (e) => {
+      item.querySelector('[data-action="delete"]').onclick = (e) => {
         e.stopPropagation();
         if (confirm(`Bạn có chắc muốn xóa bộ từ "${deck.name}"?`)) {
-          // Delete from server first if it's from server
-          if (deck.fromServer && API_ENABLED && window.WeiQuanAPI) {
-            try {
-              await window.WeiQuanAPI.deleteDeck(deck.id);
-              console.log('✅ Deleted deck from server');
-            } catch (error) {
-              console.warn('⚠️ Failed to delete from server:', error);
-            }
-          }
-          
           customHistory.splice(index, 1);
           saveCustomHistory();
           renderCustomHistory();
@@ -2218,22 +2104,8 @@ window.addEventListener('click', (e) => {
     const addManualBtn = $('addManualWordBtn');
     const saveBtn = $('saveCustomDeckBtn');
     const studyBtn = $('studyCustomDeckBtn');
-    const importJsonBtn = $('importJsonBtn');
     const studyModeModal = $('studyModeModal');
     const closeStudyModeBtn = $('closeStudyModeBtn');
-
-    // Import JSON modal elements
-    const closeImportBtn = $('closeImportJsonBtn');
-    const cancelImportBtn = $('cancelImportJsonBtn');
-    const confirmImportBtn = $('confirmImportJsonBtn');
-    const importModal = $('importJsonModal');
-
-    // Duplicate modal elements
-    const closeDupBtn = $('closeDuplicateModalBtn');
-    const cancelDupBtn = $('cancelDuplicateBtn');
-    const skipBtn = $('skipDuplicatesBtn');
-    const overwriteBtn = $('overwriteDuplicatesBtn');
-    const dupModal = $('duplicateConfirmModal');
 
     // Search autocomplete
     if (searchInput) {
@@ -2282,50 +2154,6 @@ window.addEventListener('click', (e) => {
       studyBtn.onclick = studyCustomDeck;
     }
 
-    // Import JSON button
-    if (importJsonBtn) {
-      importJsonBtn.onclick = openImportJsonModal;
-    }
-
-    // Import JSON modal events
-    if (closeImportBtn) {
-      closeImportBtn.onclick = closeImportJsonModal;
-    }
-
-    if (cancelImportBtn) {
-      cancelImportBtn.onclick = closeImportJsonModal;
-    }
-
-    if (confirmImportBtn) {
-      confirmImportBtn.onclick = importJsonWords;
-    }
-
-    // Duplicate modal events
-    if (closeDupBtn) {
-      closeDupBtn.onclick = () => {
-        closeDuplicateModal();
-        delete window._importData;
-      };
-    }
-
-    if (cancelDupBtn) {
-      cancelDupBtn.onclick = () => {
-        closeDuplicateModal();
-        delete window._importData;
-        if (window.showToast) {
-          window.showToast('❌ Đã hủy import', 'info');
-        }
-      };
-    }
-
-    if (skipBtn) {
-      skipBtn.onclick = handleSkipDuplicates;
-    }
-
-    if (overwriteBtn) {
-      overwriteBtn.onclick = handleOverwriteDuplicates;
-    }
-
     // Close study mode modal
     if (closeStudyModeBtn && studyModeModal) {
       closeStudyModeBtn.onclick = () => {
@@ -2333,7 +2161,7 @@ window.addEventListener('click', (e) => {
       };
     }
 
-    // Click outside modals to close
+    // Click outside modal to close
     if (studyModeModal) {
       window.addEventListener('click', (e) => {
         if (e.target === studyModeModal) {
@@ -2341,446 +2169,19 @@ window.addEventListener('click', (e) => {
         }
       });
     }
-
-    if (importModal) {
-      window.addEventListener('click', (e) => {
-        if (e.target === importModal) {
-          closeImportJsonModal();
-        }
-      });
-    }
-
-    if (dupModal) {
-      window.addEventListener('click', (e) => {
-        if (e.target === dupModal) {
-          closeDuplicateModal();
-          delete window._importData;
-        }
-      });
-    }
-  }
-
-  // Export functions ra global để dùng ở nơi khác
-  window.checkFlashcardComplete = checkFlashcardComplete;
-
-  // ==================== IMPORT JSON FEATURE ====================
-  
-  // Mở modal import JSON
-  function openImportJsonModal() {
-    const modal = $('importJsonModal');
-    if (!modal) return;
-    
-    // Clear inputs
-    $('jsonFileInput').value = '';
-    $('jsonTextInput').value = '';
-    
-    modal.classList.add('active');
-  }
-
-  // Đóng modal import JSON
-  function closeImportJsonModal() {
-    const modal = $('importJsonModal');
-    if (modal) modal.classList.remove('active');
-  }
-
-  // Parse và validate JSON
-  function parseImportedJson(jsonString) {
-    try {
-      const parsed = JSON.parse(jsonString);
-      let words = [];
-
-      // Format 1: Array trực tiếp [{ h, p, m, e? }]
-      if (Array.isArray(parsed)) {
-        words = parsed.filter(w => w.h && w.p && w.m).map(w => ({
-          h: w.h,
-          p: w.p,
-          m: w.m,
-          ex: w.e || w.ex || ''
-        }));
-      } 
-      // Format 2: Object với key level { "HSK 1": [...], "HSK 2": [...] }
-      else if (typeof parsed === 'object') {
-        Object.keys(parsed).forEach(key => {
-          if (Array.isArray(parsed[key])) {
-            parsed[key].forEach(w => {
-              if (w.h && w.p && w.m) {
-                words.push({
-                  h: w.h,
-                  p: w.p,
-                  m: w.m,
-                  ex: w.e || w.ex || ''
-                });
-              }
-            });
-          }
-        });
-      }
-
-      return { success: true, words, count: words.length };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
-  }
-
-  // Import từ JSON vào danh sách hiện tại
-  function importJsonWords() {
-    const fileInput = $('jsonFileInput');
-    const textInput = $('jsonTextInput');
-
-    // Ưu tiên file upload
-    if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        processJsonImport(e.target.result);
-      };
-      
-      reader.onerror = () => {
-        if (window.showToast) {
-          window.showToast('❌ Lỗi đọc file!', 'error');
-        }
-      };
-      
-      reader.readAsText(file);
-    } 
-    // Nếu không có file, dùng textarea
-    else if (textInput.value.trim()) {
-      processJsonImport(textInput.value.trim());
-    } 
-    else {
-      if (window.showToast) {
-        window.showToast('⚠️ Vui lòng tải file hoặc dán JSON!', 'error');
-      }
-    }
-  }
-
-  // Show dialog asking user what to do after import
-  function showImportActionDialog(wordCount) {
-    return new Promise((resolve) => {
-      const result = confirm(
-        `✅ Đã import ${wordCount} từ!\n\n` +
-        `Bạn muốn lưu thành bộ từ mới không?\n\n` +
-        `• OK: Lưu thành bộ từ mới (có thể đặt tên)\n` +
-        `• Cancel: Chỉ giữ trong danh sách tạm (chưa lưu)`
-      );
-      resolve(result ? 'save' : 'skip');
-    });
-  }
-
-  // Save custom deck with user-provided name
-  async function saveCustomDeckWithName() {
-    if (currentCustomWords.length === 0) {
-      if (window.showToast) {
-        window.showToast('Bộ từ đang trống!', 'error');
-      }
-      return;
-    }
-
-    const deckName = prompt('Đặt tên cho bộ từ:', `Bộ từ ${customHistory.length + 1}`);
-    if (!deckName) return;
-
-    const deck = {
-      id: Date.now(),
-      name: deckName,
-      words: [...currentCustomWords],
-      createdAt: new Date().toISOString().split('T')[0],
-      wordCount: currentCustomWords.length
-    };
-
-    console.log('💾 Saving custom deck with name:', deckName);
-
-    // Save to localStorage
-    customHistory.unshift(deck);
-    saveCustomHistory();
-    renderCustomHistory();
-
-    // Sync to API if available
-    if (API_ENABLED && window.WeiQuanAPI) {
-      try {
-        console.log('☁️ Syncing deck to API...');
-        const response = await window.WeiQuanAPI.createDeck(userId, deckName, currentCustomWords);
-        console.log('✅ Deck synced to cloud:', response);
-
-        if (response.success) {
-          deck.fromServer = true;
-          deck.serverId = response.deck_id;
-          saveCustomHistory();
-        }
-
-        if (window.showToast) {
-          window.showToast(`✅ Đã lưu "${deckName}" (${deck.wordCount} từ) lên server`, 'success');
-        }
-      } catch (error) {
-        console.error('❌ Failed to sync to API:', error);
-        if (window.showToast) {
-          window.showToast(`⚠️ Đã lưu local "${deckName}" nhưng chưa sync server`, 'warning');
-        }
-      }
-    } else {
-      if (window.showToast) {
-        window.showToast(`💾 Đã lưu "${deckName}" (${deck.wordCount} từ)`, 'success');
-      }
-    }
-  }
-
-  // Auto-save imported deck to server
-  async function autoSaveImportedDeck(importCount) {
-    if (currentCustomWords.length === 0) return;
-
-    // Generate auto name based on timestamp
-    const now = new Date();
-    const deckName = `Import ${now.toLocaleDateString('vi-VN')} ${now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}`;
-
-    const deck = {
-      id: Date.now(),
-      name: deckName,
-      words: [...currentCustomWords],
-      createdAt: new Date().toISOString().split('T')[0],
-      wordCount: currentCustomWords.length
-    };
-
-    console.log('💾 Auto-saving deck:', deckName, 'Words:', importCount, 'UserId:', userId);
-
-    // Save to localStorage
-    customHistory.unshift(deck);
-    saveCustomHistory();
-    renderCustomHistory();
-    
-    console.log('✅ Saved to localStorage');
-
-    // Sync to API if available
-    if (API_ENABLED && window.WeiQuanAPI) {
-      try {
-        console.log('☁️ Auto-syncing imported deck to API...');
-        console.log('📤 Request payload:', { user_id: userId, name: deckName, words_count: currentCustomWords.length });
-        
-        const response = await window.WeiQuanAPI.createDeck(userId, deckName, currentCustomWords);
-        console.log('✅ Deck auto-synced to cloud:', response);
-        
-        if (response.success) {
-          // Mark deck as synced
-          deck.fromServer = true;
-          deck.serverId = response.deck_id;
-          
-          if (window.showToast) {
-            window.showToast(`☁️ Đã lưu "${deckName}" lên server (${importCount} từ)`, 'success');
-          }
-        }
-      } catch (error) {
-        console.error('❌ Failed to auto-sync to API:', error);
-        console.error('Error details:', error.message, error.stack);
-        if (window.showToast) {
-          window.showToast(`💾 Đã lưu local "${deckName}" (${importCount} từ) - Server lỗi: ${error.message}`, 'warning');
-        }
-      }
-    } else {
-      console.warn('⚠️ API not enabled, only saving to localStorage');
-      console.warn('API_ENABLED:', API_ENABLED, 'WeiQuanAPI:', !!window.WeiQuanAPI);
-      if (window.showToast) {
-        window.showToast(`💾 Đã lưu local "${deckName}" (${importCount} từ)`, 'info');
-      }
-    }
-  }
-
-  // Xử lý JSON đã nhập
-  function processJsonImport(jsonString) {
-    const result = parseImportedJson(jsonString);
-
-    if (!result.success) {
-      if (window.showToast) {
-        window.showToast(`❌ JSON không hợp lệ: ${result.error}`, 'error');
-      }
-      return;
-    }
-
-    if (result.count === 0) {
-      if (window.showToast) {
-        window.showToast('⚠️ Không tìm thấy từ vựng hợp lệ trong JSON!', 'error');
-      }
-      return;
-    }
-
-    // Phân loại từ: mới và trùng
-    const newWords = [];
-    const duplicateWords = [];
-
-    result.words.forEach(word => {
-      const existingIndex = currentCustomWords.findIndex(w => w.h === word.h);
-      if (existingIndex === -1) {
-        newWords.push(word);
-      } else {
-        duplicateWords.push({
-          word: word,
-          existing: currentCustomWords[existingIndex],
-          index: existingIndex
-        });
-      }
-    });
-
-    // Nếu có từ trùng, hiển thị dialog xác nhận
-    if (duplicateWords.length > 0) {
-      showDuplicateConfirmDialog(newWords, duplicateWords);
-    } else {
-      // Không có trùng, import trực tiếp
-      currentCustomWords.push(...newWords);
-      closeImportJsonModal();
-      renderCustomWordsList();
-
-      // Ask user what to do: create new deck or just add to current
-      showImportActionDialog(newWords.length).then(action => {
-        if (action === 'save') {
-          // Save as new deck with custom name
-          saveCustomDeckWithName();
-        }
-      });
-
-      if (window.showToast) {
-        window.showToast(`✅ Đã thêm ${newWords.length} từ mới!`, 'success');
-      }
-    }
-  }
-
-  // Hiển thị dialog xác nhận khi có từ trùng
-  function showDuplicateConfirmDialog(newWords, duplicateWords) {
-    const modal = $('duplicateConfirmModal');
-    if (!modal) return;
-
-    // Temporary storage
-    window._importData = { newWords, duplicateWords };
-
-    // Update summary
-    const summary = $('duplicateSummary');
-    summary.innerHTML = `
-      <div style="display: flex; justify-content: space-around; text-align: center;">
-        <div>
-          <div style="font-size: 2rem; font-weight: 800; color: var(--neon-green);">${newWords.length}</div>
-          <div style="font-size: 0.85rem; color: var(--text-secondary);">Từ mới</div>
-        </div>
-        <div>
-          <div style="font-size: 2rem; font-weight: 800; color: #F59E0B;">${duplicateWords.length}</div>
-          <div style="font-size: 0.85rem; color: var(--text-secondary);">Từ trùng</div>
-        </div>
-      </div>
-    `;
-
-    // Update counts in buttons
-    $('newWordsCount').textContent = newWords.length;
-    $('duplicateWordsCount').textContent = duplicateWords.length;
-
-    // Update duplicate list
-    const list = $('duplicateList');
-    list.innerHTML = '';
-    duplicateWords.slice(0, 10).forEach(d => {
-      const item = document.createElement('div');
-      item.style.cssText = 'padding: 10px; margin-bottom: 8px; background: rgba(255,255,255,0.03); border-radius: 10px; border: 1px solid rgba(255,193,7,0.2);';
-      item.innerHTML = `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span style="font-size: 1.1rem; font-weight: 700; color: #fff;">${d.word.h}</span>
-          <span style="font-size: 0.85rem; color: var(--neon-cyan);">${d.word.p}</span>
-        </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem;">
-          <div>
-            <div style="color: var(--text-muted); font-size: 0.75rem;">Hiện tại:</div>
-            <div style="color: var(--text-secondary);">${d.existing.m}</div>
-          </div>
-          <div>
-            <div style="color: var(--text-muted); font-size: 0.75rem;">Mới:</div>
-            <div style="color: #F97316;">${d.word.m}</div>
-          </div>
-        </div>
-      `;
-      list.appendChild(item);
-    });
-
-    if (duplicateWords.length > 10) {
-      const more = document.createElement('div');
-      more.style.cssText = 'padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.85rem;';
-      more.textContent = `... và ${duplicateWords.length - 10} từ khác`;
-      list.appendChild(more);
-    }
-
-    // Close import modal, show duplicate modal
-    closeImportJsonModal();
-    modal.classList.add('active');
-  }
-
-  // Xử lý chọn skip duplicates
-  function handleSkipDuplicates() {
-    const { newWords } = window._importData || {};
-    if (!newWords) return;
-
-    currentCustomWords.push(...newWords);
-    closeDuplicateModal();
-    renderCustomWordsList();
-
-    // Ask user what to do
-    showImportActionDialog(newWords.length).then(action => {
-      if (action === 'save') {
-        saveCustomDeckWithName();
-      }
-    });
-
-    if (window.showToast) {
-      window.showToast(`✅ Đã thêm ${newWords.length} từ mới!`, 'success');
-    }
-
-    delete window._importData;
-  }
-
-  // Xử lý ghi đè từ trùng
-  function handleOverwriteDuplicates() {
-    const { newWords, duplicateWords } = window._importData || {};
-    if (!newWords || !duplicateWords) return;
-
-    // Thêm từ mới
-    currentCustomWords.push(...newWords);
-
-    // Ghi đè từ cũ
-    duplicateWords.forEach(d => {
-      currentCustomWords[d.index] = d.word;
-    });
-
-    closeDuplicateModal();
-    renderCustomWordsList();
-
-    // Ask user what to do
-    showImportActionDialog(newWords.length + duplicateWords.length).then(action => {
-      if (action === 'save') {
-        saveCustomDeckWithName();
-      }
-    });
-
-    if (window.showToast) {
-      window.showToast(`✅ Đã thêm ${newWords.length} từ mới + ghi đè ${duplicateWords.length} từ!`, 'success');
-    }
-
-    delete window._importData;
-  }
-
-  // Đóng duplicate modal
-  function closeDuplicateModal() {
-    const modal = $('duplicateConfirmModal');
-    if (modal) modal.classList.remove('active');
   }
 
   // Khi mở section Custom
   document.addEventListener('DOMContentLoaded', () => {
     initCustomDeckEvents();
-    
-    // Load history with API after short delay
-    setTimeout(async () => {
-      await loadCustomHistory();
-      renderCustomHistory();
-      console.log('✅ Custom deck section initialized');
-    }, 600);
+    loadCustomHistory();
+    renderCustomHistory();
 
     setTimeout(() => {
       const customMenuItem = document.querySelector('.menu-item[data-section="custom"]');
       if (customMenuItem) {
-        customMenuItem.addEventListener('click', async () => {
-          console.log('🔄 Custom section opened, reloading...');
-          await loadCustomHistory();
+        customMenuItem.addEventListener('click', () => {
+          loadCustomHistory();
           renderCustomWordsList();
           renderCustomHistory();
         });

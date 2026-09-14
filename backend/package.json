@@ -1,0 +1,19 @@
+{
+  "name": "weiquan-api",
+  "version": "1.0.0",
+  "description": "Cloudflare Workers API for WeiQuan Chinese HSK",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create weiquan_hsk",
+    "db:init": "wrangler d1 execute weiquan_hsk --file=./schema.sql",
+    "db:seed": "node scripts/seed.js"
+  },
+  "keywords": ["cloudflare", "workers", "d1", "hsk"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

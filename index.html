@@ -6,7 +6,6 @@
 <title>WeiQuan Chinese</title>
 
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-<script src="data.js" defer></script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -373,9 +372,12 @@
 
           <!-- Danh sách từ đã thêm -->
           <div class="custom-words-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
               <h4 style="font-size: 1rem; font-weight: 700; color: #fff;">Bộ từ hiện tại (<span id="customWordCount">0</span> từ)</h4>
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button class="btn" id="importJsonBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); color: #3B82F6;">
+                  � Nhập JSON
+                </button>
                 <button class="btn" id="saveCustomDeckBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: var(--neon-green);">
                   💾 Lưu bộ từ
                 </button>
@@ -461,6 +463,109 @@
 <!-- Modal Authentication (Đăng nhập / Đăng ký) - TEMPORARILY DISABLED -->
 <!-- <div id="authModal" class="modal">
 
+<!-- Modal nhập JSON -->
+<div id="importJsonModal" class="modal">
+  <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-header">
+      <h2>📥 Nhập từ vựng từ JSON</h2>
+      <span class="close-btn" id="closeImportJsonBtn">&times;</span>
+    </div>
+    <div class="modal-body" style="padding: 24px;">
+      <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 0.9rem;">
+        Dán JSON hoặc tải file JSON lên. Hỗ trợ 2 định dạng:
+      </p>
+      
+      <!-- Format examples -->
+      <details style="margin-bottom: 16px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border);">
+        <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600; user-select: none;">
+          📋 Xem ví dụ định dạng JSON
+        </summary>
+        <div style="margin-top: 12px; font-size: 0.85rem; color: var(--text-secondary);">
+          <p style="font-weight: 600; color: #fff; margin-bottom: 8px;">Format 1: Array đơn giản</p>
+          <pre style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; overflow-x: auto;"><code>[
+  {
+    "h": "你好",
+    "p": "nǐhǎo", 
+    "m": "Xin chào",
+    "e": "你好，我是学生。"
+  },
+  {
+    "h": "谢谢",
+    "p": "xièxie",
+    "m": "Cảm ơn"
+  }
+]</code></pre>
+          
+          <p style="font-weight: 600; color: #fff; margin: 12px 0 8px;">Format 2: Dạng data.js (có key level)</p>
+          <pre style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; overflow-x: auto;"><code>{
+  "HSK 1": [
+    {"h": "爱", "p": "ài", "m": "Yêu"},
+    {"h": "八", "p": "bā", "m": "Số tám"}
+  ]
+}</code></pre>
+        </div>
+      </details>
+
+      <!-- File upload -->
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-weight: 600; color: #fff; margin-bottom: 8px; font-size: 0.9rem;">
+          📁 Tải file JSON
+        </label>
+        <input type="file" id="jsonFileInput" accept=".json" class="auth-input" style="cursor: pointer; padding: 12px;">
+      </div>
+
+      <!-- Textarea for paste -->
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-weight: 600; color: #fff; margin-bottom: 8px; font-size: 0.9rem;">
+          📝 Hoặc dán JSON vào đây
+        </label>
+        <textarea id="jsonTextInput" placeholder='[{"h":"你好","p":"nǐhǎo","m":"Xin chào"}]' class="auth-input" style="width: 100%; min-height: 200px; resize: vertical; font-family: 'Courier New', monospace; font-size: 0.85rem;"></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; gap: 12px; justify-content: flex-end;">
+        <button class="btn" id="cancelImportJsonBtn" style="padding: 10px 20px; border-radius: 12px;">
+          Hủy
+        </button>
+        <button class="btn" id="confirmImportJsonBtn" style="padding: 10px 20px; border-radius: 12px; background: var(--accent-gradient); color: #fff; border: none; font-weight: 700;">
+          ✅ Nhập từ vựng
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal xác nhận từ trùng -->
+<div id="duplicateConfirmModal" class="modal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>⚠️ Phát hiện từ trùng lặp</h2>
+      <span class="close-btn" id="closeDuplicateModalBtn">&times;</span>
+    </div>
+    <div class="modal-body" style="padding: 24px;">
+      <div id="duplicateSummary" style="margin-bottom: 20px; padding: 16px; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 12px;"></div>
+      
+      <div id="duplicateList" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 12px;"></div>
+
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">
+        Bạn muốn làm gì với các từ trùng lặp?
+      </p>
+
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button class="btn" id="skipDuplicatesBtn" style="padding: 12px 20px; border-radius: 12px; background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: var(--neon-green); justify-content: center; font-weight: 700;">
+          ✅ Chỉ thêm từ mới (<span id="newWordsCount">0</span> từ)
+        </button>
+        <button class="btn" id="overwriteDuplicatesBtn" style="padding: 12px 20px; border-radius: 12px; background: rgba(249, 115, 22, 0.15); border-color: rgba(249, 115, 22, 0.4); color: #F97316; justify-content: center; font-weight: 700;">
+          🔄 Ghi đè từ cũ (cập nhật <span id="duplicateWordsCount">0</span> từ)
+        </button>
+        <button class="btn" id="cancelDuplicateBtn" style="padding: 10px 20px; border-radius: 12px; justify-content: center;">
+          ❌ Hủy bỏ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal chọn chế độ học -->
 <div id="studyModeModal" class="modal">
   <div class="modal-content" style="max-width: 480px;">
@@ -543,10 +648,12 @@
   </div>
 </div> -->
 
-<script src="storage.js" defer></script>
+<script src="data.js?v=6"></script>
+<script src="storage.js?v=6" defer></script>
+<script src="api-client.js?v=6" defer></script>
 <!-- <script src="auth.js" defer></script> -->
 <!-- <script src="profile.js" defer></script> -->
-<script src="app.js" defer></script>
+<script src="app.js?v=6" defer></script>
 
 </body>
 </html>

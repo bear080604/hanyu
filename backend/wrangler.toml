@@ -1,0 +1,13 @@
+name = "apihanyu"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "weiquan_hsk"
+database_id = "29c65690-90ff-43ef-bd4d-9a0ffe9d1100"
+
+# CORS settings
+[vars]
+ALLOWED_ORIGINS = "*"
