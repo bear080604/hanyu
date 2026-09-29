@@ -1,17 +1,168 @@
-// ---------- state ----------
-let level='HSK1', deck=[], fcIdx=0, qScore=0, qTotal=0, writer=null, wIdx=0, wChars=[];
-let userId = 'default_user'; // Fixed user ID for single user app
-localStorage.setItem('wq_user_id', userId);
+// ==================== GLOBAL NOTIFICATIONS & POPUP SYSTEM ====================
+// Floating Toast Notification
+function showToast(message, type = 'success') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement('div');
+  toast.className = `wq-toast wq-toast-${type}`;
+  let icon = '✓';
+  if (type === 'error') icon = '✗';
+  else if (type === 'info') icon = 'ℹ';
+  else if (type === 'warning') icon = '⚠';
 
-let favorites = JSON.parse(localStorage.getItem('wq_favorites_' + userId)) || [];
+  toast.innerHTML = `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.2);font-weight:900;font-size:0.8rem;">${icon}</span> <span>${message}</span>`;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.style.transform = 'translateY(0)';
+    toast.style.opacity = '1';
+  });
+
+  setTimeout(() => {
+    toast.style.transform = 'translateY(-20px)';
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+window.showToast = showToast;
+
+// Modal Popup System (thay thế hoàn toàn alert, confirm, prompt)
+window.wqPopup = {
+  alert(message, { title = 'Thông báo', icon = '💡' } = {}) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('wqPopupOverlay');
+      const titleEl = document.getElementById('wqPopupTitle');
+      const iconEl = document.getElementById('wqPopupIcon');
+      const msgEl = document.getElementById('wqPopupMessage');
+      const inputEl = document.getElementById('wqPopupInput');
+      const actionsEl = document.getElementById('wqPopupActions');
+      if (!overlay) { showToast(message, 'info'); resolve(); return; }
+
+      iconEl.textContent = icon;
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      inputEl.style.display = 'none';
+      actionsEl.innerHTML = '';
+
+      const okBtn = document.createElement('button');
+      okBtn.className = 'wq-popup-btn wq-popup-btn-primary';
+      okBtn.textContent = 'Đồng ý';
+      okBtn.onclick = () => { overlay.style.display = 'none'; resolve(); };
+      actionsEl.appendChild(okBtn);
+
+      overlay.style.display = 'flex';
+      okBtn.focus();
+    });
+  },
+  confirm(message, { title = 'Xác nhận', icon = '❓', okText = 'Xác nhận', cancelText = 'Hủy' } = {}) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('wqPopupOverlay');
+      const titleEl = document.getElementById('wqPopupTitle');
+      const iconEl = document.getElementById('wqPopupIcon');
+      const msgEl = document.getElementById('wqPopupMessage');
+      const inputEl = document.getElementById('wqPopupInput');
+      const actionsEl = document.getElementById('wqPopupActions');
+      if (!overlay) { resolve(false); return; }
+
+      iconEl.textContent = icon;
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      inputEl.style.display = 'none';
+      actionsEl.innerHTML = '';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'wq-popup-btn wq-popup-btn-secondary';
+      cancelBtn.textContent = cancelText;
+      cancelBtn.onclick = () => { overlay.style.display = 'none'; resolve(false); };
+
+      const okBtn = document.createElement('button');
+      okBtn.className = 'wq-popup-btn wq-popup-btn-primary';
+      okBtn.textContent = okText;
+      okBtn.onclick = () => { overlay.style.display = 'none'; resolve(true); };
+
+      actionsEl.appendChild(cancelBtn);
+      actionsEl.appendChild(okBtn);
+
+      overlay.style.display = 'flex';
+      okBtn.focus();
+    });
+  },
+  prompt(message, { title = 'Nhập thông tin', icon = '✏️', placeholder = '', defaultValue = '' } = {}) {
+    return new Promise((resolve) => {
+      const overlay = document.getElementById('wqPopupOverlay');
+      const titleEl = document.getElementById('wqPopupTitle');
+      const iconEl = document.getElementById('wqPopupIcon');
+      const msgEl = document.getElementById('wqPopupMessage');
+      const inputEl = document.getElementById('wqPopupInput');
+      const actionsEl = document.getElementById('wqPopupActions');
+      if (!overlay) { resolve(null); return; }
+
+      iconEl.textContent = icon;
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      inputEl.style.display = 'block';
+      inputEl.placeholder = placeholder;
+      inputEl.value = defaultValue;
+      actionsEl.innerHTML = '';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'wq-popup-btn wq-popup-btn-secondary';
+      cancelBtn.textContent = 'Hủy';
+      cancelBtn.onclick = () => { overlay.style.display = 'none'; resolve(null); };
+
+      const okBtn = document.createElement('button');
+      okBtn.className = 'wq-popup-btn wq-popup-btn-primary';
+      okBtn.textContent = 'Xác nhận';
+      const submit = () => {
+        const val = inputEl.value.trim();
+        overlay.style.display = 'none';
+        resolve(val || defaultValue);
+      };
+      okBtn.onclick = submit;
+      inputEl.onkeydown = (e) => {
+        if (e.key === 'Enter') submit();
+        if (e.key === 'Escape') { overlay.style.display = 'none'; resolve(null); }
+      };
+
+      actionsEl.appendChild(cancelBtn);
+      actionsEl.appendChild(okBtn);
+
+      overlay.style.display = 'flex';
+      setTimeout(() => { inputEl.focus(); inputEl.select(); }, 50);
+    });
+  }
+};
+
+// Helper: loại bỏ từ trùng lặp theo Hán tự
+function deduplicateWords(arr) {
+  if (!Array.isArray(arr)) return [];
+  const seen = new Set();
+  return arr.filter(w => {
+    if (!w || !w.h) return false;
+    const key = w.h.trim();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+// ---------- state (Single User) ----------
+let level = 'HSK1', deck = [], fcIdx = 0, qScore = 0, qTotal = 0, writer = null, wIdx = 0, wChars = [];
+const userId = 'default_user';
+
+let favorites = (window.WQStorage && WQStorage.getFavorites()) || JSON.parse(localStorage.getItem('wq_favorites')) || [];
 let autoplayInterval = null;
 let autoplayRunning = false;
 let autoplayTimer = null;
-let quizMode = localStorage.getItem('wq_quiz_mode_' + userId) || 'hanzi-to-mean';
+let quizMode = localStorage.getItem('wq_quiz_mode') || 'hanzi-to-mean';
 let quizPool = []; // Pool từ chưa hỏi trong quiz session
 let quizAskedWords = []; // Các từ đã hỏi trong session
 
-const $=id=>document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 // ---------- API INTEGRATION ----------
 // DATA is already declared by data.js as const, just use it
@@ -365,6 +516,7 @@ function applyRange(){
   
   if(v==='all' || level === 'favorites'){deck=src.slice();}
   else{const [a,b]=v.split('-').map(Number);deck=src.slice(a,b);}
+  deck = deduplicateWords(deck);
   fcIdx=0;wIdx=0;qScore=0;qTotal=0;
   
   // Reset quiz pool khi thay đổi deck
@@ -423,14 +575,12 @@ const card=$('fcCard');
 
 function recordLearnedWord(wordStr) {
   if (!wordStr) return;
-  const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-  const username = currentUser ? currentUser.username : null;
-  const progress = WQStorage.getUserDataField(username, 'progress', 'wq_progress') || {};
+  const progress = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress')) || {};
   if (!progress.learned) progress.learned = [];
   if (!progress.learned.includes(wordStr)) {
     progress.learned.push(wordStr);
-    if (currentUser) {
-      WQStorage.updateUserData(username, 'progress', progress);
+    if (window.WQStorage) {
+      WQStorage.saveProgress(progress);
     } else {
       localStorage.setItem('wq_progress', JSON.stringify(progress));
     }
@@ -526,18 +676,17 @@ $('fcFav').onclick = (e) => {
 
 function toggleFavorite(w) {
   const idx = favorites.findIndex(f => f.h === w.h);
-  const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-  const username = currentUser ? currentUser.username : null;
-  
   if (idx === -1) {
-    const levelGoc = Object.keys(DATA).find(lvl => DATA[lvl].some(item => item.h === w.h)) || 'HSK1';
+    const levelGoc = Object.keys(DATA).find(lvl => DATA[lvl] && DATA[lvl].some(item => item.h === w.h)) || 'HSK1';
     favorites.push({ ...w, levelGoc });
+    showToast(`Đã thêm "${w.h}" vào yêu thích ⭐`, 'success');
   } else {
     favorites.splice(idx, 1);
+    showToast(`Đã bỏ yêu thích "${w.h}"`, 'info');
   }
   
-  if (currentUser) {
-    WQStorage.updateUserData(username, 'favorites', favorites);
+  if (window.WQStorage) {
+    WQStorage.saveFavorites(favorites);
   } else {
     localStorage.setItem('wq_favorites', JSON.stringify(favorites));
   }
@@ -682,6 +831,8 @@ document.querySelectorAll('.quiz-mode-btn').forEach(btn => {
     localStorage.setItem('wq_quiz_mode', quizMode);
     qScore = 0;
     qTotal = 0;
+    quizPool = [];
+    quizAskedWords = [];
     $('qScore').textContent = 'Điểm: 0 / 0';
     newQuiz();
   };
@@ -694,32 +845,49 @@ if (savedQuizBtn) {
   savedQuizBtn.classList.add('active');
 }
 
-function newQuiz(){
-  if(deck.length<2){$('qHanzi').textContent='Cần ít nhất 2 từ';$('qOpts').innerHTML='';return;}
-  qAnswered=false;$('qResult').textContent='';
+function newQuiz() {
+  if (!deck || deck.length < 2) {
+    $('qHanzi').textContent = 'Cần ít nhất 2 từ để làm trắc nghiệm';
+    $('qPinyin').textContent = '';
+    $('qOpts').innerHTML = '';
+    return;
+  }
+  qAnswered = false;
+  $('qResult').textContent = '';
   
-  // Nếu pool rỗng, reset lại pool từ deck và shuffle
+  // Nếu pool rỗng, nạp lại toàn bộ từ (đã khử trùng) từ deck và shuffle
   if (quizPool.length === 0) {
-    quizPool = [...deck];
+    quizPool = deduplicateWords([...deck]);
     shuffle(quizPool);
-    console.log('🔄 Reset quiz pool với', quizPool.length, 'từ');
+    console.log('🔄 Đã làm mới quiz pool:', quizPool.length, 'từ');
   }
   
-  // Lấy từ đầu tiên trong pool (đảm bảo không trùng)
+  // Lấy từ tiếp theo trong pool (đảm bảo không bao giờ bị hỏi trùng trong một vòng)
   qCur = quizPool.shift();
   quizAskedWords.push(qCur);
-  console.log('❓ Câu hỏi:', qCur.h, '- Còn lại trong pool:', quizPool.length);
   
   const promptHanzi = $('qHanzi');
   const promptPinyin = $('qPinyin');
   
-  // Tùy chỉnh hiển thị câu hỏi dựa trên Quiz Mode
+  // Tùy chỉnh hiển thị câu hỏi theo Quiz Mode
   if (quizMode === 'hanzi-to-mean') {
+    // Hán tự + Pinyin ➔ Nghĩa
     promptHanzi.style.display = 'block';
     promptPinyin.style.display = 'block';
     promptHanzi.textContent = qCur.h;
     promptPinyin.textContent = qCur.p;
+  } else if (quizMode === 'hanzi-only-to-mean') {
+    // 漢字 thuần (KHÔNG Pinyin) ➔ Nghĩa (Rèn nhớ mặt chữ)
+    promptHanzi.style.display = 'block';
+    promptPinyin.style.display = 'none';
+    promptHanzi.textContent = qCur.h;
   } else if (quizMode === 'mean-to-hanzi') {
+    // Nghĩa ➔ Hán tự kèm Pinyin
+    promptHanzi.style.display = 'block';
+    promptPinyin.style.display = 'none';
+    promptHanzi.textContent = qCur.m;
+  } else if (quizMode === 'mean-to-hanzi-pure') {
+    // Nghĩa ➔ 漢字 thuần (KHÔNG Pinyin ở đáp án, rèn nhận diện mặt chữ)
     promptHanzi.style.display = 'block';
     promptPinyin.style.display = 'none';
     promptHanzi.textContent = qCur.m;
@@ -731,47 +899,51 @@ function newQuiz(){
     promptHanzi.style.display = 'block';
     promptPinyin.style.display = 'none';
     promptHanzi.textContent = '🔊 Nhấn để nghe';
-    speak(qCur.h); // Tự động phát âm khi hiện câu hỏi
+    speak(qCur.h);
   }
   
-  let opts=[qCur];
-  const pool=deck.filter(w=>w!==qCur);
+  // Tạo danh sách 4 lựa chọn không trùng lặp
+  let opts = [qCur];
+  const distractors = deck.filter(w => w && w.h !== qCur.h && w.m !== qCur.m);
+  shuffle(distractors);
   
-  // Shuffle pool trước để random
-  shuffle(pool);
-  
-  // Lấy tối đa 3 từ khác từ pool (đã shuffle nên không trùng)
-  for (let i = 0; i < Math.min(3, pool.length); i++) {
-    opts.push(pool[i]);
+  for (const d of distractors) {
+    if (opts.length >= 4) break;
+    // Kiểm tra không trùng lặp đáp án hiển thị
+    if (!opts.some(o => o.h === d.h || o.m === d.m)) {
+      opts.push(d);
+    }
   }
   
-  // Shuffle lại opts để trộn vị trí đáp án đúng
+  // Trộn thứ tự các đáp án
   shuffle(opts);
   
-  const box=$('qOpts');box.innerHTML='';
-  opts.forEach(o=>{
-    const d=document.createElement('div');d.className='q-opt';
+  const box = $('qOpts');
+  box.innerHTML = '';
+  opts.forEach(o => {
+    const d = document.createElement('div');
+    d.className = 'q-opt';
     
-    // Tùy chỉnh hiển thị câu trả lời dựa trên Quiz Mode
-    if (quizMode === 'hanzi-to-mean' || quizMode === 'audio-to-mean') {
+    // Tùy chỉnh hiển thị nội dung đáp án
+    if (quizMode === 'hanzi-to-mean' || quizMode === 'hanzi-only-to-mean' || quizMode === 'audio-to-mean') {
       d.textContent = o.m;
     } else if (quizMode === 'mean-to-hanzi') {
       d.textContent = `${o.h} (${o.p})`;
+    } else if (quizMode === 'mean-to-hanzi-pure') {
+      d.textContent = o.h; // Chỉ hiện Hán tự, không sub Pinyin
     } else if (quizMode === 'hanzi-to-pinyin') {
       d.textContent = o.p;
     }
     
-    d.onclick=()=>answer(d,o);
+    d.onclick = () => answer(d, o);
     box.appendChild(d);
   });
-  $('qLevel').textContent=level==='favorites'?'Yêu thích':level;
+  $('qLevel').textContent = level === 'favorites' ? 'Yêu thích' : level;
 }
 
 function recordSrsAnswer(wordStr, isCorrect) {
-  const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-  if (!currentUser) return;
-  const username = currentUser.username;
-  const srs = WQStorage.getUserDataField(username, 'srs', '') || {};
+  if (!wordStr) return;
+  const srs = (window.WQStorage && WQStorage.getSRS()) || JSON.parse(localStorage.getItem('wq_srs')) || {};
   
   if (!srs[wordStr]) {
     srs[wordStr] = {
@@ -795,44 +967,52 @@ function recordSrsAnswer(wordStr, isCorrect) {
   item.nextReview = nextDate.toISOString().split('T')[0];
   
   srs[wordStr] = item;
-  WQStorage.updateUserData(username, 'srs', srs);
+  if (window.WQStorage) {
+    WQStorage.saveSRS(srs);
+  } else {
+    localStorage.setItem('wq_srs', JSON.stringify(srs));
+  }
 }
 
-function answer(el,o){
-  if(qAnswered)return;qAnswered=true;qTotal++;
-  document.querySelectorAll('.q-opt').forEach(x=>x.classList.add('disabled'));
+function answer(el, o) {
+  if (qAnswered) return;
+  qAnswered = true;
+  qTotal++;
+  document.querySelectorAll('.q-opt').forEach(x => x.classList.add('disabled'));
   
-  // Xác định câu trả lời đúng định dạng hiển thị
+  // Xác định câu trả lời đúng theo định dạng hiển thị
   let correctText = '';
-  if (quizMode === 'hanzi-to-mean' || quizMode === 'audio-to-mean') {
+  if (quizMode === 'hanzi-to-mean' || quizMode === 'hanzi-only-to-mean' || quizMode === 'audio-to-mean') {
     correctText = qCur.m;
   } else if (quizMode === 'mean-to-hanzi') {
     correctText = `${qCur.h} (${qCur.p})`;
+  } else if (quizMode === 'mean-to-hanzi-pure') {
+    correctText = qCur.h;
   } else if (quizMode === 'hanzi-to-pinyin') {
     correctText = qCur.p;
   }
   
-  if(o===qCur){
+  if (o === qCur) {
     el.classList.add('correct');
     qScore++;
-    $('qResult').textContent='✓ Chính xác!';
-    $('qResult').style.color='var(--neon-green)';
+    $('qResult').textContent = '✓ Chính xác!';
+    $('qResult').style.color = 'var(--neon-green)';
     recordSrsAnswer(qCur.h, true);
   } else {
     el.classList.add('wrong');
-    document.querySelectorAll('.q-opt').forEach(x=>{
-      if(x.textContent===correctText) x.classList.add('correct');
+    document.querySelectorAll('.q-opt').forEach(x => {
+      if (x.textContent === correctText) x.classList.add('correct');
     });
-    $('qResult').textContent='✗ Đáp án: '+correctText;
-    $('qResult').style.color='var(--neon-red)';
+    $('qResult').textContent = '✗ Đáp án: ' + correctText;
+    $('qResult').style.color = 'var(--neon-red)';
     recordSrsAnswer(qCur.h, false);
   }
   speak(qCur.h);
-  $('qScore').textContent='Điểm: '+qScore+' / '+qTotal;
+  $('qScore').textContent = 'Điểm: ' + qScore + ' / ' + qTotal;
 }
 
-$('qNext').onclick=newQuiz;
-$('qAudio').onclick=()=>speak(qCur&&qCur.h);
+$('qNext').onclick = newQuiz;
+$('qAudio').onclick = () => speak(qCur && qCur.h);
 
 // ---------- WRITER ----------
 function renderWriterList(){
@@ -920,36 +1100,33 @@ document.addEventListener('keydown',e=>{
 });
 
 // ---------- PROGRESS SAVING & LOADING ----------
+// ---------- PROGRESS SAVING & LOADING (Single User) ----------
 function saveProgress() {
-  const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-  const username = currentUser ? currentUser.username : null;
   const progressData = {
     level,
     rangeVal: $('rangeSel')?.value || 'all',
     fcIdx,
     wIdx,
     activeTab: document.querySelector('.tab.active')?.dataset.p || 'flash',
-    learned: (currentUser ? WQStorage.getUserDataField(username, 'progress', 'wq_progress')?.learned : JSON.parse(localStorage.getItem('wq_progress'))?.learned) || []
+    learned: ((window.WQStorage && WQStorage.getProgress()?.learned) || JSON.parse(localStorage.getItem('wq_progress'))?.learned) || []
   };
   
-  if (currentUser) {
-    WQStorage.updateUserData(username, 'progress', progressData);
+  if (window.WQStorage) {
+    WQStorage.saveProgress(progressData);
   } else {
     localStorage.setItem('wq_progress', JSON.stringify(progressData));
   }
 }
 
 function loadProgress() {
-  const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-  const username = currentUser ? currentUser.username : null;
-  const saved = WQStorage.getUserDataField(username, 'progress', 'wq_progress');
+  const saved = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress'));
   if (saved) {
     if (saved.level) {
       level = saved.level;
-      lvlSel.value = level;
+      if (lvlSel) lvlSel.value = level;
     }
     buildRanges();
-    if (saved.rangeVal) {
+    if (saved.rangeVal && $('rangeSel')) {
       $('rangeSel').value = saved.rangeVal;
     }
     applyRange();
@@ -972,51 +1149,11 @@ function loadProgress() {
   }
 }
 
-// ---------- SYNC DATA FOR AUTH ----------
-window.WQSyncData = function(username) {
-  favorites = WQStorage.getUserDataField(username, 'favorites', 'wq_favorites');
+// Single user sync helper
+window.WQSyncData = function() {
+  favorites = (window.WQStorage && WQStorage.getFavorites()) || JSON.parse(localStorage.getItem('wq_favorites')) || [];
   updateFavOptionText();
-  
-  const userProgress = WQStorage.getUserDataField(username, 'progress', 'wq_progress');
-  if (userProgress) {
-    if (userProgress.level) {
-      level = userProgress.level;
-      if (lvlSel) lvlSel.value = level;
-    }
-    buildRanges();
-    if (userProgress.rangeVal) {
-      const rangeSel = $('rangeSel');
-      if (rangeSel) rangeSel.value = userProgress.rangeVal;
-    }
-    applyRange();
-    if (userProgress.fcIdx !== undefined && userProgress.fcIdx < deck.length) {
-      fcIdx = userProgress.fcIdx;
-      renderFlash();
-    }
-    if (userProgress.wIdx !== undefined && userProgress.wIdx < deck.length) {
-      wIdx = userProgress.wIdx;
-      renderWriterList();
-      renderWriter();
-    }
-    if (userProgress.activeTab) {
-      const tab = document.querySelector(`.tab[data-p="${userProgress.activeTab}"]`);
-      if (tab) tab.click();
-    }
-  } else {
-    level = 'HSK1';
-    if (lvlSel) lvlSel.value = 'HSK1';
-    buildRanges();
-    applyRange();
-  }
 };
-
-// Khởi chạy Auth (nhưng không load progress ngay - đợi DOM ready)
-if (typeof DATA !== 'undefined') {
-  if (window.WQAuth) {
-    window.WQAuth.init();
-  }
-  // loadProgress() sẽ được gọi trong DOMContentLoaded
-}
 
 // ---------- SEARCH FUNCTIONALITY ----------
 function removePinyinTones(str) {
@@ -1218,13 +1355,12 @@ window.addEventListener('click', (e) => {
   }
 });
 
-// ---------- SIDEBAR NAVIGATION & MODERN DASHBOARD ----------
+// ---------- SIDEBAR NAVIGATION & MODERN DASHBOARD (Single User) ----------
 (function() {
   const sidebar = document.getElementById('sidebar');
   const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
   const headerTitle = document.getElementById('headerTitle');
   const learnSelectorsWrapper = document.getElementById('learnSelectorsWrapper');
-  const sidebarLogoutBtn = document.getElementById('sidebarLogoutBtn');
 
   // Khởi tạo các sự kiện điều hướng Sidebar
   function initSidebarNavigation() {
@@ -1269,10 +1405,8 @@ window.addEventListener('click', (e) => {
           // Kích hoạt render dữ liệu cụ thể cho từng Section
           if (sectionId === 'home') {
             updateHomeDashboard();
-          } else if (sectionId === 'profile' && window.WQProfile) {
-            window.WQProfile.openProfileModal();
-          } else if (sectionId === 'stats' && window.WQProfile) {
-            window.WQProfile.openStatsModal();
+          } else if (sectionId === 'stats') {
+            renderStatsSection();
           } else if (sectionId === 'favorites') {
             if (typeof renderFavModalList === 'function') {
               renderFavModalList();
@@ -1301,36 +1435,21 @@ window.addEventListener('click', (e) => {
         }
       });
     }
-
-    // Nút Đăng xuất ở chân Sidebar
-    if (sidebarLogoutBtn && window.WQAuth) {
-      sidebarLogoutBtn.onclick = (e) => {
-        e.preventDefault();
-        window.WQAuth.logout();
-      };
-    }
   }
 
   // Cập nhật số liệu & cấp độ HSK ở Trang chủ
   function updateHomeDashboard() {
-    const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
     const welcomeText = document.getElementById('welcomeUserText');
     const userStreakVal = document.getElementById('userStreakVal');
     
-    if (currentUser) {
-      if (welcomeText) welcomeText.innerHTML = `Chào mừng quay lại, <span style="background:var(--accent-gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">${currentUser.username}</span>! 👋`;
-      
-      const users = WQStorage.getUsers();
-      const user = users.find(u => u.username === currentUser.username);
-      if (user) {
-        // Tính chuỗi streak (giả lập hoặc tính ngày dựa trên progress/srs)
-        const learned = user.progress?.learned || [];
-        const streak = learned.length > 0 ? Math.max(1, Math.min(7, Math.ceil(learned.length / 5))) : 0;
-        if (userStreakVal) userStreakVal.textContent = `${streak} ngày`;
-      }
-    } else {
-      if (welcomeText) welcomeText.textContent = `Chào mừng bạn học tập! 👋`;
-      if (userStreakVal) userStreakVal.textContent = `0 ngày`;
+    if (welcomeText) {
+      welcomeText.textContent = `Chào mừng bạn học tập! 👋`;
+    }
+
+    const learnedList = (window.WQStorage && WQStorage.getProgress()?.learned) || JSON.parse(localStorage.getItem('wq_progress'))?.learned || [];
+    const streak = learnedList.length > 0 ? Math.max(1, Math.min(30, Math.ceil(learnedList.length / 5))) : 0;
+    if (userStreakVal) {
+      userStreakVal.textContent = `${streak} ngày`;
     }
 
     renderHomeHskGrid();
@@ -1342,9 +1461,7 @@ window.addEventListener('click', (e) => {
     if (!homeHskGrid || typeof DATA === 'undefined') return;
 
     homeHskGrid.innerHTML = '';
-    const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-    const username = currentUser ? currentUser.username : null;
-    const learnedList = (currentUser ? WQStorage.getUserDataField(username, 'progress', 'wq_progress')?.learned : JSON.parse(localStorage.getItem('wq_progress'))?.learned) || [];
+    const learnedList = (window.WQStorage && WQStorage.getProgress()?.learned) || JSON.parse(localStorage.getItem('wq_progress'))?.learned || [];
 
     const colors = [
       'linear-gradient(135deg, #06B6D4 0%, #0891B2 100%)', // Cyan (HSK1)
@@ -1357,11 +1474,13 @@ window.addEventListener('click', (e) => {
 
     Object.keys(DATA).forEach((lvl, index) => {
       const words = DATA[lvl];
-      const total = words.length;
+      const total = words ? words.length : 0;
       let learnedCount = 0;
-      words.forEach(w => {
-        if (learnedList.includes(w.h)) learnedCount++;
-      });
+      if (words) {
+        words.forEach(w => {
+          if (learnedList.includes(w.h)) learnedCount++;
+        });
+      }
       const percent = total > 0 ? Math.round((learnedCount / total) * 100) : 0;
       const color = colors[index % colors.length];
 
@@ -1402,6 +1521,64 @@ window.addEventListener('click', (e) => {
     });
   }
 
+  // Render Thống kê (Stats Section)
+  function renderStatsSection() {
+    const container = document.getElementById('statsModalBody');
+    if (!container) return;
+
+    const progress = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress')) || {};
+    const learned = progress.learned || [];
+    const srs = (window.WQStorage && WQStorage.getSRS()) || JSON.parse(localStorage.getItem('wq_srs')) || {};
+    const favCount = favorites.length;
+
+    let hskStatsHtml = '';
+    if (typeof DATA !== 'undefined') {
+      Object.keys(DATA).forEach(lvl => {
+        const words = DATA[lvl] || [];
+        const total = words.length;
+        const learnedInLvl = words.filter(w => learned.includes(w.h)).length;
+        const pct = total > 0 ? Math.round((learnedInLvl / total) * 100) : 0;
+        hskStatsHtml += `
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 700; color: #fff; font-size: 1.05rem;">${lvl}</span>
+              <span style="color: var(--neon-cyan); font-weight: 600; font-size: 0.9rem;">${learnedInLvl} / ${total} (${pct}%)</span>
+            </div>
+            <div style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden;">
+              <div style="height: 100%; width: ${pct}%; background: var(--accent-gradient); border-radius: 99px; transition: width 0.4s ease;"></div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    container.innerHTML = `
+      <div style="padding: 10px;">
+        <h3 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 20px;">📊 Tổng quan học tập</h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 28px;">
+          <div class="glass-card" style="text-align: center; padding: 20px;">
+            <div style="font-size: 2.2rem; font-weight: 800; color: var(--neon-cyan);">${learned.length}</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">Từ vựng đã học</div>
+          </div>
+          <div class="glass-card" style="text-align: center; padding: 20px;">
+            <div style="font-size: 2.2rem; font-weight: 800; color: var(--neon-green);">${Object.keys(srs).length}</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">Từ trong SRS ôn tập</div>
+          </div>
+          <div class="glass-card" style="text-align: center; padding: 20px;">
+            <div style="font-size: 2.2rem; font-weight: 800; color: var(--neon-red);">${favCount}</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px;">Từ yêu thích ⭐</div>
+          </div>
+        </div>
+
+        <h4 class="section-subtitle" style="margin-bottom: 16px;">Tiến độ theo cấp độ HSK</h4>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          ${hskStatsHtml}
+        </div>
+      </div>
+    `;
+  }
+
   // Đồng bộ giao diện Cài đặt (Settings UI)
   function updateSettingsUI() {
     const isLightTheme = document.documentElement.classList.contains('light-theme');
@@ -1426,17 +1603,13 @@ window.addEventListener('click', (e) => {
     // Chuyển Theme từ Cài đặt
     if (settingsThemeBtn) {
       settingsThemeBtn.onclick = () => {
-        // Tìm và click themeBtn cũ ẩn trong DOM
         const themeBtn = document.getElementById('themeBtn');
         if (themeBtn) {
-          // Thao tác đổi theme giống hệt logic cũ của app.js
           const isLight = document.documentElement.classList.toggle('light-theme');
           themeBtn.textContent = isLight ? '☀️' : '🌙';
           localStorage.setItem('wq_theme', isLight ? 'light' : 'dark');
-          
-          setTimeout(updateSettingsUI, 50); // Cập nhật lại UI Cài đặt
+          setTimeout(updateSettingsUI, 50);
         } else {
-          // Fallback nếu không có themeBtn cũ
           const isLight = document.documentElement.classList.toggle('light-theme');
           localStorage.setItem('wq_theme', isLight ? 'light' : 'dark');
           setTimeout(updateSettingsUI, 50);
@@ -1457,26 +1630,27 @@ window.addEventListener('click', (e) => {
 
     // Reset tiến trình học tập
     if (resetProgressBtn) {
-      resetProgressBtn.onclick = () => {
-        const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-        if (!currentUser) return;
+      resetProgressBtn.onclick = async () => {
+        const confirmed = await wqPopup.confirm(
+          'Bạn có chắc chắn muốn xóa toàn bộ tiến trình học tập, danh sách yêu thích và lịch ôn tập SRS không?\n\nHành động này không thể hoàn tác!',
+          { title: 'Xóa tiến trình', icon: '🗑️', okText: 'Xóa tất cả', cancelText: 'Hủy' }
+        );
 
-        const confirmReset = confirm("Bạn có chắc chắn muốn xóa toàn bộ tiến trình học tập, danh sách yêu thích và lịch ôn tập SRS của tài khoản này không? Hành động này không thể hoàn tác!");
-        if (confirmReset) {
-          const username = currentUser.username;
-          // Cập nhật dữ liệu trống trong storage
-          WQStorage.updateUserData(username, 'progress', { level: 'HSK1', rangeVal: 'all', fcIdx: 0, wIdx: 0, learned: [] });
-          WQStorage.updateUserData(username, 'favorites', []);
-          WQStorage.updateUserData(username, 'srs', {});
-
-          // Đồng bộ lại giao diện
-          if (window.WQSyncData) {
-            window.WQSyncData(username);
+        if (confirmed) {
+          if (window.WQStorage) {
+            WQStorage.resetAll();
+          } else {
+            localStorage.removeItem('wq_progress');
+            localStorage.removeItem('wq_favorites');
+            localStorage.removeItem('wq_srs');
           }
-
-          if (window.showToast) {
-            window.showToast("Đã khôi phục cài đặt tiến trình học tập về ban đầu!", "success");
-          }
+          favorites = [];
+          level = 'HSK1';
+          if (lvlSel) lvlSel.value = 'HSK1';
+          buildRanges();
+          applyRange();
+          updateHomeDashboard();
+          showToast('Đã khôi phục cài đặt tiến trình học tập về ban đầu!', 'success');
 
           // Quay về Trang chủ
           const homeMenu = document.querySelector('.sidebar-menu .menu-item[data-section="home"]');
@@ -1486,14 +1660,12 @@ window.addEventListener('click', (e) => {
     }
   }
 
-  // Override hàm toàn cục WQSyncData để đồng bộ cả Dashboard trang chủ khi đổi User
+  // Override hàm toàn cục WQSyncData để đồng bộ Dashboard
   const originalSyncData = window.WQSyncData;
-  window.WQSyncData = function(username) {
+  window.WQSyncData = function() {
     if (typeof originalSyncData === 'function') {
-      originalSyncData(username);
+      originalSyncData();
     }
-    
-    // Cập nhật Dashboard Trang chủ khi đồng bộ
     updateHomeDashboard();
   };
 
@@ -1510,7 +1682,15 @@ window.addEventListener('click', (e) => {
     
     initSidebarNavigation();
     initSettingsEvents();
-    
+
+    // Nút Hồ sơ cá nhân
+    const openProfileBtn = document.getElementById('openProfileBtn');
+    if (openProfileBtn) {
+      openProfileBtn.onclick = () => {
+        if (window.WQProfile) WQProfile.openProfileModal();
+      };
+    }
+
     // Tự động load Dashboard trang chủ lần đầu
     setTimeout(updateHomeDashboard, 100);
   });

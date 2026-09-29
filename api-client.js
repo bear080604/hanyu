@@ -1,5 +1,5 @@
 /**
- * WeiQuan Chinese API Client
+ * WenQing Chinese API Client
  * Connect frontend với Cloudflare Workers backend
  */
 
@@ -79,10 +79,6 @@ class WeiQuanAPI {
     });
   }
 
-  async getDecks(userId) {
-    return this.request(`/api/decks?user_id=${userId}`);
-  }
-
   async getDeck(deckId) {
     return this.request(`/api/decks/${deckId}`);
   }
@@ -105,4 +101,4 @@ const API_BASE_URL = 'https://apihanyu.phuonganhkhanh683.workers.dev'; // Produc
 const api = new WeiQuanAPI(API_BASE_URL);
 
 window.WeiQuanAPI = api;
-console.log('✅ WeiQuan API Client loaded');
+console.log('✅ WenQing API Client loaded');

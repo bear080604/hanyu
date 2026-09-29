@@ -1,76 +1,72 @@
-// ---------- WQStorage module ----------
+// ---------- WQStorage module - Single User ----------
 (function() {
   const STORAGE_KEYS = {
-    USERS: 'wq_users',
-    SESSION_USER: 'wq_current_user',
-    LOCAL_FAVORITES: 'wq_favorites',
-    LOCAL_PROGRESS: 'wq_progress'
+    FAVORITES: 'wq_favorites',
+    PROGRESS: 'wq_progress',
+    SRS: 'wq_srs',
+    CUSTOM_DECKS: 'wq_custom_decks',
+    QUIZ_MODE: 'wq_quiz_mode',
+    THEME: 'wq_theme'
   };
 
   const WQStorage = {
-    getUsers() {
-      return JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS)) || [];
+    // Favorites
+    getFavorites() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVORITES)) || [];
+    },
+    saveFavorites(data) {
+      localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(data || []));
     },
 
-    saveUsers(users) {
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    // Progress
+    getProgress() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.PROGRESS)) || null;
+    },
+    saveProgress(data) {
+      localStorage.setItem(STORAGE_KEYS.PROGRESS, JSON.stringify(data || {}));
     },
 
-    getCurrentUser() {
-      const local = localStorage.getItem(STORAGE_KEYS.SESSION_USER);
-      if (local) return JSON.parse(local);
-      const session = sessionStorage.getItem(STORAGE_KEYS.SESSION_USER);
-      if (session) return JSON.parse(session);
-      return null;
+    // SRS Spaced Repetition
+    getSRS() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.SRS)) || {};
+    },
+    saveSRS(data) {
+      localStorage.setItem(STORAGE_KEYS.SRS, JSON.stringify(data || {}));
     },
 
-    setCurrentUser(user, remember = false) {
-      if (!user) {
-        localStorage.removeItem(STORAGE_KEYS.SESSION_USER);
-        sessionStorage.removeItem(STORAGE_KEYS.SESSION_USER);
-        return;
-      }
-      const userStr = JSON.stringify(user);
-      if (remember) {
-        localStorage.setItem(STORAGE_KEYS.SESSION_USER, userStr);
-      } else {
-        sessionStorage.setItem(STORAGE_KEYS.SESSION_USER, userStr);
-      }
+    // Custom Decks
+    getCustomDecks() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEYS.CUSTOM_DECKS)) || [];
+    },
+    saveCustomDecks(data) {
+      localStorage.setItem(STORAGE_KEYS.CUSTOM_DECKS, JSON.stringify(data || []));
     },
 
+    // Reset everything
+    resetAll() {
+      localStorage.removeItem(STORAGE_KEYS.FAVORITES);
+      localStorage.removeItem(STORAGE_KEYS.PROGRESS);
+      localStorage.removeItem(STORAGE_KEYS.SRS);
+      localStorage.removeItem(STORAGE_KEYS.CUSTOM_DECKS);
+    },
+
+    // Compatibility shims so older helper calls don't crash
+    getUsers() { return []; },
+    saveUsers() {},
+    getCurrentUser() { return null; },
+    setCurrentUser() {},
     updateUserData(username, field, data) {
-      const users = this.getUsers();
-      const idx = users.findIndex(u => u.username === username);
-      if (idx !== -1) {
-        if (!users[idx].progress) users[idx].progress = {};
-        if (!users[idx].favorites) users[idx].favorites = [];
-        if (!users[idx].srs) users[idx].srs = {};
-        
-        users[idx][field] = data;
-        this.saveUsers(users);
-      }
+      if (field === 'favorites') this.saveFavorites(data);
+      else if (field === 'progress') this.saveProgress(data);
+      else if (field === 'srs') this.saveSRS(data);
+      else if (field === 'customDecks') this.saveCustomDecks(data);
     },
-
     getUserDataField(username, field, fallbackLocalKey) {
-      if (username) {
-        const users = this.getUsers();
-        const user = users.find(u => u.username === username);
-        if (user) {
-          if (user[field] === undefined) {
-            if (field === 'favorites') user[field] = [];
-            else if (field === 'srs') user[field] = {};
-            else if (field === 'progress') user[field] = {};
-          }
-          return user[field];
-        }
-      }
-      // Chế độ Guest (Khách)
-      if (fallbackLocalKey === 'wq_favorites') {
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCAL_FAVORITES)) || [];
-      } else if (fallbackLocalKey === 'wq_progress') {
-        return JSON.parse(localStorage.getItem(STORAGE_KEYS.LOCAL_PROGRESS)) || null;
-      }
-      return field === 'favorites' ? [] : (field === 'srs' ? {} : {});
+      if (field === 'favorites' || fallbackLocalKey === 'wq_favorites') return this.getFavorites();
+      if (field === 'progress' || fallbackLocalKey === 'wq_progress') return this.getProgress();
+      if (field === 'srs') return this.getSRS();
+      if (field === 'customDecks') return this.getCustomDecks();
+      return null;
     }
   };
 

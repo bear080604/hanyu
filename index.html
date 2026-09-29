@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WeiQuan Chinese</title>
+<title>WenQing Chinese</title>
 
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 
@@ -18,18 +18,25 @@
   <!-- Sidebar bên trái cố định -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <img src="logo.png" alt="WeiQuan Chinese Logo" class="logo-img">
-      <span class="logo-text">WeiQuan <span>Chinese</span></span>
+      <svg class="logo-img" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="WenQing Logo">
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#8B5CF6"/>
+            <stop offset="100%" stop-color="#06B6D4"/>
+          </linearGradient>
+        </defs>
+        <rect width="40" height="40" rx="10" fill="url(#logoGrad)"/>
+        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
+              font-family="'PingFang SC','Noto Serif SC',serif"
+              font-size="24" font-weight="700" fill="#fff">文</text>
+      </svg>
+      <span class="logo-text">WenQing <span>文卿</span></span>
     </div>
     
     <nav class="sidebar-menu">
       <a href="#" class="menu-item active" data-section="home">
         <span class="menu-icon">🏠</span>
         <span class="menu-text">Trang chủ</span>
-      </a>
-      <a href="#" class="menu-item" data-section="profile">
-        <span class="menu-icon">👤</span>
-        <span class="menu-text">Trang cá nhân</span>
       </a>
       <a href="#" class="menu-item" data-section="flash">
         <span class="menu-icon">📇</span>
@@ -60,13 +67,6 @@
         <span class="menu-text">Cài đặt</span>
       </a>
     </nav>
-    
-    <!-- <div class="sidebar-footer">
-      <a href="#" class="menu-item logout-btn-item" id="sidebarLogoutBtn">
-        <span class="menu-icon">🚪</span>
-        <span class="menu-text">Đăng xuất</span>
-      </a>
-    </div> -->
   </aside>
 
   <!-- Vùng Main Content bên phải -->
@@ -103,7 +103,10 @@
           </button>
         </div>
         
-        <!-- <div id="userMenuContainer"></div> -->
+        <!-- Nút Hồ sơ cá nhân -->
+        <button class="btn" id="openProfileBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+          👤 Hồ sơ
+        </button>
         
         <!-- Nút theme ẩn (giữ ID để JS không lỗi) -->
         <button class="icon-btn" id="themeBtn" aria-label="Toggle Theme" style="display: none;"></button>
@@ -149,14 +152,7 @@
         </div>
       </section>
 
-      <!-- SECTION 2: TRANG CÁ NHÂN -->
-      <section class="app-section" id="section-profile">
-        <div id="profileModal" class="modal-section-flat">
-          <div class="modal-body" id="profileModalBody"></div>
-        </div>
-      </section>
-
-      <!-- SECTION 3: FLASHCARD (panel #flash cũ) -->
+      <!-- SECTION 2: FLASHCARD (panel #flash cũ) -->
       <section class="app-section panel" id="flash">
         <div class="statbar"><span id="fcCount"></span><span id="fcLevel"></span></div>
         
@@ -243,10 +239,12 @@
           
           <!-- Quiz Modes Selector -->
           <div class="quiz-modes">
-            <button class="quiz-mode-btn active" data-mode="hanzi-to-mean">Hán ➔ Nghĩa</button>
-            <button class="quiz-mode-btn" data-mode="mean-to-hanzi">Nghĩa ➔ Hán</button>
-            <button class="quiz-mode-btn" data-mode="hanzi-to-pinyin">Hán ➔ Pinyin</button>
-            <button class="quiz-mode-btn" data-mode="audio-to-mean">👂 Nghe ➔ Nghĩa</button>
+            <button class="quiz-mode-btn active" data-mode="hanzi-to-mean" title="Hán tự (có Pinyin) ➔ Nghĩa">Hán ➔ Nghĩa</button>
+            <button class="quiz-mode-btn" data-mode="hanzi-only-to-mean" title="Chỉ Hán tự (không Pinyin) ➔ Nghĩa">漢字 ➔ Nghĩa</button>
+            <button class="quiz-mode-btn" data-mode="mean-to-hanzi" title="Nghĩa ➔ Hán tự (kèm Pinyin)">Nghĩa ➔ Hán</button>
+            <button class="quiz-mode-btn" data-mode="mean-to-hanzi-pure" title="Nghĩa ➔ Chỉ Hán tự (không Pinyin)">Nghĩa ➔ 漢字</button>
+            <button class="quiz-mode-btn" data-mode="hanzi-to-pinyin" title="Hán tự ➔ Pinyin">Hán ➔ Pinyin</button>
+            <button class="quiz-mode-btn" data-mode="audio-to-mean" title="Nghe ➔ Nghĩa">👂 Nghe ➔ Nghĩa</button>
           </div>
 
           <div class="q-box">
@@ -607,53 +605,36 @@
   </div>
 </div>
 
-<!-- Modal Authentication (Đăng nhập / Đăng ký) - TEMPORARILY DISABLED -->
-<!-- <div id="authModal" class="modal">
-  <div class="modal-content auth-modal-content" style="max-width: 420px;">
-    <div class="modal-header" style="padding: 16px 24px 0; border: none;">
-      <div class="auth-tabs" style="display:flex; width:100%; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
-        <div class="auth-tab active" id="tabLoginBtn" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:700; color:var(--text-primary); border-bottom:2px solid var(--accent-purple);">Đăng nhập</div>
-        <div class="auth-tab" id="tabRegisterBtn" style="flex:1; text-align:center; padding:10px; cursor:pointer; font-weight:700; color:var(--text-secondary);">Đăng ký</div>
-      </div>
-      <span class="close-btn" id="closeAuthModalBtn" style="margin-left: 10px; align-self: flex-start; margin-top:-6px;">&times;</span>
-    </div>
-    <div class="modal-body" style="padding: 24px;">
-      <div id="formLogin" style="display:flex; flex-direction:column; gap:16px;">
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <input type="text" id="loginUsername" placeholder="Tên đăng nhập" class="auth-input">
-          <input type="password" id="loginPassword" placeholder="Mật khẩu" class="auth-input">
-        </div>
-        <div style="display:flex; align-items:center; justify-content:space-between; font-size:0.85rem; color:var(--text-secondary);">
-          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none;">
-            <input type="checkbox" id="loginRemember" style="accent-color:var(--accent-purple); width:16px; height:16px;">
-            Ghi nhớ đăng nhập
-          </label>
-        </div>
-        <button class="btn" id="submitLoginBtn" style="justify-content:center; background:var(--accent-gradient); color:#fff; border:none; padding:14px; border-radius:16px; font-weight:700; cursor:pointer;">
-          Đăng nhập
-        </button>
-      </div>
-      
-      <div id="formRegister" style="display:none; flex-direction:column; gap:16px;">
-        <div style="display:flex; flex-direction:column; gap:12px;">
-          <input type="text" id="registerUsername" placeholder="Tên đăng nhập (≥4 ký tự)" class="auth-input">
-          <input type="password" id="registerPassword" placeholder="Mật khẩu (≥6 ký tự)" class="auth-input">
-          <input type="password" id="registerConfirmPassword" placeholder="Nhập lại mật khẩu" class="auth-input">
-        </div>
-        <button class="btn" id="submitRegisterBtn" style="justify-content:center; background:var(--accent-gradient); color:#fff; border:none; padding:14px; border-radius:16px; font-weight:700; cursor:pointer;">
-          Đăng ký tài khoản
-        </button>
-      </div>
-    </div>
+<!-- ==================== CUSTOM POPUP MODAL (thay thế alert, confirm, prompt) ==================== -->
+<div id="wqPopupOverlay" class="wq-popup-overlay" style="display: none;">
+  <div class="wq-popup-card">
+    <div id="wqPopupIcon" class="wq-popup-icon">💡</div>
+    <h3 id="wqPopupTitle" class="wq-popup-title">Thông báo</h3>
+    <div id="wqPopupMessage" class="wq-popup-message"></div>
+    <input type="text" id="wqPopupInput" class="auth-input wq-popup-input" style="display: none;" autocomplete="off" />
+    <div id="wqPopupActions" class="wq-popup-actions"></div>
   </div>
-</div> -->
+</div>
 
-<script src="data.js?v=6"></script>
-<script src="storage.js?v=6" defer></script>
-<script src="api-client.js?v=6" defer></script>
-<!-- <script src="auth.js" defer></script> -->
-<!-- <script src="profile.js" defer></script> -->
-<script src="app.js?v=6" defer></script>
+<!-- Modal Hồ sơ cá nhân -->
+<div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="Hồ sơ cá nhân">
+  <div class="modal-content glass-card" style="max-width:480px; width:90%; max-height:85vh; overflow-y:auto; border-radius:24px; padding:28px; position:relative;">
+    <button id="closeProfileModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;" aria-label="Đóng">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h2 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:800; color:#fff; margin-bottom:20px;">👤 Hồ sơ cá nhân</h2>
+    <div id="profileModalBody"></div>
+  </div>
+</div>
+
+<!-- Container for floating toasts -->
+<div id="toastContainer"></div>
+
+<script src="data/data.js?v=7"></script>
+<script src="storage.js?v=7" defer></script>
+<script src="api-client.js?v=7" defer></script>
+<script src="profile.js?v=7" defer></script>
+<script src="app.js?v=7" defer></script>
 
 </body>
 </html>
