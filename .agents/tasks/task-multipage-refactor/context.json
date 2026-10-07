@@ -1,0 +1,23 @@
+{
+  "project_type": "Vanilla JS multi-page static web app (no bundler). Vietnamese/Chinese flashcard learning app.",
+  "language": "HTML + plain JavaScript (ES5/ES2015, no modules). CSS in styles.css.",
+  "build_system": "None — open HTML files directly in browser or serve with any static server (e.g. python -m http.server or VS Code Live Server). No npm build step for the frontend.",
+  "test_framework": "None — manual browser testing only. Open each HTML file and verify visually.",
+  "build_command": "none (static files)",
+  "test_command": "Open each HTML page in a browser and verify the page renders correctly and its features work.",
+  "verification_instructions": "1. Open the HTML page in a browser (file:// or local static server). 2. Open DevTools console and confirm no JS errors. 3. Verify the specific feature described in each FEAT's acceptance criteria works as expected.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "No bundler, no import/export. All JS files must use plain globals. Script load order in every HTML page: data/data.js (NO defer — must be synchronous) → storage.js → api-client.js → profile.js → js/shared.js → js/[page].js. The original app.js must NOT be deleted or modified.",
+  "contribution_requirements": "Keep app.js intact. Do not use ES modules (no import/export). All new JS files write to window globals. Shared state is in window.AppState and persisted to localStorage.",
+  "key_patterns": "1. State variables are plain globals: level (string), deck (array), fcIdx (int), favorites (array), quizPool/quizAskedWords (arrays), qScore/qTotal (ints), wIdx (int). 2. $ = id => document.getElementById(id) helper is used throughout. 3. WQStorage module in storage.js handles all localStorage reads/writes. 4. All sections use existing CSS classes from styles.css — do not add new class names. 5. Sidebar nav items use data-section in original; new pages use data-page and href to actual .html files. Active state set by matching location.pathname. 6. The sidebar + header HTML block is identical across all 8 pages. 7. Modals that need to appear on all pages: #profileModal, #wqPopupOverlay, #toastContainer.",
+  "relevant_files": [
+    "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\index.html",
+    "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\app.js",
+    "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\storage.js",
+    "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\api-client.js",
+    "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\profile.js",
+    "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\data\\data.js",
+    "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\styles.css"
+  ],
+  "directory_structure": "c:\\Users\\DAnnotator2\\Khanh\\hanyu\\ — root with index.html, app.js, storage.js, api-client.js, profile.js, styles.css. data/ — data.js (const DATA = { 'HSK 1': [...], ... }). backend/ — Cloudflare Workers API (not modified). .agents/tasks/ — plan and FEAT artifacts."
+}

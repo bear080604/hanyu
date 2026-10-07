@@ -560,7 +560,7 @@ function removePinyinTones(str) {
 // Multi-page: save word to localStorage then navigate to flash.html
 function navigateToWord(word) {
   localStorage.setItem('wq_navigate_word', JSON.stringify(word));
-  window.location.href = 'flash.html';
+  window.location.href = '../pages/flash.html';
 }
 
 // ==================== HOME DASHBOARD ====================
@@ -635,7 +635,7 @@ function renderHomeHskGrid() {
 
     card.querySelector('.start-learn-btn').onclick = () => {
       localStorage.setItem('wq_pending_level', lvl);
-      window.location.href = 'flash.html';
+      window.location.href = '../pages/flash.html';
     };
 
     homeHskGrid.appendChild(card);

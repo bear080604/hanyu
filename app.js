@@ -151,7 +151,7 @@ function deduplicateWords(arr) {
 }
 
 // ---------- state (Single User) ----------
-let level = 'HSK1', deck = [], fcIdx = 0, qScore = 0, qTotal = 0, writer = null, wIdx = 0, wChars = [];
+let level = 'HSK 1', deck = [], fcIdx = 0, qScore = 0, qTotal = 0, writer = null, wIdx = 0, wChars = [];
 const userId = 'default_user';
 
 let favorites = (window.WQStorage && WQStorage.getFavorites()) || JSON.parse(localStorage.getItem('wq_favorites')) || [];
@@ -517,6 +517,7 @@ function applyRange(){
   if(v==='all' || level === 'favorites'){deck=src.slice();}
   else{const [a,b]=v.split('-').map(Number);deck=src.slice(a,b);}
   deck = deduplicateWords(deck);
+  shuffle(deck);
   fcIdx=0;wIdx=0;qScore=0;qTotal=0;
   
   // Reset quiz pool khi thay đổi deck
@@ -1645,8 +1646,8 @@ window.addEventListener('click', (e) => {
             localStorage.removeItem('wq_srs');
           }
           favorites = [];
-          level = 'HSK1';
-          if (lvlSel) lvlSel.value = 'HSK1';
+          level = 'HSK 1';
+          if (lvlSel) lvlSel.value = 'HSK 1';
           buildRanges();
           applyRange();
           updateHomeDashboard();
@@ -2188,6 +2189,7 @@ window.addEventListener('click', (e) => {
     
     level = deckName;
     deck = [...words];
+    shuffle(deck);
     fcIdx = 0;
     wIdx = 0;
     qScore = 0;

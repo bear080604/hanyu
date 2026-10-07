@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WenQing Chinese — Thống kê</title>
+<title>WenQing Chinese — Cài đặt</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 
@@ -30,35 +30,35 @@
       <span class="logo-text">WenQing <span>文卿</span></span>
     </div>
     <nav class="sidebar-menu">
-      <a href="index.html" class="menu-item" data-page="home">
+      <a href="../index.html" class="menu-item" data-page="home">
         <span class="menu-icon">🏠</span>
         <span class="menu-text">Trang chủ</span>
       </a>
-      <a href="flash.html" class="menu-item" data-page="flash">
+      <a href="../flash.html" class="menu-item" data-page="flash">
         <span class="menu-icon">📇</span>
         <span class="menu-text">Flashcard</span>
       </a>
-      <a href="quiz.html" class="menu-item" data-page="quiz">
+      <a href="../quiz.html" class="menu-item" data-page="quiz">
         <span class="menu-icon">✏️</span>
         <span class="menu-text">Trắc nghiệm</span>
       </a>
-      <a href="write.html" class="menu-item" data-page="write">
+      <a href="../write.html" class="menu-item" data-page="write">
         <span class="menu-icon">🖌️</span>
         <span class="menu-text">Nét chữ</span>
       </a>
-      <a href="stats.html" class="menu-item" data-page="stats">
+      <a href="../stats.html" class="menu-item" data-page="stats">
         <span class="menu-icon">📊</span>
         <span class="menu-text">Thống kê</span>
       </a>
-      <a href="favorites.html" class="menu-item" data-page="favorites">
+      <a href="../favorites.html" class="menu-item" data-page="favorites">
         <span class="menu-icon">❤️</span>
         <span class="menu-text">Yêu thích</span>
       </a>
-      <a href="custom.html" class="menu-item" data-page="custom">
+      <a href="../custom.html" class="menu-item" data-page="custom">
         <span class="menu-icon">📝</span>
         <span class="menu-text">Tự tạo</span>
       </a>
-      <a href="settings.html" class="menu-item" data-page="settings">
+      <a href="../settings.html" class="menu-item" data-page="settings">
         <span class="menu-icon">⚙️</span>
         <span class="menu-text">Cài đặt</span>
       </a>
@@ -72,7 +72,7 @@
         <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <h2 class="header-title" id="headerTitle">Thống kê</h2>
+        <h2 class="header-title" id="headerTitle">Cài đặt</h2>
       </div>
       <div class="header-center">
         <div class="search-wrapper">
@@ -81,7 +81,7 @@
         </div>
       </div>
       <div class="header-right">
-        <!-- learnSelectorsWrapper hidden on stats -->
+        <!-- learnSelectorsWrapper hidden on settings -->
         <div class="learn-selectors-wrapper" id="learnSelectorsWrapper" style="display:none;">
           <div class="select-wrapper"><select id="levelSel"></select></div>
           <div class="select-wrapper"><select id="rangeSel"></select></div>
@@ -106,10 +106,47 @@
     </div>
 
     <main class="app-content">
-      <!-- STATS section -->
-      <section class="app-section active" id="section-stats">
-        <div id="statsModal" class="modal-section-flat">
-          <div class="modal-body" id="statsModalBody"></div>
+      <!-- SETTINGS section -->
+      <section class="app-section active" id="section-settings">
+        <div class="glass-card settings-card">
+          <h3>⚙️ Cài đặt ứng dụng</h3>
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 16px 0;">
+          <div class="settings-group">
+            <div class="settings-item">
+              <div class="settings-info">
+                <h4>Giao diện tối / sáng</h4>
+                <p>Chuyển đổi giao diện hệ thống cho phù hợp với môi trường của bạn.</p>
+              </div>
+              <button class="btn" id="settingsThemeBtn" style="padding: 10px 18px; border-radius: 12px; font-weight: 600;">
+                🌙 Chế độ tối
+              </button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-info">
+                <h4>Tốc độ chạy tự động (Flashcard)</h4>
+                <p>Khoảng thời gian chuyển từ khi bật tính năng Autoplay.</p>
+              </div>
+              <div class="select-wrapper" style="width: auto;">
+                <select id="settingsAutoplaySpeed" style="padding: 8px 16px; border-radius: 12px;">
+                  <option value="3000">3 giây</option>
+                  <option value="5000" selected>5 giây</option>
+                  <option value="8000">8 giây</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 16px 0;">
+          <div class="settings-group">
+            <div class="settings-item">
+              <div class="settings-info">
+                <h4 style="color: var(--neon-red);">Xóa dữ liệu tiến độ</h4>
+                <p>Khôi phục lại toàn bộ dữ liệu học tập về trạng thái ban đầu. Hành động này không thể hoàn tác.</p>
+              </div>
+              <button class="btn" id="resetProgressBtn" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.4); color: var(--neon-red); padding: 10px 18px; border-radius: 12px; font-weight: 600;">
+                🗑️ Xóa tiến trình
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -143,12 +180,12 @@
 <!-- Toast Container -->
 <div id="toastContainer"></div>
 
-<script src="data/data.js"></script>
-<script src="storage.js" defer></script>
-<script src="api-client.js" defer></script>
-<script src="profile.js" defer></script>
-<script src="js/shared.js" defer></script>
-<script src="js/stats.js" defer></script>
+<script src="../data/data.js"></script>
+<script src="../storage.js" defer></script>
+<script src="../api-client.js" defer></script>
+<script src="../profile.js" defer></script>
+<script src="../js/shared.js" defer></script>
+<script src="../js/settings.js" defer></script>
 
 </body>
 </html>

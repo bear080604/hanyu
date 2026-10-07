@@ -1,0 +1,39 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Integration verification and cross-page flow testing. After FEAT-001 and FEAT-002 are complete, verify all cross-page interactions work end-to-end: (1) home HSK 'Học ngay' button navigates to flash.html with correct level loaded and auto-shuffled; (2) custom deck study mode navigates to flash.html/quiz.html with pending deck loaded; (3) search navigates to flash.html; (4) 'both' study mode transitions from flash.html to quiz.html after finishing flashcards; (5) settings autoplay speed persists to flash.html. Fix any integration issues found. This FEAT depends on FEAT-001 and FEAT-002 both being complete.",
+  "status": "pending",
+  "steps": [
+    "Test cross-page flow: Home → Flash. Click 'Học ngay' on any HSK card in index.html. Confirm flash.html loads with that level active, deck is shuffled (verify by reloading multiple times — card order should differ). Fix in shared.js renderHomeHskGrid() if navigation does not work.",
+
+    "Test cross-page flow: Custom Deck → Flash. Go to custom.html, add 3+ words, click 'Học ngay', select 'Flashcard' in the study mode modal. Confirm flash.html loads with the custom deck's words shown. Fix in custom.js startStudySession() if localStorage pending deck is not being read by flash.js.",
+
+    "Test cross-page flow: Custom Deck → Quiz. Same as above but select 'Trắc nghiệm'. Confirm quiz.html loads and immediately shows the quiz game (not the deck selection screen) with the custom deck's words. Fix in quiz.js DOMContentLoaded pending deck handler if needed.",
+
+    "Test cross-page flow: Both mode. Add 3+ words in custom.html, click 'Học ngay' → 'Học đầy đủ'. Confirm flash.html loads. Navigate to the last flashcard. Confirm a prompt appears asking to switch to quiz. Confirm clicking OK navigates to quiz.html. Fix flash.js checkFlashcardComplete() if the sessionStorage wq_study_mode is not being set or checked correctly.",
+
+    "Test: Settings autoplay speed. Go to settings.html, change autoplay speed to 3 seconds. Go to flash.html, start autoplay. Confirm cards advance at ~3 seconds. Fix in settings.js (save to localStorage wq_autoplay_speed) and flash.js (read wq_autoplay_speed on init).",
+
+    "Test: Search from any page. Go to index.html, type a Chinese word in the search box. Click a suggestion. Confirm navigation to flash.html with that word's flashcard shown. Fix navigateToWord() in shared.js and the corresponding load handler in flash.js if needed.",
+
+    "Verify the sidebar active state on every page by opening each HTML file directly. The corresponding menu item should have class 'active'. Fix initSidebarNavigation() in shared.js if the filename matching is wrong.",
+
+    "Run a final check: open each of the 8 HTML files, confirm DevTools console is clean (no uncaught errors), and confirm the page's primary feature works."
+  ],
+  "acceptance_criteria": [
+    "Home HSK 'Học ngay' navigates to flash.html with correct level, deck auto-shuffled",
+    "Custom deck 'Học ngay' → Flashcard mode: navigates to flash.html with custom deck active",
+    "Custom deck 'Học ngay' → Quiz mode: navigates to quiz.html and starts quiz game immediately",
+    "Custom deck 'Học đầy đủ': flash first, then quiz after completing all cards",
+    "Settings autoplay speed change persists when opening flash.html",
+    "Search result click navigates to flash.html with correct word",
+    "Sidebar active state correct on all 8 pages",
+    "No JS errors in DevTools console on any page"
+  ],
+  "verification": [
+    "Manual test each cross-page flow listed in steps 1-6",
+    "Open all 8 HTML files in browser, check DevTools console for errors on each"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

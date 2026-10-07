@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WenQing Chinese — Yêu thích</title>
+<title>WenQing Chinese — Nét chữ</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="../styles.css">
 </head>
 <body>
 
@@ -30,35 +30,35 @@
       <span class="logo-text">WenQing <span>文卿</span></span>
     </div>
     <nav class="sidebar-menu">
-      <a href="index.html" class="menu-item" data-page="home">
+      <a href="../index.html" class="menu-item" data-page="home">
         <span class="menu-icon">🏠</span>
         <span class="menu-text">Trang chủ</span>
       </a>
-      <a href="flash.html" class="menu-item" data-page="flash">
+      <a href="../flash.html" class="menu-item" data-page="flash">
         <span class="menu-icon">📇</span>
         <span class="menu-text">Flashcard</span>
       </a>
-      <a href="quiz.html" class="menu-item" data-page="quiz">
+      <a href="../quiz.html" class="menu-item" data-page="quiz">
         <span class="menu-icon">✏️</span>
         <span class="menu-text">Trắc nghiệm</span>
       </a>
-      <a href="write.html" class="menu-item" data-page="write">
+      <a href="../write.html" class="menu-item" data-page="write">
         <span class="menu-icon">🖌️</span>
         <span class="menu-text">Nét chữ</span>
       </a>
-      <a href="stats.html" class="menu-item" data-page="stats">
+      <a href="../stats.html" class="menu-item" data-page="stats">
         <span class="menu-icon">📊</span>
         <span class="menu-text">Thống kê</span>
       </a>
-      <a href="favorites.html" class="menu-item" data-page="favorites">
+      <a href="../favorites.html" class="menu-item" data-page="favorites">
         <span class="menu-icon">❤️</span>
         <span class="menu-text">Yêu thích</span>
       </a>
-      <a href="custom.html" class="menu-item" data-page="custom">
+      <a href="../custom.html" class="menu-item" data-page="custom">
         <span class="menu-icon">📝</span>
         <span class="menu-text">Tự tạo</span>
       </a>
-      <a href="settings.html" class="menu-item" data-page="settings">
+      <a href="../settings.html" class="menu-item" data-page="settings">
         <span class="menu-icon">⚙️</span>
         <span class="menu-text">Cài đặt</span>
       </a>
@@ -72,7 +72,7 @@
         <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <h2 class="header-title" id="headerTitle">Yêu thích</h2>
+        <h2 class="header-title" id="headerTitle">Nét chữ</h2>
       </div>
       <div class="header-center">
         <div class="search-wrapper">
@@ -81,8 +81,8 @@
         </div>
       </div>
       <div class="header-right">
-        <!-- learnSelectorsWrapper hidden on favorites -->
-        <div class="learn-selectors-wrapper" id="learnSelectorsWrapper" style="display:none;">
+        <!-- learnSelectorsWrapper visible on write -->
+        <div class="learn-selectors-wrapper" id="learnSelectorsWrapper">
           <div class="select-wrapper"><select id="levelSel"></select></div>
           <div class="select-wrapper"><select id="rangeSel"></select></div>
           <button class="btn" id="shuffleBtn" style="padding: 10px 14px; border-radius: 12px;">
@@ -106,10 +106,29 @@
     </div>
 
     <main class="app-content">
-      <!-- FAVORITES section -->
-      <section class="app-section active" id="section-favorites">
-        <div id="favModal" class="modal-section-flat">
-          <div class="modal-body" id="favModalList"></div>
+      <!-- WRITE section -->
+      <section class="app-section active panel" id="write">
+        <div class="statbar"><span id="wWord"></span><span id="wLevel"></span></div>
+        <div class="w-wrap">
+          <div class="w-info">
+            <div class="p" id="wPinyin"></div>
+            <div class="m" id="wMean"></div>
+          </div>
+          <div id="writer-target"></div>
+          <div class="fc-nav">
+            <button class="btn" id="wAnimate">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Xem nét
+            </button>
+            <button class="btn" id="wQuiz">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+              Tập viết
+            </button>
+            <button class="icon-btn" id="wAudio" aria-label="Speak">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            </button>
+          </div>
+          <div class="w-char-pick" id="wPick"></div>
         </div>
       </section>
     </main>
@@ -143,12 +162,12 @@
 <!-- Toast Container -->
 <div id="toastContainer"></div>
 
-<script src="data/data.js"></script>
-<script src="storage.js" defer></script>
-<script src="api-client.js" defer></script>
-<script src="profile.js" defer></script>
-<script src="js/shared.js" defer></script>
-<script src="js/favorites.js" defer></script>
+<script src="../data/data.js"></script>
+<script src="../storage.js" defer></script>
+<script src="../api-client.js" defer></script>
+<script src="../profile.js" defer></script>
+<script src="../js/shared.js" defer></script>
+<script src="../js/write.js" defer></script>
 
 </body>
 </html>

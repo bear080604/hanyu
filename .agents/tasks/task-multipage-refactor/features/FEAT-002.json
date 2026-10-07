@@ -1,0 +1,49 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Create all 8 HTML pages: replace index.html (home dashboard), and create flash.html, quiz.html, write.html, stats.html, favorites.html, custom.html, settings.html. Each page has the same sidebar+header shell, the correct main content section extracted from the original index.html, and loads its own JS. Independent of FEAT-001 only in terms of file content structure, but must be implemented after FEAT-001 so that the JS files already exist when HTML pages reference them.",
+  "status": "pending",
+  "steps": [
+    "Define the shared HTML shell that every page reuses. It consists of:\n  1. <head>: charset, viewport, <title> (page-specific), HanziWriter CDN script (flash.html and write.html only — others omit it), styles.css link\n  2. <body>: <canvas id='bg-canvas'>, .app-container wrapping:\n     a. <aside class='sidebar' id='sidebar'> with logo + nav. Nav uses actual href URLs:\n        - <a href='index.html' class='menu-item' data-page='home'>🏠 Trang chủ</a>\n        - <a href='flash.html' class='menu-item' data-page='flash'>📇 Flashcard</a>\n        - <a href='quiz.html' class='menu-item' data-page='quiz'>✏️ Trắc nghiệm</a>\n        - <a href='write.html' class='menu-item' data-page='write'>🖌️ Nét chữ</a>\n        - <a href='stats.html' class='menu-item' data-page='stats'>📊 Thống kê</a>\n        - <a href='favorites.html' class='menu-item' data-page='favorites'>❤️ Yêu thích</a>\n        - <a href='custom.html' class='menu-item' data-page='custom'>📝 Tự tạo</a>\n        - <a href='settings.html' class='menu-item' data-page='settings'>⚙️ Cài đặt</a>\n     b. .main-content-layout with:\n        - <header class='app-header'>: hamburger, <h2 class='header-title'> (page-specific title), search wrapper, learnSelectorsWrapper (visible on flash/quiz/write, hidden otherwise), openProfileBtn, hidden themeBtn\n        - Hidden elements needed by app.js compatibility: #favListBtn (display:none), .tabs (display:none)\n        - <main class='app-content'>: page-specific content\n        - <footer class='footer'>\n  3. Shared modals present on ALL pages: #profileModal, #wqPopupOverlay\n  4. <div id='toastContainer'></div>\n  5. Scripts: <script src='data/data.js?v=7'></script> <script src='storage.js?v=7' defer></script> <script src='api-client.js?v=7' defer></script> <script src='profile.js?v=7' defer></script> <script src='js/shared.js' defer></script> <script src='js/[page].js' defer></script>",
+
+    "Replace index.html (Trang chủ / home dashboard):\n  - Title: 'WenQing - Trang chủ'\n  - HanziWriter CDN: NO (not needed on home)\n  - learnSelectorsWrapper: hidden (style='display:none')\n  - Main content: copy the entire #section-home section from original index.html (welcomeBanner, dashboardGrid with streak card, homeHskGrid)\n  - Page-specific JS: none (home logic is in shared.js)\n  - Scripts: data/data.js → storage.js → api-client.js → profile.js → js/shared.js (no page-specific last script)",
+
+    "Create flash.html (Flashcard / Tự học):\n  - Title: 'WenQing - Flashcard'\n  - HanziWriter CDN: YES (write.html also needs it but flash does not — actually flash.html does NOT need HanziWriter. Only write.html does.)\n  - learnSelectorsWrapper: VISIBLE (remove style='display:none' from the wrapper)\n  - Main content: copy the entire #flash section from original index.html (statbar, autoplay bar, .fc-wrap, .fc-nav)\n  - Scripts: ... → js/shared.js → js/flash.js",
+
+    "Create quiz.html (Trắc nghiệm):\n  - Title: 'WenQing - Trắc nghiệm'\n  - HanziWriter CDN: NO\n  - learnSelectorsWrapper: VISIBLE\n  - Main content: copy the entire #quiz section from original index.html (quizDeckSelection + quizGameSection)\n  - Scripts: ... → js/shared.js → js/quiz.js",
+
+    "Create write.html (Nét chữ):\n  - Title: 'WenQing - Nét chữ'\n  - HanziWriter CDN: YES — <script src='https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js'></script> in <head>\n  - learnSelectorsWrapper: VISIBLE\n  - Main content: copy the entire #write section from original index.html\n  - Scripts: ... → js/shared.js → js/write.js",
+
+    "Create stats.html (Thống kê):\n  - Title: 'WenQing - Thống kê'\n  - HanziWriter CDN: NO\n  - learnSelectorsWrapper: HIDDEN\n  - Main content: copy #section-stats from original index.html (statsModal flat section with statsModalBody)\n  - Scripts: ... → js/shared.js → js/stats.js",
+
+    "Create favorites.html (Yêu thích):\n  - Title: 'WenQing - Yêu thích'\n  - HanziWriter CDN: NO\n  - learnSelectorsWrapper: HIDDEN\n  - Main content: copy #section-favorites from original index.html (favModal flat section with favModalList)\n  - Scripts: ... → js/shared.js → js/favorites.js",
+
+    "Create custom.html (Tự tạo):\n  - Title: 'WenQing - Tự tạo'\n  - HanziWriter CDN: NO\n  - learnSelectorsWrapper: HIDDEN\n  - Main content: copy #section-custom from original index.html (the full glass-card form with search, manual input, wordsList, historyList)\n  - Additional modals: importJsonModal, duplicateConfirmModal, studyModeModal (copy from original index.html)\n  - Scripts: ... → js/shared.js → js/custom.js",
+
+    "Create settings.html (Cài đặt):\n  - Title: 'WenQing - Cài đặt'\n  - HanziWriter CDN: NO\n  - learnSelectorsWrapper: HIDDEN\n  - Main content: copy #section-settings from original index.html (the glass-card settings panel)\n  - Scripts: ... → js/shared.js → js/settings.js"
+  ],
+  "acceptance_criteria": [
+    "All 8 HTML files exist: index.html, flash.html, quiz.html, write.html, stats.html, favorites.html, custom.html, settings.html",
+    "Opening index.html in a browser shows the home dashboard with HSK cards and no JS errors",
+    "Opening flash.html shows flashcards, the level/range/shuffle selectors are visible in the header",
+    "Opening quiz.html shows the quiz deck selection with HSK grid",
+    "Opening write.html shows the HanziWriter panel",
+    "Opening stats.html shows the stats section",
+    "Opening favorites.html shows the favorites list (empty or populated)",
+    "Opening custom.html shows the custom deck form with history",
+    "Opening settings.html shows the settings panel",
+    "Sidebar nav active state is correctly set based on the current page filename",
+    "Sidebar links navigate between pages correctly (no # hrefs remaining in nav items)",
+    "learnSelectorsWrapper is visible on flash/quiz/write and hidden on all others"
+  ],
+  "verification": [
+    "Open each HTML file in browser, check DevTools console for JS errors",
+    "Click sidebar links on index.html — confirm navigation to flash.html, quiz.html, etc.",
+    "Open flash.html — confirm level/range selectors visible, first card shows, shuffle applied (order varies on reload)",
+    "Open quiz.html — confirm HSK grid renders and clicking a level starts the quiz",
+    "Open write.html — confirm HanziWriter loads and renders",
+    "Open custom.html — add a word and click Học ngay — confirm navigation to flash.html with that word"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

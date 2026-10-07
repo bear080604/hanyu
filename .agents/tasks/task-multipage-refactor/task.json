@@ -1,0 +1,7 @@
+{
+  "task_id": "task-multipage-refactor",
+  "task_description": "Refactor the single-page Vietnamese/Chinese flashcard app (index.html + app.js ~3100 lines) into a multi-page app with separate HTML files and split JS modules under js/. Also fix the auto-shuffle bug (deck is never shuffled on load), the level init mismatch ('HSK1' vs 'HSK 1'), and the custom deck cross-page navigation.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
