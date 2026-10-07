@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WenQing Chinese — Trang chủ</title>
+<title>WenQing Chinese — Yêu thích</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -72,7 +72,7 @@
         <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <h2 class="header-title" id="headerTitle">Trang chủ</h2>
+        <h2 class="header-title" id="headerTitle">Yêu thích</h2>
       </div>
       <div class="header-center">
         <div class="search-wrapper">
@@ -81,7 +81,7 @@
         </div>
       </div>
       <div class="header-right">
-        <!-- learnSelectorsWrapper hidden on home -->
+        <!-- learnSelectorsWrapper hidden on favorites -->
         <div class="learn-selectors-wrapper" id="learnSelectorsWrapper" style="display:none;">
           <div class="select-wrapper"><select id="levelSel"></select></div>
           <div class="select-wrapper"><select id="rangeSel"></select></div>
@@ -96,7 +96,7 @@
       </div>
     </header>
 
-    <!-- Ẩn favListBtn và tabs cũ để JS không lỗi -->
+    <!-- Ẩn favListBtn và tabs cũ -->
     <button id="favListBtn" style="display: none !important;"></button>
     <div class="tabs" style="display: none !important;">
       <div class="tab-indicator" id="tabIndicator"></div>
@@ -106,24 +106,11 @@
     </div>
 
     <main class="app-content">
-      <!-- TRANG CHỦ -->
-      <section class="app-section active" id="section-home">
-        <div class="welcome-banner">
-          <h1 id="welcomeUserText">Chào mừng bạn học tập! 👋</h1>
-          <p>Chúc bạn một ngày học tiếng Trung hiệu quả. Hãy chọn một phần học dưới đây hoặc xem tiến độ của mình.</p>
+      <!-- FAVORITES section -->
+      <section class="app-section active" id="section-favorites">
+        <div id="favModal" class="modal-section-flat">
+          <div class="modal-body" id="favModalList"></div>
         </div>
-        <div class="dashboard-grid">
-          <div class="glass-card stat-highlight-card" style="max-width: 360px;">
-            <div class="card-icon">🔥</div>
-            <div class="card-info">
-              <h3>Chuỗi học tập</h3>
-              <div class="value" id="userStreakVal">0 ngày</div>
-              <p>Học hàng ngày để duy trì chuỗi!</p>
-            </div>
-          </div>
-        </div>
-        <h3 class="section-subtitle">Chương trình học HSK</h3>
-        <div class="hsk-grid" id="homeHskGrid"></div>
       </section>
     </main>
 
@@ -161,6 +148,7 @@
 <script src="api-client.js" defer></script>
 <script src="profile.js" defer></script>
 <script src="js/shared.js" defer></script>
+<script src="js/favorites.js" defer></script>
 
 </body>
 </html>

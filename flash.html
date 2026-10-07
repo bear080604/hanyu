@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WenQing Chinese — Trang chủ</title>
+<title>WenQing Chinese — Flashcard</title>
 <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -72,7 +72,7 @@
         <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
-        <h2 class="header-title" id="headerTitle">Trang chủ</h2>
+        <h2 class="header-title" id="headerTitle">Flashcard</h2>
       </div>
       <div class="header-center">
         <div class="search-wrapper">
@@ -81,8 +81,8 @@
         </div>
       </div>
       <div class="header-right">
-        <!-- learnSelectorsWrapper hidden on home -->
-        <div class="learn-selectors-wrapper" id="learnSelectorsWrapper" style="display:none;">
+        <!-- learnSelectorsWrapper visible on flash -->
+        <div class="learn-selectors-wrapper" id="learnSelectorsWrapper">
           <div class="select-wrapper"><select id="levelSel"></select></div>
           <div class="select-wrapper"><select id="rangeSel"></select></div>
           <button class="btn" id="shuffleBtn" style="padding: 10px 14px; border-radius: 12px;">
@@ -106,24 +106,54 @@
     </div>
 
     <main class="app-content">
-      <!-- TRANG CHỦ -->
-      <section class="app-section active" id="section-home">
-        <div class="welcome-banner">
-          <h1 id="welcomeUserText">Chào mừng bạn học tập! 👋</h1>
-          <p>Chúc bạn một ngày học tiếng Trung hiệu quả. Hãy chọn một phần học dưới đây hoặc xem tiến độ của mình.</p>
+      <!-- FLASHCARD section -->
+      <section class="app-section active panel" id="flash">
+        <div class="statbar"><span id="fcCount"></span><span id="fcLevel"></span></div>
+
+        <!-- Auto-play controls -->
+        <div class="autoplay-bar">
+          <button class="btn" id="autoplayBtn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 12px;">
+            <span id="autoplayBtnText">▶️ Tự động chạy</span>
+          </button>
+          <div class="autoplay-speed" style="display: none;">
+            <label for="autoplaySpeed">Thời gian:</label>
+            <select id="autoplaySpeed">
+              <option value="3000">3 giây</option>
+              <option value="5000" selected>5 giây</option>
+              <option value="8000">8 giây</option>
+            </select>
+          </div>
+          <div id="autoplayProgress" class="autoplay-progress"></div>
         </div>
-        <div class="dashboard-grid">
-          <div class="glass-card stat-highlight-card" style="max-width: 360px;">
-            <div class="card-icon">🔥</div>
-            <div class="card-info">
-              <h3>Chuỗi học tập</h3>
-              <div class="value" id="userStreakVal">0 ngày</div>
-              <p>Học hàng ngày để duy trì chuỗi!</p>
+
+        <div class="fc-wrap">
+          <div class="fc" id="fcCard">
+            <div class="fc-face fc-front">
+              <div class="fc-hanzi" id="fcHanzi"></div>
+              <div class="fc-pinyin" id="fcPinyin"></div>
+              <div class="fc-hint">Bấm để lật thẻ</div>
+            </div>
+            <div class="fc-face fc-back">
+              <div class="fc-mean" id="fcMean"></div>
+              <div class="fc-ex" id="fcEx"></div>
+              <div class="fc-hint">Bấm để lật lại</div>
             </div>
           </div>
         </div>
-        <h3 class="section-subtitle">Chương trình học HSK</h3>
-        <div class="hsk-grid" id="homeHskGrid"></div>
+        <div class="fc-nav">
+          <button class="icon-btn" id="fcPrev" aria-label="Previous">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button class="icon-btn" id="fcFav" aria-label="Favorite">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          </button>
+          <button class="icon-btn" id="fcAudio" aria-label="Speak">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          </button>
+          <button class="icon-btn" id="fcNext" aria-label="Next">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+        </div>
       </section>
     </main>
 
@@ -161,6 +191,7 @@
 <script src="api-client.js" defer></script>
 <script src="profile.js" defer></script>
 <script src="js/shared.js" defer></script>
+<script src="js/flash.js" defer></script>
 
 </body>
 </html>
