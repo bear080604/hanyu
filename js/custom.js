@@ -11,26 +11,40 @@
 
   // ==================== STORAGE ====================
 
-  function loadCustomHistory() {
-    const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-    const username = currentUser ? currentUser.username : null;
+  var USER_ID = 'default_user'; // fallback user id
 
-    if (username && window.WQStorage) {
-      customHistory = WQStorage.getUserDataField(username, 'customDecks', '') || [];
-    } else {
-      customHistory = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
+  function loadCustomHistory() {
+    // Load từ localStorage trước để hiển thị nhanh
+    customHistory = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
+    renderCustomHistory();
+
+    // Sau đó sync từ Cloudflare API
+    if (window.WeiQuanAPI) {
+      window.WeiQuanAPI.getDecks(USER_ID).then(function (res) {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          // Merge: ưu tiên cloud, bổ sung local nếu chưa có trên cloud
+          var cloudDecks = res.data.map(function (d) {
+            return {
+              id: d.id,
+              cloudId: d.id,
+              name: d.name,
+              words: [], // words được load lazy khi cần
+              wordCount: d.word_count || 0,
+              createdAt: (d.created_at || '').split('T')[0] || new Date().toISOString().split('T')[0]
+            };
+          });
+          customHistory = cloudDecks;
+          localStorage.setItem('wq_custom_decks', JSON.stringify(customHistory));
+          renderCustomHistory();
+        }
+      }).catch(function (err) {
+        console.warn('⚠️ Không thể load decks từ cloud:', err);
+      });
     }
   }
 
   function saveCustomHistory() {
-    const currentUser = window.WQAuth && window.WQAuth.getCurrentUser();
-    const username = currentUser ? currentUser.username : null;
-
-    if (username && window.WQStorage) {
-      WQStorage.updateUserData(username, 'customDecks', customHistory);
-    } else {
-      localStorage.setItem('wq_custom_decks', JSON.stringify(customHistory));
-    }
+    localStorage.setItem('wq_custom_decks', JSON.stringify(customHistory));
   }
 
   // ==================== RENDER ====================
@@ -68,17 +82,46 @@
 
       item.querySelector('[data-action="load"]').onclick = function (e) {
         e.stopPropagation();
-        currentCustomWords = (deckObj.words || []).slice();
-        renderCustomWordsList();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (window.showToast) {
-          window.showToast('Đã tải "' + deckObj.name + '" (' + currentCustomWords.length + ' từ)', 'success');
+        // Nếu là cloud deck chưa có words, fetch trước
+        if (deckObj.cloudId && (!deckObj.words || deckObj.words.length === 0)) {
+          if (window.WeiQuanAPI) {
+            window.WeiQuanAPI.getDeckById(deckObj.cloudId).then(function (res) {
+              if (res && res.success && res.data && res.data.words) {
+                deckObj.words = res.data.words;
+                currentCustomWords = deckObj.words.slice();
+                renderCustomWordsList();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                if (window.showToast) window.showToast('Đã tải "' + deckObj.name + '" (' + currentCustomWords.length + ' từ)', 'success');
+              }
+            }).catch(function () {
+              if (window.showToast) window.showToast('❌ Không thể tải từ cloud!', 'error');
+            });
+          }
+        } else {
+          currentCustomWords = (deckObj.words || []).slice();
+          renderCustomWordsList();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (window.showToast) window.showToast('Đã tải "' + deckObj.name + '" (' + currentCustomWords.length + ' từ)', 'success');
         }
       };
 
       item.querySelector('[data-action="study"]').onclick = function (e) {
         e.stopPropagation();
-        showStudyModeModal(deckObj);
+        // Nếu là cloud deck chưa có words, fetch trước
+        if (deckObj.cloudId && (!deckObj.words || deckObj.words.length === 0)) {
+          if (window.WeiQuanAPI) {
+            window.WeiQuanAPI.getDeckById(deckObj.cloudId).then(function (res) {
+              if (res && res.success && res.data && res.data.words) {
+                deckObj.words = res.data.words;
+                showStudyModeModal(deckObj);
+              }
+            }).catch(function () {
+              if (window.showToast) window.showToast('❌ Không thể tải từ cloud!', 'error');
+            });
+          }
+        } else {
+          showStudyModeModal(deckObj);
+        }
       };
 
       item.querySelector('[data-action="delete"]').onclick = function (e) {
@@ -371,6 +414,24 @@
     customHistory.unshift(newDeck);
     saveCustomHistory();
     renderCustomHistory();
+
+    // Sync lên Cloudflare
+    if (window.WeiQuanAPI) {
+      window.WeiQuanAPI.createDeck(USER_ID, deckName, currentCustomWords.slice()).then(function (res) {
+        if (res && res.success && res.deck_id) {
+          newDeck.cloudId = res.deck_id;
+          saveCustomHistory();
+          if (window.showToast) {
+            window.showToast('☁️ Đã lưu "' + deckName + '" lên cloud!', 'success');
+          }
+        }
+      }).catch(function (err) {
+        console.warn('⚠️ Lưu cloud thất bại, đã lưu local:', err);
+        if (window.showToast) {
+          window.showToast('💾 Đã lưu local (cloud lỗi)', 'info');
+        }
+      });
+    }
 
     if (window.showToast) {
       window.showToast('Đã lưu bộ từ "' + deckName + '" (' + newDeck.wordCount + ' từ)', 'success');
