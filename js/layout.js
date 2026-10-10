@@ -130,16 +130,33 @@
   }
 
   function inject() {
-    // Move existing <main> content into a temp holder
+    // Save page-main-content
     var existingMain = document.getElementById('page-main-content');
     var mainContent = existingMain ? existingMain.innerHTML : '';
 
+    // Save all other top-level elements (modals, toastContainer, scripts, etc.)
+    // that are NOT #page-main-content and NOT script tags (scripts already ran)
+    var extras = [];
+    Array.from(document.body.children).forEach(function(el) {
+      if (el.id !== 'page-main-content' && el.tagName !== 'SCRIPT') {
+        extras.push(el.cloneNode(true));
+      }
+    });
+
+    // Inject shell
     document.body.innerHTML = buildShell();
 
     // Re-inject page content into <main>
     if (mainContent) {
       document.getElementById('page-main').innerHTML = mainContent;
     }
+
+    // Re-append modals and other extras
+    extras.forEach(function(el) {
+      // Skip canvas (already in shell) and layout/script stubs
+      if (el.id === 'bg-canvas') return;
+      document.body.appendChild(el);
+    });
   }
 
   // Run immediately (script is non-defer)
