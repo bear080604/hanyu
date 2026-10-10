@@ -67,6 +67,11 @@
 <script src="api-client.js" defer></script>
 <script src="profile.js" defer></script>
 <script src="js/shared.js" defer></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/hanyu/sw.js');
+  }
+</script>
 
 </body>
 </html>
