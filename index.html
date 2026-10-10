@@ -9,126 +9,25 @@
 </head>
 <body>
 
-<canvas id="bg-canvas"></canvas>
-
-<div class="app-container">
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <svg class="logo-img" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="WenQing Logo">
-        <defs>
-          <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#8B5CF6"/>
-            <stop offset="100%" stop-color="#06B6D4"/>
-          </linearGradient>
-        </defs>
-        <rect width="40" height="40" rx="10" fill="url(#logoGrad)"/>
-        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
-              font-family="'PingFang SC','Noto Serif SC',serif"
-              font-size="24" font-weight="700" fill="#fff">文</text>
-      </svg>
-      <span class="logo-text">WenQing <span>文卿</span></span>
+<div id="page-main-content">
+  <section class="app-section active" id="section-home">
+    <div class="welcome-banner">
+      <h1 id="welcomeUserText">Chào mừng bạn học tập! 👋</h1>
+      <p>Chúc bạn một ngày học tiếng Trung hiệu quả. Hãy chọn một phần học dưới đây hoặc xem tiến độ của mình.</p>
     </div>
-    <nav class="sidebar-menu">
-      <a href="index.html" class="menu-item" data-page="home">
-        <span class="menu-icon">🏠</span>
-        <span class="menu-text">Trang chủ</span>
-      </a>
-      <a href="pages/flash.html" class="menu-item" data-page="flash">
-        <span class="menu-icon">📇</span>
-        <span class="menu-text">Flashcard</span>
-      </a>
-      <a href="pages/quiz.html" class="menu-item" data-page="quiz">
-        <span class="menu-icon">✏️</span>
-        <span class="menu-text">Trắc nghiệm</span>
-      </a>
-      <a href="pages/write.html" class="menu-item" data-page="write">
-        <span class="menu-icon">🖌️</span>
-        <span class="menu-text">Nét chữ</span>
-      </a>
-      <a href="pages/stats.html" class="menu-item" data-page="stats">
-        <span class="menu-icon">📊</span>
-        <span class="menu-text">Thống kê</span>
-      </a>
-      <a href="pages/favorites.html" class="menu-item" data-page="favorites">
-        <span class="menu-icon">❤️</span>
-        <span class="menu-text">Yêu thích</span>
-      </a>
-      <a href="pages/custom.html" class="menu-item" data-page="custom">
-        <span class="menu-icon">📝</span>
-        <span class="menu-text">Tự tạo</span>
-      </a>
-      <a href="pages/settings.html" class="menu-item" data-page="settings">
-        <span class="menu-icon">⚙️</span>
-        <span class="menu-text">Cài đặt</span>
-      </a>
-    </nav>
-  </aside>
-
-  <!-- Main Content -->
-  <div class="main-content-layout">
-    <header class="app-header">
-      <div class="header-left">
-        <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <h2 class="header-title" id="headerTitle">Trang chủ</h2>
-      </div>
-      <div class="header-center">
-        <div class="search-wrapper">
-          <input type="text" id="searchInput" placeholder="Tìm kiếm từ, pinyin, nghĩa..." autocomplete="off">
-          <div class="search-suggestions" id="searchSuggestions"></div>
+    <div class="dashboard-grid">
+      <div class="glass-card stat-highlight-card" style="max-width: 360px;">
+        <div class="card-icon">🔥</div>
+        <div class="card-info">
+          <h3>Chuỗi học tập</h3>
+          <div class="value" id="userStreakVal">0 ngày</div>
+          <p>Học hàng ngày để duy trì chuỗi!</p>
         </div>
       </div>
-      <div class="header-right">
-        <!-- learnSelectorsWrapper hidden on home -->
-        <div class="learn-selectors-wrapper" id="learnSelectorsWrapper" style="display:none;">
-          <div class="select-wrapper"><select id="levelSel"></select></div>
-          <div class="select-wrapper"><select id="rangeSel"></select></div>
-          <button class="btn" id="shuffleBtn" style="padding: 10px 14px; border-radius: 12px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-          </button>
-        </div>
-        <button class="btn" id="openProfileBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
-          👤 Hồ sơ
-        </button>
-        <button class="icon-btn" id="themeBtn" aria-label="Toggle Theme" style="display: none;"></button>
-      </div>
-    </header>
-
-    <!-- Ẩn favListBtn và tabs cũ để JS không lỗi -->
-    <button id="favListBtn" style="display: none !important;"></button>
-    <div class="tabs" style="display: none !important;">
-      <div class="tab-indicator" id="tabIndicator"></div>
-      <div class="tab active" data-p="flash">📇 Flashcard</div>
-      <div class="tab" data-p="quiz">✏️ Trắc nghiệm</div>
-      <div class="tab" data-p="write">🖌️ Nét chữ</div>
     </div>
-
-    <main class="app-content">
-      <!-- TRANG CHỦ -->
-      <section class="app-section active" id="section-home">
-        <div class="welcome-banner">
-          <h1 id="welcomeUserText">Chào mừng bạn học tập! 👋</h1>
-          <p>Chúc bạn một ngày học tiếng Trung hiệu quả. Hãy chọn một phần học dưới đây hoặc xem tiến độ của mình.</p>
-        </div>
-        <div class="dashboard-grid">
-          <div class="glass-card stat-highlight-card" style="max-width: 360px;">
-            <div class="card-icon">🔥</div>
-            <div class="card-info">
-              <h3>Chuỗi học tập</h3>
-              <div class="value" id="userStreakVal">0 ngày</div>
-              <p>Học hàng ngày để duy trì chuỗi!</p>
-            </div>
-          </div>
-        </div>
-        <h3 class="section-subtitle">Chương trình học HSK</h3>
-        <div class="hsk-grid" id="homeHskGrid"></div>
-      </section>
-    </main>
-
-    <div class="footer">Dữ liệu HSK 1–6 · Nét chữ bởi HanziWriter · Phát âm chất lượng cao</div>
-  </div>
+    <h3 class="section-subtitle">Chương trình học HSK</h3>
+    <div class="hsk-grid" id="homeHskGrid"></div>
+  </section>
 </div>
 
 <!-- Modal Hồ sơ -->
@@ -153,10 +52,10 @@
   </div>
 </div>
 
-<!-- Toast Container -->
 <div id="toastContainer"></div>
 
 <script src="data/data.js"></script>
+<script src="js/layout.js"></script>
 <script src="storage.js" defer></script>
 <script src="api-client.js" defer></script>
 <script src="profile.js" defer></script>

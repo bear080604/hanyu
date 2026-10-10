@@ -9,159 +9,54 @@
 </head>
 <body>
 
-<canvas id="bg-canvas"></canvas>
-
-<div class="app-container">
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar-logo">
-      <svg class="logo-img" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="WenQing Logo">
-        <defs>
-          <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stop-color="#8B5CF6"/>
-            <stop offset="100%" stop-color="#06B6D4"/>
-          </linearGradient>
-        </defs>
-        <rect width="40" height="40" rx="10" fill="url(#logoGrad)"/>
-        <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
-              font-family="'PingFang SC','Noto Serif SC',serif"
-              font-size="24" font-weight="700" fill="#fff">文</text>
-      </svg>
-      <span class="logo-text">WenQing <span>文卿</span></span>
+<div id="page-main-content">
+  <section class="app-section active panel" id="flash">
+    <div class="statbar"><span id="fcCount"></span><span id="fcLevel"></span></div>
+    <div class="autoplay-bar">
+      <button class="btn" id="autoplayBtn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 12px;">
+        <span id="autoplayBtnText">▶️ Tự động chạy</span>
+      </button>
+      <div class="autoplay-speed" style="display: none;">
+        <label for="autoplaySpeed">Thời gian:</label>
+        <select id="autoplaySpeed">
+          <option value="3000">3 giây</option>
+          <option value="5000" selected>5 giây</option>
+          <option value="8000">8 giây</option>
+        </select>
+      </div>
+      <div id="autoplayProgress" class="autoplay-progress"></div>
     </div>
-    <nav class="sidebar-menu">
-      <a href="../index.html" class="menu-item" data-page="home">
-        <span class="menu-icon">🏠</span>
-        <span class="menu-text">Trang chủ</span>
-      </a>
-      <a href="../flash.html" class="menu-item" data-page="flash">
-        <span class="menu-icon">📇</span>
-        <span class="menu-text">Flashcard</span>
-      </a>
-      <a href="../quiz.html" class="menu-item" data-page="quiz">
-        <span class="menu-icon">✏️</span>
-        <span class="menu-text">Trắc nghiệm</span>
-      </a>
-      <a href="../write.html" class="menu-item" data-page="write">
-        <span class="menu-icon">🖌️</span>
-        <span class="menu-text">Nét chữ</span>
-      </a>
-      <a href="../stats.html" class="menu-item" data-page="stats">
-        <span class="menu-icon">📊</span>
-        <span class="menu-text">Thống kê</span>
-      </a>
-      <a href="../favorites.html" class="menu-item" data-page="favorites">
-        <span class="menu-icon">❤️</span>
-        <span class="menu-text">Yêu thích</span>
-      </a>
-      <a href="../custom.html" class="menu-item" data-page="custom">
-        <span class="menu-icon">📝</span>
-        <span class="menu-text">Tự tạo</span>
-      </a>
-      <a href="../settings.html" class="menu-item" data-page="settings">
-        <span class="menu-icon">⚙️</span>
-        <span class="menu-text">Cài đặt</span>
-      </a>
-    </nav>
-  </aside>
-
-  <!-- Main Content -->
-  <div class="main-content-layout">
-    <header class="app-header">
-      <div class="header-left">
-        <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <h2 class="header-title" id="headerTitle">Flashcard</h2>
-      </div>
-      <div class="header-center">
-        <div class="search-wrapper">
-          <input type="text" id="searchInput" placeholder="Tìm kiếm từ, pinyin, nghĩa..." autocomplete="off">
-          <div class="search-suggestions" id="searchSuggestions"></div>
+    <div class="fc-wrap">
+      <div class="fc" id="fcCard">
+        <div class="fc-face fc-front">
+          <div class="fc-hanzi" id="fcHanzi"></div>
+          <div class="fc-pinyin" id="fcPinyin"></div>
+          <div class="fc-hint">Bấm để lật thẻ</div>
+        </div>
+        <div class="fc-face fc-back">
+          <div class="fc-mean" id="fcMean"></div>
+          <div class="fc-ex" id="fcEx"></div>
+          <div class="fc-hint">Bấm để lật lại</div>
         </div>
       </div>
-      <div class="header-right">
-        <!-- learnSelectorsWrapper visible on flash -->
-        <div class="learn-selectors-wrapper" id="learnSelectorsWrapper">
-          <div class="select-wrapper"><select id="levelSel"></select></div>
-          <div class="select-wrapper"><select id="rangeSel"></select></div>
-          <button class="btn" id="shuffleBtn" style="padding: 10px 14px; border-radius: 12px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-          </button>
-        </div>
-        <button class="btn" id="openProfileBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
-          👤 Hồ sơ
-        </button>
-        <button class="icon-btn" id="themeBtn" aria-label="Toggle Theme" style="display: none;"></button>
-      </div>
-    </header>
-
-    <!-- Ẩn favListBtn và tabs cũ để JS không lỗi -->
-    <button id="favListBtn" style="display: none !important;"></button>
-    <div class="tabs" style="display: none !important;">
-      <div class="tab-indicator" id="tabIndicator"></div>
-      <div class="tab active" data-p="flash">📇 Flashcard</div>
-      <div class="tab" data-p="quiz">✏️ Trắc nghiệm</div>
-      <div class="tab" data-p="write">🖌️ Nét chữ</div>
     </div>
-
-    <main class="app-content">
-      <!-- FLASHCARD section -->
-      <section class="app-section active panel" id="flash">
-        <div class="statbar"><span id="fcCount"></span><span id="fcLevel"></span></div>
-
-        <!-- Auto-play controls -->
-        <div class="autoplay-bar">
-          <button class="btn" id="autoplayBtn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 12px;">
-            <span id="autoplayBtnText">▶️ Tự động chạy</span>
-          </button>
-          <div class="autoplay-speed" style="display: none;">
-            <label for="autoplaySpeed">Thời gian:</label>
-            <select id="autoplaySpeed">
-              <option value="3000">3 giây</option>
-              <option value="5000" selected>5 giây</option>
-              <option value="8000">8 giây</option>
-            </select>
-          </div>
-          <div id="autoplayProgress" class="autoplay-progress"></div>
-        </div>
-
-        <div class="fc-wrap">
-          <div class="fc" id="fcCard">
-            <div class="fc-face fc-front">
-              <div class="fc-hanzi" id="fcHanzi"></div>
-              <div class="fc-pinyin" id="fcPinyin"></div>
-              <div class="fc-hint">Bấm để lật thẻ</div>
-            </div>
-            <div class="fc-face fc-back">
-              <div class="fc-mean" id="fcMean"></div>
-              <div class="fc-ex" id="fcEx"></div>
-              <div class="fc-hint">Bấm để lật lại</div>
-            </div>
-          </div>
-        </div>
-        <div class="fc-nav">
-          <button class="icon-btn" id="fcPrev" aria-label="Previous">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          </button>
-          <button class="icon-btn" id="fcFav" aria-label="Favorite">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-          </button>
-          <button class="icon-btn" id="fcAudio" aria-label="Speak">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-          </button>
-          <button class="icon-btn" id="fcNext" aria-label="Next">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-          </button>
-        </div>
-      </section>
-    </main>
-
-    <div class="footer">Dữ liệu HSK 1–6 · Nét chữ bởi HanziWriter · Phát âm chất lượng cao</div>
-  </div>
+    <div class="fc-nav">
+      <button class="icon-btn" id="fcPrev" aria-label="Previous">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <button class="icon-btn" id="fcFav" aria-label="Favorite">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+      </button>
+      <button class="icon-btn" id="fcAudio" aria-label="Speak">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+      </button>
+      <button class="icon-btn" id="fcNext" aria-label="Next">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
+  </section>
 </div>
 
-<!-- Modal Hồ sơ -->
 <div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="Hồ sơ cá nhân">
   <div class="modal-content glass-card" style="max-width:480px; width:90%; max-height:85vh; overflow-y:auto; border-radius:24px; padding:28px; position:relative;">
     <button id="closeProfileModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;" aria-label="Đóng">
@@ -172,7 +67,6 @@
   </div>
 </div>
 
-<!-- Custom Popup Overlay -->
 <div id="wqPopupOverlay" class="wq-popup-overlay" style="display: none;">
   <div class="wq-popup-card">
     <div id="wqPopupIcon" class="wq-popup-icon">💡</div>
@@ -183,10 +77,10 @@
   </div>
 </div>
 
-<!-- Toast Container -->
 <div id="toastContainer"></div>
 
 <script src="../data/data.js"></script>
+<script src="../js/layout.js"></script>
 <script src="../storage.js" defer></script>
 <script src="../api-client.js" defer></script>
 <script src="../profile.js" defer></script>

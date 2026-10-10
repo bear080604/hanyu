@@ -128,9 +128,21 @@
         e.stopPropagation();
         var confirmMsg = 'Bạn có chắc muốn xóa bộ từ "' + deckObj.name + '"?';
         var doDelete = function () {
-          customHistory.splice(index, 1);
+          // Xóa theo id thay vì index (tránh lỗi khi index bị lệch)
+          var idx = customHistory.findIndex(function(d) {
+            return d.id === deckObj.id || (d.cloudId && d.cloudId === deckObj.cloudId);
+          });
+          if (idx !== -1) customHistory.splice(idx, 1);
           saveCustomHistory();
           renderCustomHistory();
+
+          // Xóa trên Cloudflare nếu có cloudId
+          if (deckObj.cloudId && window.WeiQuanAPI) {
+            window.WeiQuanAPI.deleteDeck(deckObj.cloudId).catch(function(err) {
+              console.warn('⚠️ Xóa cloud thất bại:', err);
+            });
+          }
+
           if (window.showToast) {
             window.showToast('Đã xóa "' + deckObj.name + '"', 'info');
           }

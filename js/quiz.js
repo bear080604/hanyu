@@ -404,28 +404,50 @@ document.addEventListener('DOMContentLoaded', function() {
   if (qAudio) qAudio.onclick = function() { if (qCur) speak(qCur.h); };
 
   // 1. Check for pending deck from cross-page navigation
-  var pendingDeckStr = localStorage.getItem('wq_pending_deck');
-  var pendingMode = localStorage.getItem('wq_pending_mode');
+  // Delay to let shared.js finish loadProgress() which may reset deck
+  function initQuizPage() {
+    var pendingDeckStr = localStorage.getItem('wq_pending_deck');
+    var pendingMode = localStorage.getItem('wq_pending_mode');
 
-  if (pendingDeckStr && (pendingMode === 'quiz' || pendingMode === 'both')) {
-    try {
-      var pendingDeck = JSON.parse(pendingDeckStr);
-      localStorage.removeItem('wq_pending_deck');
-      localStorage.removeItem('wq_pending_mode');
-      startQuizWithDeck(pendingDeck);
-    } catch(e) {
-      console.warn('Failed to load pending deck for quiz:', e);
-      // Fall through to show selection grid
+    if (pendingDeckStr && (pendingMode === 'quiz' || pendingMode === 'both')) {
+      try {
+        var pendingDeck = JSON.parse(pendingDeckStr);
+        localStorage.removeItem('wq_pending_deck');
+        localStorage.removeItem('wq_pending_mode');
+        startQuizWithDeck(pendingDeck);
+      } catch(e) {
+        console.warn('Failed to load pending deck for quiz:', e);
+        renderQuizHskGrid();
+        renderQuizCustomDecks();
+        var deckSel = document.getElementById('quizDeckSelection');
+        if (deckSel) deckSel.style.display = 'block';
+      }
+    } else {
+      // No pending deck — show selection grid
+      function tryRenderGrid() {
+        if (typeof DATA !== 'undefined' && Object.keys(DATA).length > 0) {
+          renderQuizHskGrid();
+          renderQuizCustomDecks();
+          var deckSelection = document.getElementById('quizDeckSelection');
+          if (deckSelection) deckSelection.style.display = 'block';
+        } else {
+          setTimeout(tryRenderGrid, 100);
+        }
+      }
+      tryRenderGrid();
+    }
+  }
+
+  // Wait for shared.js to finish init, then init quiz page
+  // shared.js skips applyRange when wq_pending_deck is present, so deck won't be overwritten
+  initQuizPage();
+
+  // Also re-render grid when DATA becomes available via WQSyncData
+  document.addEventListener('wq:data-loaded', function() {
+    var sel = document.getElementById('quizDeckSelection');
+    if (sel && sel.style.display !== 'none') {
       renderQuizHskGrid();
       renderQuizCustomDecks();
-      var deckSel = document.getElementById('quizDeckSelection');
-      if (deckSel) deckSel.style.display = 'block';
     }
-  } else {
-    // 2. No pending deck — show selection grid
-    renderQuizHskGrid();
-    renderQuizCustomDecks();
-    var deckSelection = document.getElementById('quizDeckSelection');
-    if (deckSelection) deckSelection.style.display = 'block';
-  }
+  });
 });

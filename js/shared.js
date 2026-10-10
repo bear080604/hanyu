@@ -504,6 +504,12 @@ function saveProgress() {
 }
 
 function loadProgress() {
+  // Nếu có pending deck từ cross-page nav, không overwrite deck
+  var hasPending = localStorage.getItem('wq_pending_deck') &&
+    (localStorage.getItem('wq_pending_mode') === 'quiz' ||
+     localStorage.getItem('wq_pending_mode') === 'both' ||
+     localStorage.getItem('wq_pending_mode') === 'flashcard');
+
   const saved = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress'));
   if (saved) {
     if (saved.level) {
@@ -517,13 +523,15 @@ function loadProgress() {
     if (saved.rangeVal && rangeSel) {
       rangeSel.value = saved.rangeVal;
     }
-    applyRange();
-    if (saved.fcIdx !== undefined && saved.fcIdx < deck.length) {
+    if (!hasPending) {
+      applyRange();
+    }
+    if (!hasPending && saved.fcIdx !== undefined && saved.fcIdx < deck.length) {
       fcIdx = saved.fcIdx;
       window.AppState.fcIdx = fcIdx;
       if (typeof renderFlash === 'function') renderFlash();
     }
-    if (saved.wIdx !== undefined && saved.wIdx < deck.length) {
+    if (!hasPending && saved.wIdx !== undefined && saved.wIdx < deck.length) {
       wIdx = saved.wIdx;
       window.AppState.wIdx = wIdx;
       if (typeof renderWriterList === 'function') renderWriterList();
