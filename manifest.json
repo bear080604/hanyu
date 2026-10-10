@@ -1,0 +1,21 @@
+{
+  "name": "WenQing 文卿",
+  "short_name": "WenQing",
+  "description": "Ứng dụng học tiếng Trung HSK",
+  "start_url": "/hanyu/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#8B5CF6",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
