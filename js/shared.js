@@ -337,27 +337,21 @@ function speak(t) {
 // ==================== API INTEGRATION ====================
 async function loadDataFromAPI() {
   try {
-    console.log('📡 Loading data from API...');
-    const hsk1Response = await window.WeiQuanAPI.getVocabulary({ level: 'HSK1', limit: 1000 });
-    const hsk1Data = hsk1Response.data.map(item => ({
-      h: item.hanzi, p: item.pinyin, m: item.meaning, e: item.example || ''
-    }));
-    const hsk2Response = await window.WeiQuanAPI.getVocabulary({ level: 'HSK2', limit: 1000 });
-    const hsk2Data = hsk2Response.data.map(item => ({
-      h: item.hanzi, p: item.pinyin, m: item.meaning, e: item.example || ''
-    }));
-    DATA['HSK 1'] = hsk1Data;
-    DATA['HSK 2'] = hsk2Data;
-    DATA['HSK 3'] = DATA['HSK 3'] || [];
-    DATA['HSK 4'] = DATA['HSK 4'] || [];
-    DATA['HSK 5'] = DATA['HSK 5'] || [];
-    DATA['HSK 6'] = DATA['HSK 6'] || [];
-    console.log('✅ Loaded from API:', hsk1Data.length + hsk2Data.length, 'words');
+    console.log('📡 Loading all HSK data from API...');
+    const res = await fetch('https://apihanyu.phuonganhkhanh683.workers.dev/api/vocabulary/all');
+    const json = await res.json();
+    if (!json.success) throw new Error('API returned error');
+
+    // Merge into DATA, keeping any existing local levels
+    Object.keys(json.data).forEach(lvl => {
+      DATA[lvl] = json.data[lvl];
+    });
+
+    console.log('✅ Loaded from API:', Object.keys(DATA).map(k => k + ':' + DATA[k].length).join(', '));
     API_ENABLED = true;
     initUIWithData();
   } catch (error) {
-    console.warn('⚠️ API not available for HSK data, falling back to embedded data:', error);
-    console.log('✅ Using embedded data:', Object.keys(DATA).length, 'levels');
+    console.warn('⚠️ API not available, falling back to embedded data:', error);
     initUIWithData();
   }
 }

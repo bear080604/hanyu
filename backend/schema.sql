@@ -7,6 +7,10 @@ CREATE TABLE IF NOT EXISTS vocabulary (
   pinyin TEXT NOT NULL,
   meaning TEXT NOT NULL,
   example TEXT,
+  example_pinyin TEXT,
+  example_meaning TEXT,
+  pos TEXT,
+  meanings_json TEXT,
   level TEXT NOT NULL CHECK(level IN ('HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6')),
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   UNIQUE(hanzi, level)

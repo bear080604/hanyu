@@ -38,6 +38,32 @@ export default {
     try {
       // ==================== VOCABULARY ENDPOINTS ====================
       
+      // GET /api/vocabulary/all - Lấy toàn bộ từ vựng theo từng level (cho frontend DATA object)
+      if (path === '/api/vocabulary/all' && method === 'GET') {
+        const { results } = await env.DB.prepare(`
+          SELECT hanzi, pinyin, meaning, example, example_pinyin, example_meaning, pos, level
+          FROM vocabulary
+          ORDER BY level, id
+        `).all();
+
+        // Group by level, convert to frontend format {h, p, m, ex, exm, pos}
+        const data = {};
+        for (const row of results) {
+          const lvl = row.level.replace('HSK', 'HSK '); // HSK1 -> HSK 1
+          if (!data[lvl]) data[lvl] = [];
+          data[lvl].push({
+            h: row.hanzi,
+            p: row.pinyin,
+            m: row.meaning,
+            ex: row.example || '',
+            exm: row.example_meaning || '',
+            pos: row.pos || '',
+          });
+        }
+
+        return jsonResponse({ success: true, data });
+      }
+
       // GET /api/vocabulary - Lấy tất cả từ vựng hoặc theo level
       if (path === '/api/vocabulary' && method === 'GET') {
         const level = url.searchParams.get('level'); // HSK1, HSK2, etc.
