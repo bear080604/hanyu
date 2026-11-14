@@ -76,25 +76,44 @@ class WeiQuanAPI {
     return res;
   }
 
+  _serializeWordForCloud(w) {
+    if (!w) return w;
+    if (Array.isArray(w.examples) && w.examples.length > 1) {
+      return {
+        ...w,
+        ex: w.examples.map(x => x.ex || '').join(' || '),
+        exp: w.examples.map(x => x.exp || '').join(' || '),
+        exm: w.examples.map(x => x.exm || '').join(' || '),
+      };
+    }
+    return w;
+  }
+
   async createDeck(userId, name, words) {
-    // Save any custom sentences to localStorage as well
+    // Save any custom sentences (including examples, tokens, blank, options) to localStorage as well
     try {
       const savedSentences = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
       (words || []).forEach(w => {
-        if (w && w.h && (w.ex || w.e || w.exm || w.exp)) {
-          savedSentences[w.h.trim()] = {
+        if (w && w.h && (w.ex || w.e || w.exm || w.exp || (Array.isArray(w.examples) && w.examples.length))) {
+          const entry = {
             ex: w.ex || w.e || '',
             exp: w.exp || '',
             exm: w.exm || ''
           };
+          if (Array.isArray(w.tokens) && w.tokens.length) entry.tokens = w.tokens;
+          if (w.blank) entry.blank = w.blank;
+          if (Array.isArray(w.options) && w.options.length) entry.options = w.options;
+          if (Array.isArray(w.examples) && w.examples.length) entry.examples = w.examples;
+          savedSentences[w.h.trim()] = entry;
         }
       });
       localStorage.setItem('wq_custom_sentences', JSON.stringify(savedSentences));
     } catch (e) { }
 
+    const cloudWords = (words || []).map(w => this._serializeWordForCloud(w));
     return this.request('/api/decks', {
       method: 'POST',
-      body: JSON.stringify({ user_id: userId, name, words }),
+      body: JSON.stringify({ user_id: userId, name, words: cloudWords }),
     });
   }
 
@@ -117,9 +136,13 @@ class WeiQuanAPI {
   }
 
   async updateDeck(deckId, data) {
+    const payload = { ...data };
+    if (Array.isArray(payload.words)) {
+      payload.words = payload.words.map(w => this._serializeWordForCloud(w));
+    }
     return this.request(`/api/decks/${deckId}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   }
 

@@ -181,61 +181,124 @@ window.wqPopup = {
 };
 
 // ==================== UTILITIES ====================
+function normalizeSentenceEntry(rawEntry) {
+  if (!rawEntry) return null;
+  if (typeof rawEntry === 'string') {
+    let exStr = rawEntry.trim();
+    if (!exStr) return null;
+    let tokensStr = null;
+    if (exStr.indexOf('/') !== -1) {
+      const endMatch = exStr.match(/[。？！.?!]+$/);
+      const endPunct = endMatch ? endMatch[0] : '。';
+      const rawParts = exStr.replace(/[。？！.?!]+$/, '').split('/').map(s => s.replace(/^[，、；：,;\s]+|[，、；：,;\s]+$/g, '').trim()).filter(Boolean);
+      if (rawParts.length >= 2) tokensStr = rawParts;
+      exStr = exStr.replace(/\s*\/\s*/g, '');
+      if (!/[。？！.?!]$/.test(exStr)) exStr += endPunct;
+    }
+    const resStr = { ex: exStr, exp: '', exm: '' };
+    if (tokensStr) resStr.tokens = tokensStr;
+    return resStr;
+  }
+
+  if (typeof rawEntry !== 'object') return null;
+  let ex = String(rawEntry.ex || rawEntry.e || rawEntry.example || rawEntry.sentence || rawEntry.s || '').trim();
+  if (!ex) return null;
+  let exp = String(rawEntry.exp || rawEntry.ep || rawEntry.example_pinyin || rawEntry.sentence_pinyin || '').replace(/\//g, '').trim();
+  let exm = String(rawEntry.exm || rawEntry.em || rawEntry.example_meaning || rawEntry.sentence_meaning || '').trim();
+  let tokens = Array.isArray(rawEntry.tokens) ? rawEntry.tokens : (Array.isArray(rawEntry.segments) ? rawEntry.segments : null);
+  let blank = rawEntry.blank ? String(rawEntry.blank).trim() : '';
+  let options = Array.isArray(rawEntry.options) ? rawEntry.options : null;
+
+  if (ex.indexOf('/') !== -1) {
+    const endMatch = ex.match(/[。？！.?!]+$/);
+    const endPunct = endMatch ? endMatch[0] : '。';
+    const rawParts = ex.replace(/[。？！.?!]+$/, '').split('/').map(s => s.replace(/^[，、；：,;\s]+|[，、；：,;\s]+$/g, '').trim()).filter(Boolean);
+    if (rawParts.length >= 2 && !tokens) tokens = rawParts;
+    ex = ex.replace(/\s*\/\s*/g, '');
+    if (!/[。？！.?!]$/.test(ex)) ex += endPunct;
+  }
+
+  const out = { ex, exp, exm };
+  if (tokens && tokens.length) out.tokens = tokens;
+  if (blank) out.blank = blank;
+  if (options && options.length) out.options = options;
+  return out;
+}
+window.normalizeSentenceEntry = normalizeSentenceEntry;
+
 function enrichWordWithSentence(word) {
   if (!word || !word.h) return word;
   const h = word.h.trim();
   const cleanH = h.split('|')[0].trim();
 
-  let ex = (word.ex || word.e || word.example || '').split('\n')[0].trim();
-  let exp = (word.exp || word.example_pinyin || '').replace(/\//g, '').split('\n')[0].trim();
-  let exm = (word.exm || word.example_meaning || '').split('\n')[0].trim();
-  let tokens = Array.isArray(word.tokens) ? word.tokens : null;
-  let blank = word.blank || '';
-  let options = Array.isArray(word.options) ? word.options : null;
-
-  // If ex uses "/" as explicit word-split delimiter (e.g. "王老师 / 教 / 我们 / 汉语。")
-  if (ex && ex.indexOf('/') !== -1) {
-    const endMatch = ex.match(/[。？！.?!]+$/);
-    const endPunct = endMatch ? endMatch[0] : '。';
-    const rawParts = ex.replace(/[。？！.?!]+$/, '').split('/').map(s => s.replace(/^[，、；：,;\s]+|[，、；：,;\s]+$/g, '').trim()).filter(Boolean);
-    if (rawParts.length >= 2 && !tokens) {
-      tokens = rawParts;
+  const examples = [];
+  const addExampleUnique = (entry) => {
+    const norm = normalizeSentenceEntry(entry);
+    if (!norm || !norm.ex) return;
+    const existing = examples.find(x => x.ex === norm.ex);
+    if (!existing) {
+      examples.push(norm);
+    } else {
+      if (!existing.exp && norm.exp) existing.exp = norm.exp;
+      if (!existing.exm && norm.exm) existing.exm = norm.exm;
+      if (!existing.tokens && norm.tokens) existing.tokens = norm.tokens;
+      if (!existing.blank && norm.blank) existing.blank = norm.blank;
+      if (!existing.options && norm.options) existing.options = norm.options;
     }
-    ex = ex.replace(/\s*\/\s*/g, '');
-    if (!/[。？！.?!]$/.test(ex)) ex += endPunct;
+  };
+
+  // A. Explicit examples / sentences array on word
+  const rawArr = Array.isArray(word.examples) ? word.examples : (Array.isArray(word.sentences) ? word.sentences : null);
+  if (rawArr) {
+    rawArr.forEach(addExampleUnique);
+  }
+
+  // B. Single or multi-sentence (separated by "||" or "\n") in word.ex / word.exp / word.exm
+  const rawExStr = String(word.ex || word.e || word.example || '').trim();
+  const rawExpStr = String(word.exp || word.example_pinyin || '').trim();
+  const rawExmStr = String(word.exm || word.example_meaning || '').trim();
+  if (rawExStr) {
+    const splitDelim = rawExStr.indexOf('||') !== -1 ? /\s*\|\|\s*/ : /\r?\n+/;
+    const exParts = rawExStr.split(splitDelim).map(s => s.trim()).filter(Boolean);
+    const expParts = rawExpStr ? rawExpStr.split(splitDelim).map(s => s.trim()) : [];
+    const exmParts = rawExmStr ? rawExmStr.split(splitDelim).map(s => s.trim()) : [];
+    exParts.forEach((partEx, idx) => {
+      addExampleUnique({
+        ex: partEx,
+        exp: expParts[idx] || (idx === 0 ? rawExpStr : '') || '',
+        exm: exmParts[idx] || (idx === 0 ? rawExmStr : '') || '',
+        tokens: idx === 0 && Array.isArray(word.tokens) ? word.tokens : null,
+        blank: idx === 0 && word.blank ? word.blank : '',
+        options: idx === 0 && Array.isArray(word.options) ? word.options : null
+      });
+    });
   }
 
   // 1. Check user custom saved sentences in localStorage
-  if (!ex || !exm || !tokens) {
-    try {
-      const customSent = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
-      const cs = customSent[h] || customSent[cleanH];
-      if (cs) {
-        if (!ex && cs.ex) ex = cs.ex;
-        if (!exp && cs.exp) exp = cs.exp;
-        if (!exm && cs.exm) exm = cs.exm;
-        if (!tokens && Array.isArray(cs.tokens)) tokens = cs.tokens;
-        if (!blank && cs.blank) blank = cs.blank;
-        if (!options && Array.isArray(cs.options)) options = cs.options;
+  try {
+    const customSent = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
+    const cs = customSent[h] || customSent[cleanH];
+    if (cs) {
+      if (Array.isArray(cs.examples)) {
+        cs.examples.forEach(addExampleUnique);
       }
-    } catch (e) { }
-  }
+      if (cs.ex) {
+        addExampleUnique(cs);
+      }
+    }
+  } catch (e) { }
 
-  // 2. Check WQ_SENTENCE_BANK (curated sentences for all 7 cloud custom decks)
-  if ((!ex || !exm || !tokens) && window.WQ_SENTENCE_BANK) {
+  // 2. Check WQ_SENTENCE_BANK (curated sentences for cloud custom decks)
+  if (examples.length === 0 && window.WQ_SENTENCE_BANK) {
     const sb = window.WQ_SENTENCE_BANK[h] || window.WQ_SENTENCE_BANK[cleanH];
     if (sb) {
-      if (!ex && sb.ex) ex = sb.ex;
-      if (!exp && sb.exp) exp = sb.exp;
-      if (!exm && sb.exm) exm = sb.exm;
-      if (!tokens && Array.isArray(sb.tokens)) tokens = sb.tokens;
-      if (!blank && sb.blank) blank = sb.blank;
-      if (!options && Array.isArray(sb.options)) options = sb.options;
+      if (Array.isArray(sb.examples)) sb.examples.forEach(addExampleUnique);
+      if (sb.ex) addExampleUnique(sb);
     }
   }
 
   // 3. Check DATA (HSK 1-6)
-  if ((!ex || !exm) && typeof DATA !== 'undefined') {
+  if (examples.length === 0 && typeof DATA !== 'undefined') {
     for (const lvl of Object.keys(DATA)) {
       const list = DATA[lvl] || [];
       const found = list.find(item => {
@@ -243,38 +306,138 @@ function enrichWordWithSentence(word) {
         const variants = item.h.split('|').map(s => s.trim());
         return variants.includes(h) || variants.includes(cleanH);
       });
-      if (found) {
-        if (!ex && (found.ex || found.e)) ex = (found.ex || found.e).split('\n')[0].trim();
-        if (!exp && found.exp) exp = found.exp.replace(/\//g, '').split('\n')[0].trim();
-        if (!exm && found.exm) exm = found.exm.split('\n')[0].trim();
+      if (found && (found.ex || found.e)) {
+        addExampleUnique({
+          ex: (found.ex || found.e).split('\n')[0].trim(),
+          exp: (found.exp || '').replace(/\//g, '').split('\n')[0].trim(),
+          exm: (found.exm || '').split('\n')[0].trim()
+        });
         break;
       }
     }
   }
 
+  const primary = examples[0] || { ex: '', exp: '', exm: '' };
   const out = {
     ...word,
-    ex: ex || '',
-    exp: exp || '',
-    exm: exm || ''
+    ex: primary.ex || '',
+    exp: primary.exp || '',
+    exm: primary.exm || ''
   };
-  if (tokens && tokens.length) out.tokens = tokens;
-  if (blank) out.blank = blank;
-  if (options && options.length) out.options = options;
+  if (primary.tokens && primary.tokens.length) out.tokens = primary.tokens;
+  else delete out.tokens;
+  if (primary.blank) out.blank = primary.blank;
+  else delete out.blank;
+  if (primary.options && primary.options.length) out.options = primary.options;
+  else delete out.options;
+  if (examples.length > 0) {
+    out.examples = examples;
+  }
   return out;
 }
 window.enrichWordWithSentence = enrichWordWithSentence;
 
+function mergeWordExamples(targetWord, sourceWord) {
+  if (!targetWord) return sourceWord;
+  if (!sourceWord) return targetWord;
+  const t = enrichWordWithSentence(targetWord);
+  const s = enrichWordWithSentence(sourceWord);
+  const combined = Array.isArray(t.examples) ? t.examples.slice() : [];
+  const sExamples = Array.isArray(s.examples) ? s.examples : [];
+  sExamples.forEach(entry => {
+    const norm = normalizeSentenceEntry(entry);
+    if (!norm || !norm.ex) return;
+    const exist = combined.find(x => x.ex === norm.ex);
+    if (!exist) {
+      combined.push(norm);
+    } else {
+      if (!exist.exp && norm.exp) exist.exp = norm.exp;
+      if (!exist.exm && norm.exm) exist.exm = norm.exm;
+      if (!exist.tokens && norm.tokens) exist.tokens = norm.tokens;
+      if (!exist.blank && norm.blank) exist.blank = norm.blank;
+      if (!exist.options && norm.options) exist.options = norm.options;
+    }
+  });
+  return enrichWordWithSentence({
+    ...t,
+    p: t.p || s.p || '',
+    m: (t.m && t.m !== 'Chưa có nghĩa') ? t.m : (s.m || t.m || ''),
+    examples: combined
+  });
+}
+window.mergeWordExamples = mergeWordExamples;
+
+function pickRandomSentenceVariant(word, lastEx, forceNext) {
+  const ew = enrichWordWithSentence(word);
+  if (!ew || !Array.isArray(ew.examples) || ew.examples.length === 0) {
+    return ew;
+  }
+  if (ew.examples.length === 1) {
+    const single = ew.examples[0];
+    return {
+      ...ew,
+      ex: single.ex || '',
+      exp: single.exp || '',
+      exm: single.exm || '',
+      tokens: single.tokens || null,
+      blank: single.blank || '',
+      options: single.options || null,
+      _variantIndex: 0,
+      _variantTotal: 1
+    };
+  }
+
+  let candidates = ew.examples.map((item, index) => ({ item, index }));
+  if (lastEx) {
+    const diff = candidates.filter(c => c.item.ex !== lastEx);
+    if (diff.length > 0) candidates = diff;
+  }
+
+  let picked;
+  if (forceNext && lastEx) {
+    const curIdx = ew.examples.findIndex(x => x.ex === lastEx);
+    const nextIdx = (curIdx + 1) % ew.examples.length;
+    picked = { item: ew.examples[nextIdx], index: nextIdx };
+  } else {
+    picked = candidates[Math.floor(Math.random() * candidates.length)];
+  }
+
+  const chosen = picked.item;
+  return {
+    ...ew,
+    ex: chosen.ex || '',
+    exp: chosen.exp || '',
+    exm: chosen.exm || '',
+    tokens: chosen.tokens || null,
+    blank: chosen.blank || '',
+    options: chosen.options || null,
+    _variantIndex: picked.index,
+    _variantTotal: ew.examples.length
+  };
+}
+window.pickRandomSentenceVariant = pickRandomSentenceVariant;
+
 function deduplicateWords(arr) {
   if (!Array.isArray(arr)) return [];
-  const seen = new Set();
-  return arr.filter(w => {
-    if (!w || !w.h) return false;
+  const map = new Map();
+  const result = [];
+  arr.forEach(w => {
+    if (!w || !w.h) return;
     const key = w.h.trim();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+    if (!map.has(key)) {
+      const ew = enrichWordWithSentence(w);
+      map.set(key, ew);
+      result.push(ew);
+    } else {
+      const idx = result.findIndex(item => item.h.trim() === key);
+      if (idx !== -1) {
+        const merged = mergeWordExamples(result[idx], w);
+        result[idx] = merged;
+        map.set(key, merged);
+      }
+    }
   });
+  return result;
 }
 
 // Fisher-Yates in-place shuffle

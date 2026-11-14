@@ -19,6 +19,7 @@ var sAnswerItems = []; // [{ id, text }]
 // Fill mode state
 var sFillOptions = [];
 var sTargetMatch = '';
+var sLastSentenceByWord = {}; // tracks last shown sentence per word so repeats pick a different random sentence
 
 // ==================== WORD DICTIONARY & TOOLTIP SYSTEM ====================
 var _EXTRA_WORD_DICT = {
@@ -529,6 +530,20 @@ function getWordLookupMap() {
           }
         });
       }
+      if (Array.isArray(item.examples)) {
+        item.examples.forEach(function(exItem) {
+          if (exItem && Array.isArray(exItem.tokens)) {
+            exItem.tokens.forEach(function(tk) {
+              if (tk && typeof tk === 'object') {
+                var th = (tk.h || tk.t || tk.w || '').trim();
+                if (th && (tk.p || tk.m)) {
+                  map.set(th, { p: tk.p || '', m: tk.m || '' });
+                }
+              }
+            });
+          }
+        });
+      }
     });
     var cDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
     cDecks.forEach(function(d) {
@@ -548,6 +563,20 @@ function getWordLookupMap() {
               if (th && (tk.p || tk.m)) {
                 map.set(th, { p: tk.p || '', m: tk.m || '' });
               }
+            }
+          });
+        }
+        if (w && Array.isArray(w.examples)) {
+          w.examples.forEach(function(exItem) {
+            if (exItem && Array.isArray(exItem.tokens)) {
+              exItem.tokens.forEach(function(tk) {
+                if (tk && typeof tk === 'object') {
+                  var th = (tk.h || tk.t || tk.w || '').trim();
+                  if (th && (tk.p || tk.m)) {
+                    map.set(th, { p: tk.p || '', m: tk.m || '' });
+                  }
+                }
+              });
             }
           });
         }
@@ -944,6 +973,97 @@ function buildSentencePoolFromDeck(rawDeck) {
   return deduplicateWords(enriched);
 }
 
+function requeueWordForReview(wordObj) {
+  if (!wordObj || !wordObj.h) return;
+  var cleanKey = getCleanHanzi(wordObj.h);
+  var alreadyInPool = sPool.some(function(w) { return w && getCleanHanzi(w.h) === cleanKey; });
+  if (alreadyInPool) return;
+  var copy = Object.assign({}, wordObj, { _isRetry: true });
+  var offset = Math.min(sPool.length, 2 + Math.floor(Math.random() * 2));
+  sPool.splice(offset, 0, copy);
+}
+
+function switchCurrentWordSentence() {
+  if (!sCur || !Array.isArray(sCur.examples) || sCur.examples.length <= 1) return;
+  var cleanKey = getCleanHanzi(sCur.h);
+  var wasRetry = sCur._isRetry;
+  sCur = typeof window.pickRandomSentenceVariant === 'function'
+    ? window.pickRandomSentenceVariant(sCur, sCur.ex, true)
+    : sCur;
+  if (wasRetry) sCur._isRetry = true;
+  sLastSentenceByWord[cleanKey] = sCur.ex;
+  sAnswered = false;
+  var feedbackEl = document.getElementById('sFeedback');
+  if (feedbackEl) feedbackEl.style.display = 'none';
+  var curDeck = (window.AppState && window.AppState.deck && window.AppState.deck.length)
+    ? window.AppState.deck : deck;
+  var validDeck = buildSentencePoolFromDeck(curDeck);
+  renderCurrentQuestionUI(validDeck);
+  if (window.showToast) {
+    showToast('🎲 Đã đổi sang câu ví dụ ' + ((sCur._variantIndex || 0) + 1) + '/' + sCur.examples.length + ' của từ "' + cleanKey + '"', 'info');
+  }
+}
+window.switchCurrentWordSentence = switchCurrentWordSentence;
+
+function renderCurrentQuestionUI(validDeck) {
+  var meaningEl = document.getElementById('sMeaningPrompt');
+  var wordHintEl = document.getElementById('sWordHint');
+  var arrangeArea = document.getElementById('sArrangeArea');
+  var fillArea = document.getElementById('sFillArea');
+
+  // Decide sub-mode for this question
+  sTargetMatch = (sCur.blank && sCur.ex.indexOf(sCur.blank) !== -1)
+    ? sCur.blank
+    : findMatchedVariant(sCur.ex, sCur.h);
+  var canFill = sCur.ex.indexOf(sTargetMatch) !== -1 && (validDeck.length >= 2 || (Array.isArray(sCur.options) && sCur.options.length >= 2));
+
+  if (sMode === 'arrange') {
+    sActiveSubMode = 'arrange';
+  } else if (sMode === 'fill') {
+    sActiveSubMode = canFill ? 'fill' : 'arrange';
+  } else {
+    // mix mode
+    sActiveSubMode = (canFill && Math.random() < 0.5) ? 'fill' : 'arrange';
+  }
+
+  // Render prompt header
+  var badgeEl = document.getElementById('sTaskBadge');
+  if (badgeEl) {
+    badgeEl.textContent = sActiveSubMode === 'arrange'
+      ? '🧩 Sắp xếp các mảnh từ thành câu hoàn chỉnh'
+      : '✍️ Chọn từ thích hợp điền vào chỗ trống';
+  }
+
+  if (meaningEl) {
+    meaningEl.textContent = sCur.exm || ('Câu chứa từ "' + getCleanHanzi(sCur.h) + '" (' + (sCur.m || '') + ')');
+  }
+
+  if (wordHintEl) {
+    var baseHint = sActiveSubMode === 'arrange'
+      ? '💡 Từ vựng trọng tâm: <strong>' + getCleanHanzi(sCur.h) + '</strong> (' + (sCur.p || '') + ') — ' + (sCur.m || '')
+      : '💡 Gợi ý nghĩa từ cần điền: <strong>' + (sCur.m || '') + '</strong>';
+    var extraBadges = '';
+    if (sCur._isRetry) {
+      extraBadges += ' <span style="display:inline-flex; align-items:center; gap:4px; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:0.75rem; font-weight:700; background:rgba(245,158,11,0.14); color:#d97706; border:1px solid rgba(245,158,11,0.35);">🔄 Ôn lại từ sai</span>';
+    }
+    if (Array.isArray(sCur.examples) && sCur.examples.length > 1) {
+      var vIdx = (typeof sCur._variantIndex === 'number' ? sCur._variantIndex : 0) + 1;
+      extraBadges += ' <button type="button" onclick="window.switchCurrentWordSentence && window.switchCurrentWordSentence()" style="display:inline-flex; align-items:center; gap:4px; margin-left:8px; padding:2px 9px; border-radius:999px; font-size:0.75rem; font-weight:700; cursor:pointer; background:rgba(139,92,246,0.12); color:var(--accent-purple); border:1px solid rgba(139,92,246,0.35);">🎲 Câu ' + vIdx + '/' + sCur.examples.length + ' · Đổi câu</button>';
+    }
+    wordHintEl.innerHTML = baseHint + extraBadges;
+  }
+
+  if (sActiveSubMode === 'arrange') {
+    if (arrangeArea) arrangeArea.style.display = 'block';
+    if (fillArea) fillArea.style.display = 'none';
+    setupArrangeQuestion(sCur, validDeck);
+  } else {
+    if (arrangeArea) arrangeArea.style.display = 'none';
+    if (fillArea) fillArea.style.display = 'block';
+    setupFillQuestion(sCur, validDeck);
+  }
+}
+
 // ==================== NEW SENTENCE QUESTION ====================
 function newSentenceQuestion() {
   var feedbackEl = document.getElementById('sFeedback');
@@ -976,7 +1096,14 @@ function newSentenceQuestion() {
     updateScoreUI();
   }
 
-  sCur = sPool.shift();
+  var rawWord = sPool.shift();
+  var cleanKey = getCleanHanzi(rawWord.h);
+  sCur = typeof window.pickRandomSentenceVariant === 'function'
+    ? window.pickRandomSentenceVariant(rawWord, sLastSentenceByWord[cleanKey])
+    : rawWord;
+  if (rawWord._isRetry) sCur._isRetry = true;
+  sLastSentenceByWord[cleanKey] = sCur.ex;
+
   sAsked.push(sCur);
   sAnswered = false;
 
@@ -993,50 +1120,7 @@ function newSentenceQuestion() {
     levelEl.textContent = curLevel === 'favorites' ? 'Yêu thích' : curLevel;
   }
 
-  // Decide sub-mode for this question
-  sTargetMatch = (sCur.blank && sCur.ex.indexOf(sCur.blank) !== -1)
-    ? sCur.blank
-    : findMatchedVariant(sCur.ex, sCur.h);
-  var canFill = sCur.ex.indexOf(sTargetMatch) !== -1 && (validDeck.length >= 2 || (Array.isArray(sCur.options) && sCur.options.length >= 2));
-
-  if (sMode === 'arrange') {
-    sActiveSubMode = 'arrange';
-  } else if (sMode === 'fill') {
-    sActiveSubMode = canFill ? 'fill' : 'arrange';
-  } else {
-    // mix mode
-    sActiveSubMode = (canFill && Math.random() < 0.5) ? 'fill' : 'arrange';
-  }
-
-  // Render prompt header
-  var badgeEl = document.getElementById('sTaskBadge');
-  if (badgeEl) {
-    badgeEl.textContent = sActiveSubMode === 'arrange'
-      ? '🧩 Sắp xếp các mảnh từ thành câu hoàn chỉnh'
-      : '✍️ Chọn từ thích hợp điền vào chỗ trống';
-  }
-
-  if (meaningEl) {
-    meaningEl.textContent = sCur.exm || ('Câu chứa từ "' + getCleanHanzi(sCur.h) + '" (' + (sCur.m || '') + ')');
-  }
-
-  if (wordHintEl) {
-    if (sActiveSubMode === 'arrange') {
-      wordHintEl.innerHTML = '💡 Từ vựng trọng tâm: <strong>' + getCleanHanzi(sCur.h) + '</strong> (' + (sCur.p || '') + ') — ' + (sCur.m || '');
-    } else {
-      wordHintEl.innerHTML = '💡 Gợi ý nghĩa từ cần điền: <strong>' + (sCur.m || '') + '</strong>';
-    }
-  }
-
-  if (sActiveSubMode === 'arrange') {
-    if (arrangeArea) arrangeArea.style.display = 'block';
-    if (fillArea) fillArea.style.display = 'none';
-    setupArrangeQuestion(sCur, validDeck);
-  } else {
-    if (arrangeArea) arrangeArea.style.display = 'none';
-    if (fillArea) fillArea.style.display = 'block';
-    setupFillQuestion(sCur, validDeck);
-  }
+  renderCurrentQuestionUI(validDeck);
 }
 
 // ==================== MODE 1: ARRANGE SENTENCE ====================
@@ -1214,6 +1298,7 @@ function checkArrangeAnswer() {
       zoneEl.classList.add('correct-zone');
     }
   } else {
+    requeueWordForReview(sCur);
     if (zoneEl) {
       zoneEl.classList.remove('correct-zone');
       zoneEl.classList.add('wrong-zone');
@@ -1410,6 +1495,7 @@ function answerFillQuestion(optIdx) {
     sScore++;
     if (optEls[optIdx]) optEls[optIdx].classList.add('correct');
   } else {
+    requeueWordForReview(sCur);
     if (optEls[optIdx]) optEls[optIdx].classList.add('wrong');
     sFillOptions.forEach(function(o, i) {
       if (getCleanHanzi(o.h) === getCleanHanzi(expectedH) && optEls[i]) {

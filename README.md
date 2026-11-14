@@ -112,6 +112,7 @@ Mỗi trang trong `pages/*.html` (hoặc `index.html`) nạp các file script th
 - `exm`: Nghĩa tiếng Việt của câu ví dụ (alias: `em`, `example_meaning`, `sentence_meaning`, `example_vi`).
 - `tokens` *(tùy chọn)*: Mảng quy định sẵn các mảnh từ để ghép câu (`arrange`) kèm Pinyin `p` và Nghĩa `m` cho từng mảnh (dùng khi trỏ chuột hiện Tooltip). Nếu không truyền `tokens`, `sentence.js` tự động tách câu bằng `segmentChineseSentence()`.
 - `blank` & `options` *(tùy chọn)*: Từ cần đục lỗ và 4 phương án trắc nghiệm cho chế độ Điền từ (`fill`). Nếu không truyền, hệ thống tự đục lỗ từ `h` và tự lấy 3 từ khác trong bộ từ làm phương án nhiễu.
+- `examples` *(hoặc `sentences` — tùy chọn)*: Mảng chứa nhiều câu ví dụ khác nhau cho cùng 1 từ (`[{ ex, exp, exm, tokens, blank, options }, ...]`). Khi vào lượt học (hoặc khi làm sai và gặp lại từ đó trong cùng turn học), hệ thống tự động **random câu ví dụ khác nhau** (không lặp lại câu vừa ra). Ngoài ra cũng có thể viết tắt nhiều câu ngăn cách bằng dấu `||` ngay trong `ex`, `exp`, `exm`, hoặc lặp lại nhiều object cùng từ `h` trong JSON để hệ thống tự gộp.
 
 ### 3.2. Các định dạng đầu vào mà Form Nhập JSON hỗ trợ
 Form **📥 Nhập JSON** tại `pages/custom.html` (`js/custom.js`) tự động làm sạch lỗi cú pháp (xóa markdown ```` ```json ````, xóa dấu phẩy thừa ở cuối mảng/object, bỏ BOM) và hỗ trợ 5 định dạng:

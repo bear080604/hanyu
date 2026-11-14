@@ -18,8 +18,9 @@
     try {
       var savedSentences = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
       var changed = false;
-      words.forEach(function (w) {
-        if (w && w.h && (w.ex || w.e || w.exm || w.exp || w.tokens)) {
+      words.forEach(function (rawW) {
+        var w = typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(rawW) : rawW;
+        if (w && w.h && (w.ex || w.e || w.exm || w.exp || w.tokens || (Array.isArray(w.examples) && w.examples.length))) {
           var key = String(w.h).trim();
           var entry = {
             ex: w.ex || w.e || '',
@@ -31,15 +32,17 @@
           if (Array.isArray(w.tokens) && w.tokens.length) entry.tokens = w.tokens;
           if (w.blank) entry.blank = w.blank;
           if (Array.isArray(w.options) && w.options.length) entry.options = w.options;
+          if (Array.isArray(w.examples) && w.examples.length) entry.examples = w.examples;
 
           savedSentences[key] = entry;
           if (window.WQ_SENTENCE_BANK) {
             window.WQ_SENTENCE_BANK[key] = Object.assign({}, window.WQ_SENTENCE_BANK[key] || {}, entry);
           }
 
-          // Lưu luôn từng mảnh từ trong tokens vào từ điển tra nhanh (để trỏ chuột vào từ phụ trong câu hiện đúng Pinyin & Nghĩa)
-          if (Array.isArray(w.tokens)) {
-            w.tokens.forEach(function (tk) {
+          // Lưu luôn từng mảnh từ trong tokens (của câu chính và của mọi câu trong examples) vào từ điển tra nhanh
+          var registerTokenList = function (tkList) {
+            if (!Array.isArray(tkList)) return;
+            tkList.forEach(function (tk) {
               if (tk && typeof tk === 'object') {
                 var th = String(tk.h || tk.t || tk.w || '').trim();
                 if (th && (tk.p || tk.m)) {
@@ -51,6 +54,12 @@
                   }
                 }
               }
+            });
+          };
+          registerTokenList(w.tokens);
+          if (Array.isArray(w.examples)) {
+            w.examples.forEach(function (exObj) {
+              if (exObj && Array.isArray(exObj.tokens)) registerTokenList(exObj.tokens);
             });
           }
           changed = true;
@@ -252,9 +261,19 @@
       var ew = typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(word) : word;
       currentCustomWords[index] = ew;
       var exHtml = '';
-      if (ew.ex) {
+      var exList = Array.isArray(ew.examples) && ew.examples.length > 0 ? ew.examples : (ew.ex ? [{ ex: ew.ex, exm: ew.exm }] : []);
+      if (exList.length > 1) {
+        exHtml = '<div style="margin-top: 6px; display: flex; flex-direction: column; gap: 3px;">' +
+          '<div style="font-size: 0.74rem; font-weight: 700; color: var(--accent-purple);">🎲 ' + exList.length + ' câu ví dụ (sẽ random câu khi học):</div>' +
+          exList.map(function (exObj, idxEx) {
+            return '<div style="font-size: 0.79rem; color: var(--text-muted); font-style: italic; padding-left: 6px; border-left: 2px solid rgba(139,92,246,0.3);">' +
+              (idxEx + 1) + '. ' + exObj.ex + (exObj.exm ? ' — <span style="color: var(--text-secondary);">' + exObj.exm + '</span>' : '') +
+              '</div>';
+          }).join('') +
+          '</div>';
+      } else if (exList.length === 1) {
         exHtml = '<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-style: italic;">' +
-          '💬 ' + ew.ex + (ew.exm ? ' — <span style="color: var(--text-secondary);">' + ew.exm + '</span>' : '') +
+          '💬 ' + exList[0].ex + (exList[0].exm ? ' — <span style="color: var(--text-secondary);">' + exList[0].exm + '</span>' : '') +
           '</div>';
       } else {
         exHtml = '<div style="font-size: 0.78rem; color: #f59e0b; margin-top: 4px;">⚠️ Chưa có câu ví dụ (bấm ✏️ để thêm)</div>';
@@ -272,7 +291,7 @@
         exHtml +
         '</div>' +
         '<div class="custom-word-actions">' +
-        '<button class="custom-word-btn edit-ex" title="Thêm / Sửa câu ví dụ" aria-label="Sửa câu ví dụ" data-index="' + index + '">' +
+        '<button class="custom-word-btn edit-ex" title="Thêm / Sửa câu ví dụ (hỗ trợ nhiều câu ngăn cách bởi ||)" aria-label="Sửa câu ví dụ" data-index="' + index + '">' +
         '✏️' +
         '</button>' +
         '<button class="custom-word-btn speak" aria-label="Speak" data-index="' + index + '">' +
@@ -285,38 +304,49 @@
 
       item.querySelector('.edit-ex').onclick = async function (e) {
         e.stopPropagation();
-        var newEx = ew.ex || '';
-        var newExm = ew.exm || '';
+        var defaultEx = (Array.isArray(ew.examples) && ew.examples.length > 1)
+          ? ew.examples.map(function (x) { return x.ex; }).join(' || ')
+          : (ew.ex || '');
+        var defaultExm = (Array.isArray(ew.examples) && ew.examples.length > 1)
+          ? ew.examples.map(function (x) { return x.exm || ''; }).join(' || ')
+          : (ew.exm || '');
+        var newEx = defaultEx;
+        var newExm = defaultExm;
         if (window.wqPopup) {
-          var resEx = await window.wqPopup.prompt('Nhập câu ví dụ tiếng Trung cho từ "' + ew.h + '":', {
-            title: 'Câu ví dụ tiếng Trung',
+          var resEx = await window.wqPopup.prompt('Nhập câu ví dụ tiếng Trung cho từ "' + ew.h + '" (ngăn cách nhiều câu bằng dấu || để random khi học):', {
+            title: 'Câu ví dụ tiếng Trung (Hỗ trợ nhiều câu)',
             icon: '💬',
-            placeholder: 'Ví dụ: 我喜欢吃' + ew.h + '。',
+            placeholder: 'Ví dụ: 我喜欢' + ew.h + '。 || 他也喜欢' + ew.h + '。',
             defaultValue: newEx
           });
           if (resEx === null) return;
           newEx = resEx.trim();
-          var resExm = await window.wqPopup.prompt('Nhập nghĩa tiếng Việt của câu ví dụ:', {
+          var resExm = await window.wqPopup.prompt('Nhập nghĩa tiếng Việt tương ứng (ngăn cách bằng dấu || nếu có nhiều câu):', {
             title: 'Nghĩa câu ví dụ',
             icon: '🇻🇳',
-            placeholder: 'Ví dụ: Tôi thích...',
+            placeholder: 'Ví dụ: Tôi thích... || Anh ấy cũng thích...',
             defaultValue: newExm
           });
           if (resExm !== null) newExm = resExm.trim();
         } else {
-          var p1 = prompt('Câu ví dụ tiếng Trung:', newEx);
+          var p1 = prompt('Câu ví dụ tiếng Trung (ngăn cách nhiều câu bằng ||):', newEx);
           if (p1 === null) return;
           newEx = p1.trim();
-          var p2 = prompt('Nghĩa tiếng Việt của câu:', newExm);
+          var p2 = prompt('Nghĩa tiếng Việt tương ứng (ngăn cách bằng ||):', newExm);
           if (p2 !== null) newExm = p2.trim();
         }
-        currentCustomWords[index].ex = newEx;
-        currentCustomWords[index].exm = newExm;
-        try {
-          var savedSentences = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
-          savedSentences[ew.h.trim()] = { ex: newEx, exp: ew.exp || '', exm: newExm };
-          localStorage.setItem('wq_custom_sentences', JSON.stringify(savedSentences));
-        } catch (err) { }
+        var updatedWord = {
+          h: ew.h,
+          p: ew.p,
+          m: ew.m,
+          ex: newEx,
+          exp: ew.exp || '',
+          exm: newExm
+        };
+        currentCustomWords[index] = typeof window.enrichWordWithSentence === 'function'
+          ? window.enrichWordWithSentence(updatedWord)
+          : updatedWord;
+        persistWordsSentences([currentCustomWords[index]]);
         renderCustomWordsList();
         if (window.showToast) window.showToast('✅ Đã cập nhật câu ví dụ cho "' + ew.h + '"', 'success');
       };
@@ -781,6 +811,11 @@
     if (Array.isArray(rawItem.options) && rawItem.options.length) {
       wordObj.options = rawItem.options;
     }
+    if (Array.isArray(rawItem.examples) && rawItem.examples.length) {
+      wordObj.examples = rawItem.examples;
+    } else if (Array.isArray(rawItem.sentences) && rawItem.sentences.length) {
+      wordObj.examples = rawItem.sentences;
+    }
     return typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(wordObj) : wordObj;
   }
 
@@ -792,19 +827,19 @@
       }
 
       var parsed = JSON.parse(cleaned);
-      var words = [];
+      var rawWords = [];
       var suggestedDeckName = '';
 
       if (Array.isArray(parsed)) {
         parsed.forEach(function (item) {
           var nw = normalizeImportedWord(item);
-          if (nw) words.push(nw);
+          if (nw) rawWords.push(nw);
         });
       } else if (typeof parsed === 'object' && parsed !== null) {
         // Trường hợp 1: Object 1 từ duy nhất {"h": "你好", "p": "nǐ hǎo", "m": "Xin chào"}
         if (parsed.h || parsed.hanzi || parsed.word || parsed.zh) {
           var single = normalizeImportedWord(parsed);
-          if (single) words.push(single);
+          if (single) rawWords.push(single);
         } else {
           // Trường hợp 2: Object có {"name": "Bài 11", "words": [...]} hoặc {"Bài 11": [...]}
           if (typeof parsed.name === 'string' || typeof parsed.deck_name === 'string' || typeof parsed.title === 'string') {
@@ -817,19 +852,27 @@
           arrayKeys.forEach(function (key) {
             parsed[key].forEach(function (item) {
               var nw = normalizeImportedWord(item);
-              if (nw) words.push(nw);
+              if (nw) rawWords.push(nw);
             });
           });
         }
       }
 
+      // Gộp các object cùng chữ Hán "h" thành 1 từ với mảng "examples" chứa tất cả các câu ví dụ
+      var words = typeof window.deduplicateWords === 'function' ? window.deduplicateWords(rawWords) : rawWords;
+
       var withExCount = words.filter(function (w) { return Boolean(w.ex); }).length;
+      var totalSentencesCount = words.reduce(function (sum, w) {
+        if (Array.isArray(w.examples) && w.examples.length > 0) return sum + w.examples.length;
+        return sum + (w.ex ? 1 : 0);
+      }, 0);
 
       return {
         success: true,
         words: words,
         count: words.length,
         withExCount: withExCount,
+        totalSentencesCount: totalSentencesCount,
         suggestedDeckName: suggestedDeckName
       };
     } catch (error) {
@@ -875,20 +918,28 @@
     }
 
     var previewChips = res.words.slice(0, 8).map(function (w) {
+      var sentBadge = (Array.isArray(w.examples) && w.examples.length > 1)
+        ? ' <span style="font-size:0.72rem; color:var(--accent-purple); font-weight:700;">🎲' + w.examples.length + ' câu</span>'
+        : '';
       return '<span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:8px; background:rgba(139,92,246,0.1); border:1px solid var(--glass-border); font-size:0.8rem; color:var(--text-primary);">' +
         '<b>' + w.h + '</b>' +
         (w.p ? ' <span style="color:var(--neon-cyan);">(' + w.p + ')</span>' : '') +
+        sentBadge +
         '</span>';
     }).join(' ');
     if (res.count > 8) {
       previewChips += ' <span style="font-size:0.78rem; color:var(--text-muted);">+' + (res.count - 8) + ' từ khác</span>';
     }
 
+    var multiSentNote = res.totalSentencesCount > res.withExCount
+      ? ' · Tổng <b>' + res.totalSentencesCount + ' câu ví dụ</b> (tự động random câu khi học 🎲)'
+      : ' (có <b>' + res.withExCount + '/' + res.count + '</b> câu ví dụ ghép câu)';
+
     liveStatus.style.background = 'rgba(16, 185, 129, 0.08)';
     liveStatus.style.borderColor = 'rgba(16, 185, 129, 0.35)';
     liveStatus.innerHTML =
       '<div style="color: var(--neon-green); font-weight: 700; margin-bottom: 6px;">' +
-      '✅ JSON hợp lệ: Nhận diện <b>' + res.count + ' từ vựng</b> (có <b>' + res.withExCount + '/' + res.count + '</b> câu ví dụ ghép câu)' +
+      '✅ JSON hợp lệ: Nhận diện <b>' + res.count + ' từ vựng</b>' + multiSentNote +
       '</div>' +
       '<div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">' + previewChips + '</div>';
   }
@@ -1114,13 +1165,19 @@
 
         currentCustomWords.push.apply(currentCustomWords, newWords);
         duplicateWords.forEach(function (d) {
-          currentCustomWords[d.index] = d.word;
+          var mergedWord = typeof window.mergeWordExamples === 'function'
+            ? window.mergeWordExamples(d.existing, d.word)
+            : d.word;
+          if (d.word.p) mergedWord.p = d.word.p;
+          if (d.word.m && d.word.m !== 'Chưa có nghĩa') mergedWord.m = d.word.m;
+          currentCustomWords[d.index] = mergedWord;
         });
 
+        persistWordsSentences(currentCustomWords);
         closeDuplicateModal();
         renderCustomWordsList();
         if (window.showToast) {
-          window.showToast('✅ Đã thêm ' + newWords.length + ' từ mới + ghi đè ' + duplicateWords.length + ' từ!', 'success');
+          window.showToast('✅ Đã thêm ' + newWords.length + ' từ mới + gộp câu ví dụ cho ' + duplicateWords.length + ' từ trùng!', 'success');
         }
         delete window._importData;
       }
@@ -1235,6 +1292,40 @@
           insertSampleBtn.onclick = function () {
             var sample = [
               {
+                h: '老师',
+                p: 'lǎoshī',
+                m: 'Giáo viên, thầy/cô giáo',
+                examples: [
+                  {
+                    ex: '王老师教我们汉语。',
+                    exp: 'Wáng lǎoshī jiāo wǒmen Hànyǔ.',
+                    exm: 'Thầy Vương dạy chúng tôi tiếng Trung.',
+                    tokens: [
+                      { h: '王老师', p: 'Wáng lǎoshī', m: 'Thầy Vương' },
+                      { h: '教', p: 'jiāo', m: 'dạy' },
+                      { h: '我们', p: 'wǒmen', m: 'chúng tôi' },
+                      { h: '汉语', p: 'Hànyǔ', m: 'tiếng Trung' }
+                    ],
+                    blank: '老师',
+                    options: ['老师', '学生', '朋友', '医生']
+                  },
+                  {
+                    ex: '她是我的汉语老师。',
+                    exp: 'Tā shì wǒ de Hànyǔ lǎoshī.',
+                    exm: 'Cô ấy là giáo viên tiếng Trung của tôi.',
+                    tokens: [
+                      { h: '她', p: 'tā', m: 'cô ấy' },
+                      { h: '是', p: 'shì', m: 'là' },
+                      { h: '我的', p: 'wǒ de', m: 'của tôi' },
+                      { h: '汉语', p: 'Hànyǔ', m: 'tiếng Trung' },
+                      { h: '老师', p: 'lǎoshī', m: 'giáo viên' }
+                    ],
+                    blank: '老师',
+                    options: ['老师', '同学', '经理', '大夫']
+                  }
+                ]
+              },
+              {
                 h: '你好',
                 p: 'nǐ hǎo',
                 m: 'Xin chào',
@@ -1249,27 +1340,11 @@
                 ],
                 blank: '你好',
                 options: ['你好', '谢谢', '再见', '老师']
-              },
-              {
-                h: '老师',
-                p: 'lǎoshī',
-                m: 'Giáo viên, thầy/cô giáo',
-                ex: '王老师教我们汉语。',
-                exp: 'Wáng lǎoshī jiāo wǒmen Hànyǔ.',
-                exm: 'Thầy Vương dạy chúng tôi tiếng Trung.',
-                tokens: [
-                  { h: '王老师', p: 'Wáng lǎoshī', m: 'Thầy Vương' },
-                  { h: '教', p: 'jiāo', m: 'dạy' },
-                  { h: '我们', p: 'wǒmen', m: 'chúng tôi' },
-                  { h: '汉语', p: 'Hànyǔ', m: 'tiếng Trung' }
-                ],
-                blank: '老师',
-                options: ['老师', '学生', '朋友', '医生']
               }
             ];
             jsonTextInput.value = JSON.stringify(sample, null, 2);
             updateJsonLiveStatus();
-            if (window.showToast) window.showToast('📋 Đã chèn mẫu JSON đầy đủ (kèm các mảnh ghép câu & tooltip)!', 'info');
+            if (window.showToast) window.showToast('📋 Đã chèn mẫu JSON (gồm cả từ có nhiều câu ví dụ random)!', 'info');
           };
         }
 
@@ -1300,12 +1375,13 @@
               '- "h": Chữ Hán (bắt buộc)\n' +
               '- "p": Pinyin có dấu thanh điệu\n' +
               '- "m": Nghĩa tiếng Việt ngắn gọn, rõ ràng\n' +
-              '- "ex": 1 câu ví dụ tiếng Trung tự nhiên chứa từ đó (khoảng 5-10 chữ, có dấu chấm câu)\n' +
-              '- "exp": Pinyin của cả câu ví dụ\n' +
-              '- "exm": Nghĩa tiếng Việt của cả câu ví dụ\n' +
-              '- "tokens": Mảng tách câu ví dụ "ex" thành 3-6 mảnh từ để người học xếp câu, mỗi mảnh gồm {"h": "mảnh chữ Hán", "p": "pinyin mảnh đó", "m": "nghĩa tiếng Việt mảnh đó"} (dùng để hiện tooltip khi trỏ chuột vào từng từ)\n' +
-              '- "blank": Từ cần đục lỗ trong câu "ex" cho bài Điền từ (thường chính là "h")\n' +
-              '- "options": Mảng 4 phương án chữ Hán cho bài Điền từ (gồm đáp án đúng + 3 từ gây nhiễu cùng chủ đề)\n\n' +
+              '- "examples": Mảng từ 2 đến 3 câu ví dụ khác nhau chứa từ đó (để mỗi lần gặp lại từ trong lượt học, web tự động random câu khác nhau). Mỗi câu trong mảng "examples" gồm:\n' +
+              '   + "ex": Câu ví dụ tiếng Trung (khoảng 5-10 chữ, có dấu chấm câu)\n' +
+              '   + "exp": Pinyin của cả câu ví dụ\n' +
+              '   + "exm": Nghĩa tiếng Việt của cả câu ví dụ\n' +
+              '   + "tokens": Mảng tách câu "ex" thành 3-6 mảnh từ để người học xếp câu, mỗi mảnh gồm {"h": "mảnh chữ Hán", "p": "pinyin mảnh đó", "m": "nghĩa tiếng Việt mảnh đó"}\n' +
+              '   + "blank": Từ cần đục lỗ trong câu "ex" cho bài Điền từ\n' +
+              '   + "options": Mảng 4 phương án chữ Hán cho bài Điền từ (1 đáp án đúng + 3 từ gây nhiễu)\n\n' +
               'Ví dụ kết quả:\n' +
               '{\n' +
               '  "name": "Bài 11",\n' +
@@ -1314,17 +1390,35 @@
               '      "h": "老师",\n' +
               '      "p": "lǎoshī",\n' +
               '      "m": "Giáo viên",\n' +
-              '      "ex": "王老师教我们汉语。",\n' +
-              '      "exp": "Wáng lǎoshī jiāo wǒmen Hànyǔ.",\n' +
-              '      "exm": "Thầy Vương dạy chúng tôi tiếng Trung.",\n' +
-              '      "tokens": [\n' +
-              '        { "h": "王老师", "p": "Wáng lǎoshī", "m": "Thầy Vương" },\n' +
-              '        { "h": "教", "p": "jiāo", "m": "dạy" },\n' +
-              '        { "h": "我们", "p": "wǒmen", "m": "chúng tôi" },\n' +
-              '        { "h": "汉语", "p": "Hànyǔ", "m": "tiếng Trung" }\n' +
-              '      ],\n' +
-              '      "blank": "老师",\n' +
-              '      "options": ["老师", "学生", "朋友", "医生"]\n' +
+              '      "examples": [\n' +
+              '        {\n' +
+              '          "ex": "王老师教我们汉语。",\n' +
+              '          "exp": "Wáng lǎoshī jiāo wǒmen Hànyǔ.",\n' +
+              '          "exm": "Thầy Vương dạy chúng tôi tiếng Trung.",\n' +
+              '          "tokens": [\n' +
+              '            { "h": "王老师", "p": "Wáng lǎoshī", "m": "Thầy Vương" },\n' +
+              '            { "h": "教", "p": "jiāo", "m": "dạy" },\n' +
+              '            { "h": "我们", "p": "wǒmen", "m": "chúng tôi" },\n' +
+              '            { "h": "汉语", "p": "Hànyǔ", "m": "tiếng Trung" }\n' +
+              '          ],\n' +
+              '          "blank": "老师",\n' +
+              '          "options": ["老师", "学生", "朋友", "医生"]\n' +
+              '        },\n' +
+              '        {\n' +
+              '          "ex": "她是我的汉语老师。",\n' +
+              '          "exp": "Tā shì wǒ de Hànyǔ lǎoshī.",\n' +
+              '          "exm": "Cô ấy là giáo viên tiếng Trung của tôi.",\n' +
+              '          "tokens": [\n' +
+              '            { "h": "她", "p": "tā", "m": "cô ấy" },\n' +
+              '            { "h": "是", "p": "shì", "m": "là" },\n' +
+              '            { "h": "我的", "p": "wǒ de", "m": "của tôi" },\n' +
+              '            { "h": "汉语", "p": "Hànyǔ", "m": "tiếng Trung" },\n' +
+              '            { "h": "老师", "p": "lǎoshī", "m": "giáo viên" }\n' +
+              '          ],\n' +
+              '          "blank": "老师",\n' +
+              '          "options": ["老师", "同学", "经理", "大夫"]\n' +
+              '        }\n' +
+              '      ]\n' +
               '    }\n' +
               '  ]\n' +
               '}\n\n' +

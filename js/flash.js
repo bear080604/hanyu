@@ -19,6 +19,8 @@ function recordLearnedWord(wordStr) {
   }
 }
 
+var _fcLastSentenceByWord = {};
+
 // ---------- renderFlash ----------
 function renderFlash() {
   const fcCard = document.getElementById('fcCard');
@@ -45,7 +47,11 @@ function renderFlash() {
     return;
   }
 
-  const w = typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(deck[fcIdx]) : deck[fcIdx];
+  const baseW = typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(deck[fcIdx]) : deck[fcIdx];
+  const w = typeof window.pickRandomSentenceVariant === 'function'
+    ? window.pickRandomSentenceVariant(baseW, _fcLastSentenceByWord[baseW.h])
+    : baseW;
+  _fcLastSentenceByWord[baseW.h] = w.ex;
   recordLearnedWord(w.h);
 
   if (fcCard) {
@@ -57,7 +63,10 @@ function renderFlash() {
   fcPinyin.textContent = w.p;
   fcMean.textContent = w.m;
   const exStr = w.ex || w.e || '';
-  fcEx.textContent = exStr ? (w.exm ? exStr + ' — ' + w.exm : exStr) : '';
+  const multiBadge = (Array.isArray(w.examples) && w.examples.length > 1)
+    ? ' (🎲 ' + ((w._variantIndex || 0) + 1) + '/' + w.examples.length + ')'
+    : '';
+  fcEx.textContent = exStr ? ((w.exm ? exStr + ' — ' + w.exm : exStr) + multiBadge) : '';
   if (fcCount) fcCount.textContent = (fcIdx + 1) + ' / ' + deck.length;
   if (fcLevel) fcLevel.textContent = level === 'favorites' ? 'Yêu thích' : level;
   renderFavIcon();
