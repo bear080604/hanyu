@@ -203,6 +203,28 @@ function answer(idx) {
     window.AppState.qScore = qScore;
     window.AppState.qTotal = qTotal;
   }
+
+  // Check if user finished all questions in full-study ('both') flow
+  if (quizPool && quizPool.length === 0 && localStorage.getItem('wq_pending_mode') === 'both') {
+    setTimeout(async function () {
+      var goSentence = window.wqPopup
+        ? await window.wqPopup.confirm({
+          icon: '🧩',
+          title: 'Hoàn thành Trắc nghiệm!',
+          message: 'Điểm của bạn: ' + qScore + ' / ' + qTotal + '.\nBạn có muốn tiếp tục sang phần 🧩 Ghép câu & Hoàn thiện câu để nắm vững ngữ cảnh không?',
+          confirmText: '🧩 Luyện ghép câu',
+          cancelText: 'Hoàn tất tại đây'
+        })
+        : confirm('🎉 Bạn đã hoàn thành Trắc nghiệm (' + qScore + '/' + qTotal + ')!\nBạn có muốn chuyển sang phần 🧩 Ghép câu & Hoàn thiện câu không?');
+      if (goSentence) {
+        localStorage.setItem('wq_pending_deck', JSON.stringify({ name: level || 'Custom', words: deck }));
+        localStorage.setItem('wq_pending_mode', 'sentence');
+        window.location.href = '../pages/sentence.html';
+      } else {
+        localStorage.removeItem('wq_pending_mode');
+      }
+    }, 600);
+  }
 }
 
 // ==================== QUIZ HSK GRID ====================
@@ -220,7 +242,7 @@ function renderQuizHskGrid() {
     'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
   ];
 
-  Object.keys(DATA).forEach(function(lvl, index) {
+  Object.keys(DATA).forEach(function (lvl, index) {
     const words = DATA[lvl];
     if (!words || words.length === 0) return;
     const total = words.length;
@@ -231,15 +253,15 @@ function renderQuizHskGrid() {
     card.style.setProperty('--card-color', color);
     card.innerHTML =
       '<div class="hsk-card-header">' +
-        '<h4>' + lvl + '</h4>' +
-        '<span class="word-count">' + total + ' từ</span>' +
+      '<h4>' + lvl + '</h4>' +
+      '<span class="word-count">' + total + ' từ</span>' +
       '</div>' +
       '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.9rem;">' +
-        'Làm trắc nghiệm với ' + total + ' từ vựng' +
+      'Làm trắc nghiệm với ' + total + ' từ vựng' +
       '</div>' +
       '<button class="btn start-learn-btn" style="background: ' + color + '; border: none; color: #fff;">✏️ Bắt đầu Quiz</button>';
 
-    card.querySelector('.start-learn-btn').onclick = function() {
+    card.querySelector('.start-learn-btn').onclick = function () {
       startQuizWithDeck({ name: lvl, words: words });
     };
 
@@ -248,206 +270,251 @@ function renderQuizHskGrid() {
 }
 
 // ==================== QUIZ CUSTOM DECKS ====================
-function renderQuizCustomDecks() {
-  const list = document.getElementById('quizCustomDecksList');
-  if (!list) return;
+  let _quizDecksSynced = false;
 
-  const currentUser = window.WQAuth && window.WQAuth.getCurrentUser ? window.WQAuth.getCurrentUser() : null;
-  const username = currentUser ? currentUser.username : null;
-  let customDecks = [];
+  async function renderQuizCustomDecks() {
+    const list = document.getElementById('quizCustomDecksList');
+    if (!list) return;
 
-  if (username && window.WQStorage && WQStorage.getUserDataField) {
-    customDecks = WQStorage.getUserDataField(username, 'customDecks', '') || [];
-  } else {
-    try {
-      customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
-    } catch(e) {
-      customDecks = [];
+    const currentUser = window.WQAuth && window.WQAuth.getCurrentUser ? window.WQAuth.getCurrentUser() : null;
+    const username = currentUser ? currentUser.username : null;
+    let customDecks = [];
+
+    if (username && window.WQStorage && WQStorage.getUserDataField) {
+      customDecks = WQStorage.getUserDataField(username, 'customDecks', '') || [];
+    } else {
+      try {
+        customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
+      } catch (e) {
+        customDecks = [];
+      }
     }
-  }
 
-  if (customDecks.length === 0) {
-    list.innerHTML =
-      '<div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">' +
+    if (!_quizDecksSynced && window.WeiQuanAPI && window.WeiQuanAPI.getDecks) {
+      _quizDecksSynced = true;
+      try {
+        const cloudDecks = await window.WeiQuanAPI.getDecks('default_user');
+        if (Array.isArray(cloudDecks) && cloudDecks.length > 0) {
+          const localById = new Map(customDecks.map(function (d) { return [String(d.id), d]; }));
+          cloudDecks.forEach(function (cd) {
+            const existing = localById.get(String(cd.id));
+            localById.set(String(cd.id), {
+              ...cd,
+              words: (existing && existing.words && existing.words.length > 0) ? existing.words : []
+            });
+          });
+          customDecks = Array.from(localById.values());
+          if (username && window.WQStorage && WQStorage.setUserDataField) {
+            WQStorage.setUserDataField(username, 'customDecks', customDecks);
+          } else {
+            localStorage.setItem('wq_custom_decks', JSON.stringify(customDecks));
+          }
+        }
+      } catch (err) {
+        console.warn('Could not sync cloud decks in quiz:', err);
+      }
+    }
+
+    if (customDecks.length === 0) {
+      list.innerHTML =
+        '<div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">' +
         'Chưa có bộ từ tự tạo. <a href="custom.html" style="color: var(--accent-purple); text-decoration: underline;">Tạo ngay</a>' +
-      '</div>';
-    return;
-  }
+        '</div>';
+      return;
+    }
 
-  list.innerHTML = '';
-  customDecks.forEach(function(d) {
-    const card = document.createElement('div');
-    card.className = 'hsk-card';
-    card.style.setProperty('--card-color', 'var(--accent-gradient)');
-    card.innerHTML =
-      '<div class="hsk-card-header">' +
+    list.innerHTML = '';
+    customDecks.forEach(function (d) {
+      const card = document.createElement('div');
+      card.className = 'hsk-card';
+      card.style.setProperty('--card-color', 'var(--accent-gradient)');
+      card.innerHTML =
+        '<div class="hsk-card-header">' +
         '<h4>📚 ' + d.name + '</h4>' +
         '<span class="word-count">' + (d.wordCount || (d.words && d.words.length) || 0) + ' từ</span>' +
-      '</div>' +
-      '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.85rem;">' +
+        '</div>' +
+        '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.85rem;">' +
         '📅 ' + (d.createdAt || '') +
-      '</div>' +
-      '<button class="btn start-learn-btn" style="background: var(--accent-gradient); border: none; color: #fff;">✏️ Bắt đầu Quiz</button>';
+        '</div>' +
+        '<button class="btn start-learn-btn" style="background: var(--accent-gradient); border: none; color: #fff;">✏️ Bắt đầu Quiz</button>';
 
-    card.querySelector('.start-learn-btn').onclick = function() {
-      startQuizWithDeck({ name: d.name, words: d.words });
-    };
+        card.querySelector('.start-learn-btn').onclick = async function () {
+          let words = d.words || [];
+          if (words.length === 0 && window.WeiQuanAPI && window.WeiQuanAPI.getDeckById) {
+            const cloudId = d.cloudId || (typeof d.id === 'number' && d.id < 1000000000 ? d.id : null);
+            if (cloudId) {
+              try {
+                if (window.showToast) showToast('☁️ Đang tải từ vựng từ Cloud...', 'info');
+                const fullDeck = await window.WeiQuanAPI.getDeckById(cloudId);
+                if (fullDeck && Array.isArray(fullDeck.words)) {
+                  words = fullDeck.words;
+                  d.words = words;
+                }
+              } catch (err) {
+                console.warn('Error loading cloud deck in quiz:', err);
+              }
+            }
+          }
+          startQuizWithDeck({ name: d.name, words: words });
+        };
 
-    list.appendChild(card);
-  });
-}
-
-// ==================== START QUIZ WITH DECK ====================
-// deckObj: { name: string, words: array }
-function startQuizWithDeck(deckObj) {
-  if (!deckObj || !deckObj.words || deckObj.words.length < 2) {
-    if (window.showToast) showToast('Cần ít nhất 2 từ để làm trắc nghiệm!', 'error');
-    return;
+        list.appendChild(card);
+      });
   }
 
-  // Update global state
-  level = deckObj.name;
-  deck = [...deckObj.words];
-  // Deduplicate and shuffle deck
-  deck = deduplicateWords(deck);
-  shuffle(deck);
+  // ==================== START QUIZ WITH DECK ====================
+  // deckObj: { name: string, words: array }
+  function startQuizWithDeck(deckObj) {
+    if (!deckObj || !deckObj.words || deckObj.words.length < 2) {
+      if (window.showToast) showToast('Cần ít nhất 2 từ để làm trắc nghiệm!', 'error');
+      return;
+    }
 
-  fcIdx = 0; wIdx = 0; qScore = 0; qTotal = 0;
-  quizPool = []; quizAskedWords = [];
+    // Update global state
+    level = deckObj.name;
+    deck = [...deckObj.words];
+    // Deduplicate and shuffle deck
+    deck = deduplicateWords(deck);
+    shuffle(deck);
 
-  // Sync to AppState
-  if (window.AppState) {
-    window.AppState.level = level;
-    window.AppState.deck = deck;
-    window.AppState.fcIdx = 0;
-    window.AppState.wIdx = 0;
-    window.AppState.qScore = 0;
-    window.AppState.qTotal = 0;
-    window.AppState.quizPool = quizPool;
-    window.AppState.quizAskedWords = quizAskedWords;
+    fcIdx = 0; wIdx = 0; qScore = 0; qTotal = 0;
+    quizPool = []; quizAskedWords = [];
+
+    // Sync to AppState
+    if (window.AppState) {
+      window.AppState.level = level;
+      window.AppState.deck = deck;
+      window.AppState.fcIdx = 0;
+      window.AppState.wIdx = 0;
+      window.AppState.qScore = 0;
+      window.AppState.qTotal = 0;
+      window.AppState.quizPool = quizPool;
+      window.AppState.quizAskedWords = quizAskedWords;
+    }
+
+    // Switch UI panels
+    const deckSelection = document.getElementById('quizDeckSelection');
+    const gameSection = document.getElementById('quizGameSection');
+    if (deckSelection) deckSelection.style.display = 'none';
+    if (gameSection) gameSection.style.display = 'block';
+
+    newQuiz();
+    if (window.showToast) showToast('✏️ Bắt đầu trắc nghiệm "' + deckObj.name + '"!', 'success');
+  }
+  window.startQuizWithDeck = startQuizWithDeck;
+
+  // ==================== BACK TO QUIZ SELECTION ====================
+  function backToQuizSelection() {
+    const deckSelection = document.getElementById('quizDeckSelection');
+    const gameSection = document.getElementById('quizGameSection');
+    if (deckSelection) deckSelection.style.display = 'block';
+    if (gameSection) gameSection.style.display = 'none';
+
+    qScore = 0; qTotal = 0;
+    quizPool = []; quizAskedWords = [];
+
+    if (window.AppState) {
+      window.AppState.qScore = 0;
+      window.AppState.qTotal = 0;
+      window.AppState.quizPool = [];
+      window.AppState.quizAskedWords = [];
+    }
+
+    const qScoreEl = document.getElementById('qScore');
+    const qResultEl = document.getElementById('qResult');
+    if (qScoreEl) qScoreEl.textContent = 'Điểm: 0 / 0';
+    if (qResultEl) qResultEl.textContent = '';
   }
 
-  // Switch UI panels
-  const deckSelection = document.getElementById('quizDeckSelection');
-  const gameSection = document.getElementById('quizGameSection');
-  if (deckSelection) deckSelection.style.display = 'none';
-  if (gameSection) gameSection.style.display = 'block';
+  // ==================== DOM CONTENT LOADED ====================
+  document.addEventListener('DOMContentLoaded', function () {
+    // Quiz mode buttons
+    document.querySelectorAll('.quiz-mode-btn').forEach(function (btn) {
+      btn.onclick = function () {
+        document.querySelectorAll('.quiz-mode-btn').forEach(function (b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        quizMode = btn.dataset.mode;
+        localStorage.setItem('wq_quiz_mode', quizMode);
+        if (window.AppState) window.AppState.quizMode = quizMode;
 
-  newQuiz();
-  if (window.showToast) showToast('✏️ Bắt đầu trắc nghiệm "' + deckObj.name + '"!', 'success');
-}
-window.startQuizWithDeck = startQuizWithDeck;
+        qScore = 0; qTotal = 0;
+        quizPool = []; quizAskedWords = [];
+        if (window.AppState) {
+          window.AppState.qScore = 0;
+          window.AppState.qTotal = 0;
+          window.AppState.quizPool = [];
+          window.AppState.quizAskedWords = [];
+        }
+        const qScoreEl = document.getElementById('qScore');
+        if (qScoreEl) qScoreEl.textContent = 'Điểm: 0 / 0';
+        newQuiz();
+      };
+    });
 
-// ==================== BACK TO QUIZ SELECTION ====================
-function backToQuizSelection() {
-  const deckSelection = document.getElementById('quizDeckSelection');
-  const gameSection = document.getElementById('quizGameSection');
-  if (deckSelection) deckSelection.style.display = 'block';
-  if (gameSection) gameSection.style.display = 'none';
+    // Restore saved quiz mode active state
+    var savedBtn = document.querySelector('.quiz-mode-btn[data-mode="' + quizMode + '"]');
+    if (savedBtn) {
+      document.querySelectorAll('.quiz-mode-btn').forEach(function (b) { b.classList.remove('active'); });
+      savedBtn.classList.add('active');
+    }
 
-  qScore = 0; qTotal = 0;
-  quizPool = []; quizAskedWords = [];
+    // Back button
+    var qBackBtn = document.getElementById('qBackBtn');
+    if (qBackBtn) qBackBtn.onclick = backToQuizSelection;
 
-  if (window.AppState) {
-    window.AppState.qScore = 0;
-    window.AppState.qTotal = 0;
-    window.AppState.quizPool = [];
-    window.AppState.quizAskedWords = [];
-  }
+    // Next and audio buttons
+    var qNext = document.getElementById('qNext');
+    var qAudio = document.getElementById('qAudio');
+    if (qNext) qNext.onclick = newQuiz;
+    if (qAudio) qAudio.onclick = function () { if (qCur) speak(qCur.h); };
 
-  const qScoreEl = document.getElementById('qScore');
-  const qResultEl = document.getElementById('qResult');
-  if (qScoreEl) qScoreEl.textContent = 'Điểm: 0 / 0';
-  if (qResultEl) qResultEl.textContent = '';
-}
+    // 1. Check for pending deck from cross-page navigation
+    // Delay to let shared.js finish loadProgress() which may reset deck
+    function initQuizPage() {
+      var pendingDeckStr = localStorage.getItem('wq_pending_deck');
+      var pendingMode = localStorage.getItem('wq_pending_mode');
 
-// ==================== DOM CONTENT LOADED ====================
-document.addEventListener('DOMContentLoaded', function() {
-  // Quiz mode buttons
-  document.querySelectorAll('.quiz-mode-btn').forEach(function(btn) {
-    btn.onclick = function() {
-      document.querySelectorAll('.quiz-mode-btn').forEach(function(b) { b.classList.remove('active'); });
-      btn.classList.add('active');
-      quizMode = btn.dataset.mode;
-      localStorage.setItem('wq_quiz_mode', quizMode);
-      if (window.AppState) window.AppState.quizMode = quizMode;
-
-      qScore = 0; qTotal = 0;
-      quizPool = []; quizAskedWords = [];
-      if (window.AppState) {
-        window.AppState.qScore = 0;
-        window.AppState.qTotal = 0;
-        window.AppState.quizPool = [];
-        window.AppState.quizAskedWords = [];
-      }
-      const qScoreEl = document.getElementById('qScore');
-      if (qScoreEl) qScoreEl.textContent = 'Điểm: 0 / 0';
-      newQuiz();
-    };
-  });
-
-  // Restore saved quiz mode active state
-  var savedBtn = document.querySelector('.quiz-mode-btn[data-mode="' + quizMode + '"]');
-  if (savedBtn) {
-    document.querySelectorAll('.quiz-mode-btn').forEach(function(b) { b.classList.remove('active'); });
-    savedBtn.classList.add('active');
-  }
-
-  // Back button
-  var qBackBtn = document.getElementById('qBackBtn');
-  if (qBackBtn) qBackBtn.onclick = backToQuizSelection;
-
-  // Next and audio buttons
-  var qNext = document.getElementById('qNext');
-  var qAudio = document.getElementById('qAudio');
-  if (qNext) qNext.onclick = newQuiz;
-  if (qAudio) qAudio.onclick = function() { if (qCur) speak(qCur.h); };
-
-  // 1. Check for pending deck from cross-page navigation
-  // Delay to let shared.js finish loadProgress() which may reset deck
-  function initQuizPage() {
-    var pendingDeckStr = localStorage.getItem('wq_pending_deck');
-    var pendingMode = localStorage.getItem('wq_pending_mode');
-
-    if (pendingDeckStr && (pendingMode === 'quiz' || pendingMode === 'both')) {
-      try {
-        var pendingDeck = JSON.parse(pendingDeckStr);
-        localStorage.removeItem('wq_pending_deck');
-        localStorage.removeItem('wq_pending_mode');
-        startQuizWithDeck(pendingDeck);
-      } catch(e) {
-        console.warn('Failed to load pending deck for quiz:', e);
-        renderQuizHskGrid();
-        renderQuizCustomDecks();
-        var deckSel = document.getElementById('quizDeckSelection');
-        if (deckSel) deckSel.style.display = 'block';
-      }
-    } else {
-      // No pending deck — show selection grid
-      function tryRenderGrid() {
-        if (typeof DATA !== 'undefined' && Object.keys(DATA).length > 0) {
+      if (pendingDeckStr && (pendingMode === 'quiz' || pendingMode === 'both')) {
+        try {
+          var pendingDeck = JSON.parse(pendingDeckStr);
+          localStorage.removeItem('wq_pending_deck');
+          if (pendingMode === 'quiz') {
+            localStorage.removeItem('wq_pending_mode');
+          }
+          startQuizWithDeck(pendingDeck);
+        } catch (e) {
+          console.warn('Failed to load pending deck for quiz:', e);
           renderQuizHskGrid();
           renderQuizCustomDecks();
-          var deckSelection = document.getElementById('quizDeckSelection');
-          if (deckSelection) deckSelection.style.display = 'block';
-        } else {
-          setTimeout(tryRenderGrid, 100);
+          var deckSel = document.getElementById('quizDeckSelection');
+          if (deckSel) deckSel.style.display = 'block';
         }
+      } else {
+        // No pending deck — show selection grid
+        function tryRenderGrid() {
+          if (typeof DATA !== 'undefined' && Object.keys(DATA).length > 0) {
+            renderQuizHskGrid();
+            renderQuizCustomDecks();
+            var deckSelection = document.getElementById('quizDeckSelection');
+            if (deckSelection) deckSelection.style.display = 'block';
+          } else {
+            setTimeout(tryRenderGrid, 100);
+          }
+        }
+        tryRenderGrid();
       }
-      tryRenderGrid();
     }
-  }
 
-  // Wait for shared.js to finish init, then init quiz page
-  // shared.js skips applyRange when wq_pending_deck is present, so deck won't be overwritten
-  initQuizPage();
+    // Wait for shared.js to finish init, then init quiz page
+    // shared.js skips applyRange when wq_pending_deck is present, so deck won't be overwritten
+    initQuizPage();
 
-  // Also re-render grid when DATA becomes available via WQSyncData
-  document.addEventListener('wq:data-loaded', function() {
-    var sel = document.getElementById('quizDeckSelection');
-    if (sel && sel.style.display !== 'none') {
-      renderQuizHskGrid();
-      renderQuizCustomDecks();
-    }
+    // Also re-render grid when DATA becomes available via WQSyncData
+    document.addEventListener('wq:data-loaded', function () {
+      var sel = document.getElementById('quizDeckSelection');
+      if (sel && sel.style.display !== 'none') {
+        renderQuizHskGrid();
+        renderQuizCustomDecks();
+      }
+    });
   });
-});

@@ -1,16 +1,19 @@
 // Service Worker — WenQing Chinese
-const CACHE_NAME = 'wenqing-v1';
+const CACHE_NAME = 'wenqing-v8';
 const STATIC_ASSETS = [
   '/hanyu/',
   '/hanyu/index.html',
   '/hanyu/styles.css',
   '/hanyu/logo.png',
+  '/hanyu/logo-light.png',
+  '/hanyu/logo-dark.png',
   '/hanyu/manifest.json',
   '/hanyu/data/data.js',
   '/hanyu/js/layout.js',
   '/hanyu/js/shared.js',
   '/hanyu/js/flash.js',
   '/hanyu/js/quiz.js',
+  '/hanyu/js/sentence.js',
   '/hanyu/js/write.js',
   '/hanyu/js/stats.js',
   '/hanyu/js/favorites.js',
@@ -18,6 +21,7 @@ const STATIC_ASSETS = [
   '/hanyu/js/settings.js',
   '/hanyu/pages/flash.html',
   '/hanyu/pages/quiz.html',
+  '/hanyu/pages/sentence.html',
   '/hanyu/pages/write.html',
   '/hanyu/pages/stats.html',
   '/hanyu/pages/favorites.html',
@@ -48,16 +52,24 @@ self.addEventListener('activate', function(e) {
   self.clients.claim();
 });
 
-// Fetch — cache first, fallback to network
+// Fetch — network first (always fresh), fallback to cache when offline
 self.addEventListener('fetch', function(e) {
-  // Skip API calls — always go to network
-  if (e.request.url.includes('workers.dev') || e.request.url.includes('cdn.jsdelivr')) {
+  // Skip non-GET and API/CDN calls
+  if (e.request.method !== 'GET' || e.request.url.includes('workers.dev') || e.request.url.includes('cdn.jsdelivr')) {
     return;
   }
   e.respondWith(
-    caches.match(e.request).then(function(cached) {
-      return cached || fetch(e.request).catch(function() {
-        // Offline fallback
+    fetch(e.request).then(function(networkRes) {
+      if (networkRes && networkRes.status === 200) {
+        var clone = networkRes.clone();
+        caches.open(CACHE_NAME).then(function(cache) {
+          cache.put(e.request, clone);
+        });
+      }
+      return networkRes;
+    }).catch(function() {
+      return caches.match(e.request).then(function(cached) {
+        if (cached) return cached;
         if (e.request.mode === 'navigate') {
           return caches.match('/hanyu/index.html');
         }

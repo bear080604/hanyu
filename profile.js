@@ -29,27 +29,27 @@
 
       modalBody.innerHTML = `
         <div class="profile-summary" style="display:flex; flex-direction:column; gap:20px;">
-          <div style="text-align:center; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);">
+          <div style="text-align:center; padding-bottom:12px; border-bottom:1px solid var(--glass-border);">
             <div style="font-size:3.5rem; margin-bottom:8px;">🧑‍🎓</div>
-            <h3 style="font-size:1.6rem; color:#fff; font-family:'Plus Jakarta Sans', sans-serif;">Học viên</h3>
+            <h3 style="font-size:1.6rem; color:var(--text-primary); font-family:'Plus Jakarta Sans', sans-serif;">Học viên</h3>
           </div>
 
           <div class="stats-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:14px;">
-            <div class="stat-card" style="background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
+            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
               <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Đã học</div>
               <div style="font-size:1.8rem; font-weight:800; color:var(--neon-cyan); margin-top:4px;">${learnedCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
             </div>
-            <div class="stat-card" style="background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
+            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
               <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Yêu thích</div>
-              <div style="font-size:1.8rem; font-weight:800; color:#FBBF24; margin-top:4px;">${favoritesCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
+              <div style="font-size:1.8rem; font-weight:800; color:#d97706; margin-top:4px;">${favoritesCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
             </div>
-            <div class="stat-card" style="background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
+            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
               <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Đã nhớ</div>
-              <div style="font-size:1.8rem; font-weight:800; color:var(--neon-green, #4ade80); margin-top:4px;">${rememberedCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
+              <div style="font-size:1.8rem; font-weight:800; color:var(--neon-green, #059669); margin-top:4px;">${rememberedCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
             </div>
-            <div class="stat-card" style="background:rgba(255,255,255,0.02); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
+            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
               <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Ôn hôm nay</div>
-              <div style="font-size:1.8rem; font-weight:800; color:var(--neon-red, #f87171); margin-top:4px;">${reviewTodayCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
+              <div style="font-size:1.8rem; font-weight:800; color:var(--neon-red, #dc2626); margin-top:4px;">${reviewTodayCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
             </div>
           </div>
         </div>
@@ -72,7 +72,7 @@
 
       const title = document.createElement('h3');
       title.textContent = 'Tiến trình hoàn thành HSK';
-      title.style.cssText = "font-family:'Plus Jakarta Sans', sans-serif; font-size:1.25rem; font-weight:700; color:#fff; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;";
+      title.style.cssText = "font-family:'Plus Jakarta Sans', sans-serif; font-size:1.25rem; font-weight:700; color:var(--text-primary); border-bottom:1px solid var(--glass-border); padding-bottom:10px;";
       container.appendChild(title);
 
       Object.keys(DATA).forEach(lvl => {
@@ -88,7 +88,7 @@
         const labelRow = document.createElement('div');
         labelRow.style.cssText = 'display:flex; justify-content:space-between; font-size:0.9rem; font-weight:600;';
         const spanLvl = document.createElement('span');
-        spanLvl.style.color = '#fff';
+        spanLvl.style.color = 'var(--text-primary)';
         spanLvl.textContent = lvl;
         const spanCount = document.createElement('span');
         spanCount.style.color = 'var(--text-secondary)';
@@ -97,7 +97,7 @@
         labelRow.appendChild(spanCount);
 
         const barBg = document.createElement('div');
-        barBg.style.cssText = 'width:100%; height:10px; background:rgba(255,255,255,0.04); border-radius:5px; border:1px solid rgba(255,255,255,0.05); overflow:hidden;';
+        barBg.style.cssText = 'width:100%; height:10px; background:rgba(139,92,246,0.1); border-radius:5px; border:1px solid var(--glass-border); overflow:hidden;';
         const barFill = document.createElement('div');
         barFill.style.cssText = `width:${percent}%; height:100%; background:var(--accent-gradient); border-radius:5px; transition:width 0.5s ease;`;
 

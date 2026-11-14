@@ -99,6 +99,7 @@ function buildWriter(char, targetDivId) {
   }
 
   try {
+    var isLight = document.documentElement.classList.contains('light-theme');
     _writerInstance = HanziWriter.create(targetDivId, char, {
       width: 250,
       height: 250,
@@ -106,11 +107,11 @@ function buildWriter(char, targetDivId) {
       showOutline: true,
       strokeAnimationSpeed: 1,
       delayBetweenStrokes: 300,
-      strokeColor: '#00f2fe',
-      outlineColor: 'rgba(255,255,255,0.2)',
-      drawingColor: '#00f2fe',
+      strokeColor: isLight ? '#1e293b' : '#00f2fe',
+      outlineColor: isLight ? '#cbd5e1' : 'rgba(255,255,255,0.2)',
+      drawingColor: isLight ? '#7c3aed' : '#00f2fe',
       drawingWidth: 4,
-      highlightColor: '#8b5cf6'
+      highlightColor: isLight ? '#0284c7' : '#8b5cf6'
     });
   } catch(e) {
     console.error('HanziWriter.create error:', e);

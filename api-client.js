@@ -11,7 +11,7 @@ class WeiQuanAPI {
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -22,7 +22,7 @@ class WeiQuanAPI {
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'API request failed');
       }
@@ -69,10 +69,29 @@ class WeiQuanAPI {
   }
 
   async getDeckById(deckId) {
-    return this.request(`/api/decks/${deckId}`);
+    const res = await this.request(`/api/decks/${deckId}`);
+    if (res && res.data && Array.isArray(res.data.words)) {
+      res.data.words = res.data.words.map(w => this._normalizeDeckWord(w));
+    }
+    return res;
   }
 
   async createDeck(userId, name, words) {
+    // Save any custom sentences to localStorage as well
+    try {
+      const savedSentences = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
+      (words || []).forEach(w => {
+        if (w && w.h && (w.ex || w.e || w.exm || w.exp)) {
+          savedSentences[w.h.trim()] = {
+            ex: w.ex || w.e || '',
+            exp: w.exp || '',
+            exm: w.exm || ''
+          };
+        }
+      });
+      localStorage.setItem('wq_custom_sentences', JSON.stringify(savedSentences));
+    } catch (e) { }
+
     return this.request('/api/decks', {
       method: 'POST',
       body: JSON.stringify({ user_id: userId, name, words }),
@@ -80,7 +99,28 @@ class WeiQuanAPI {
   }
 
   async getDeck(deckId) {
-    return this.request(`/api/decks/${deckId}`);
+    return this.getDeckById(deckId);
+  }
+
+  _normalizeDeckWord(w) {
+    if (!w) return w;
+    let m = w.m || w.meaning || '';
+    let ex = w.ex || w.e || w.example || '';
+    let exp = w.exp || w.example_pinyin || '';
+    let exm = w.exm || w.example_meaning || '';
+
+    const enriched = { ...w, h: w.h || w.hanzi, p: w.p || w.pinyin, m, ex, exp, exm };
+    if (typeof window.enrichWordWithSentence === 'function') {
+      return window.enrichWordWithSentence(enriched);
+    }
+    return enriched;
+  }
+
+  async updateDeck(deckId, data) {
+    return this.request(`/api/decks/${deckId}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   }
 
   async deleteDeck(deckId) {

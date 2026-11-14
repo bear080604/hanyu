@@ -69,6 +69,9 @@ CREATE TABLE IF NOT EXISTS custom_deck_words (
   hanzi TEXT NOT NULL,
   pinyin TEXT NOT NULL,
   meaning TEXT NOT NULL,
+  example TEXT,
+  example_pinyin TEXT,
+  example_meaning TEXT,
   sort_order INTEGER DEFAULT 0,
   FOREIGN KEY (deck_id) REFERENCES custom_decks(id) ON DELETE CASCADE
 );

@@ -120,7 +120,7 @@ function renderStatsSection() {
 
     topWords.forEach(function(h) {
       var item = srsData[h];
-      html += '<tr style="border-top: 1px solid var(--border-color);">';
+      html += '<tr style="border-top: 1px solid var(--glass-border);">';
       html += '<td style="padding: 8px 10px; font-size: 1.1rem; color: var(--text-primary);">' + h + '</td>';
       html += '<td style="padding: 8px 10px; color: var(--text-secondary);">' + (item.reviewCount || 0) + '</td>';
       html += '<td style="padding: 8px 10px; color: var(--text-secondary);">' + (item.nextReview || '—') + '</td>';

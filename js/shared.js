@@ -181,6 +181,90 @@ window.wqPopup = {
 };
 
 // ==================== UTILITIES ====================
+function enrichWordWithSentence(word) {
+  if (!word || !word.h) return word;
+  const h = word.h.trim();
+  const cleanH = h.split('|')[0].trim();
+
+  let ex = (word.ex || word.e || word.example || '').split('\n')[0].trim();
+  let exp = (word.exp || word.example_pinyin || '').replace(/\//g, '').split('\n')[0].trim();
+  let exm = (word.exm || word.example_meaning || '').split('\n')[0].trim();
+  let tokens = Array.isArray(word.tokens) ? word.tokens : null;
+  let blank = word.blank || '';
+  let options = Array.isArray(word.options) ? word.options : null;
+
+  // If ex uses "/" as explicit word-split delimiter (e.g. "王老师 / 教 / 我们 / 汉语。")
+  if (ex && ex.indexOf('/') !== -1) {
+    const endMatch = ex.match(/[。？！.?!]+$/);
+    const endPunct = endMatch ? endMatch[0] : '。';
+    const rawParts = ex.replace(/[。？！.?!]+$/, '').split('/').map(s => s.replace(/^[，、；：,;\s]+|[，、；：,;\s]+$/g, '').trim()).filter(Boolean);
+    if (rawParts.length >= 2 && !tokens) {
+      tokens = rawParts;
+    }
+    ex = ex.replace(/\s*\/\s*/g, '');
+    if (!/[。？！.?!]$/.test(ex)) ex += endPunct;
+  }
+
+  // 1. Check user custom saved sentences in localStorage
+  if (!ex || !exm || !tokens) {
+    try {
+      const customSent = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
+      const cs = customSent[h] || customSent[cleanH];
+      if (cs) {
+        if (!ex && cs.ex) ex = cs.ex;
+        if (!exp && cs.exp) exp = cs.exp;
+        if (!exm && cs.exm) exm = cs.exm;
+        if (!tokens && Array.isArray(cs.tokens)) tokens = cs.tokens;
+        if (!blank && cs.blank) blank = cs.blank;
+        if (!options && Array.isArray(cs.options)) options = cs.options;
+      }
+    } catch (e) { }
+  }
+
+  // 2. Check WQ_SENTENCE_BANK (curated sentences for all 7 cloud custom decks)
+  if ((!ex || !exm || !tokens) && window.WQ_SENTENCE_BANK) {
+    const sb = window.WQ_SENTENCE_BANK[h] || window.WQ_SENTENCE_BANK[cleanH];
+    if (sb) {
+      if (!ex && sb.ex) ex = sb.ex;
+      if (!exp && sb.exp) exp = sb.exp;
+      if (!exm && sb.exm) exm = sb.exm;
+      if (!tokens && Array.isArray(sb.tokens)) tokens = sb.tokens;
+      if (!blank && sb.blank) blank = sb.blank;
+      if (!options && Array.isArray(sb.options)) options = sb.options;
+    }
+  }
+
+  // 3. Check DATA (HSK 1-6)
+  if ((!ex || !exm) && typeof DATA !== 'undefined') {
+    for (const lvl of Object.keys(DATA)) {
+      const list = DATA[lvl] || [];
+      const found = list.find(item => {
+        if (!item || !item.h) return false;
+        const variants = item.h.split('|').map(s => s.trim());
+        return variants.includes(h) || variants.includes(cleanH);
+      });
+      if (found) {
+        if (!ex && (found.ex || found.e)) ex = (found.ex || found.e).split('\n')[0].trim();
+        if (!exp && found.exp) exp = found.exp.replace(/\//g, '').split('\n')[0].trim();
+        if (!exm && found.exm) exm = found.exm.split('\n')[0].trim();
+        break;
+      }
+    }
+  }
+
+  const out = {
+    ...word,
+    ex: ex || '',
+    exp: exp || '',
+    exm: exm || ''
+  };
+  if (tokens && tokens.length) out.tokens = tokens;
+  if (blank) out.blank = blank;
+  if (options && options.length) out.options = options;
+  return out;
+}
+window.enrichWordWithSentence = enrichWordWithSentence;
+
 function deduplicateWords(arr) {
   if (!Array.isArray(arr)) return [];
   const seen = new Set();
@@ -214,7 +298,7 @@ if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !=
 
 function speak(t) {
   if (!t) return;
-  try { speechSynthesis.cancel(); } catch(e) {}
+  try { speechSynthesis.cancel(); } catch (e) { }
 
   const providers = [
     `https://dict.youdao.com/dictvoice?le=zh&audio=${encodeURIComponent(t)}`,
@@ -317,21 +401,57 @@ function speak(t) {
 })();
 
 // ==================== THEME INIT ====================
-(function initTheme() {
-  if (localStorage.getItem('wq_theme') === 'light') {
-    document.documentElement.classList.add('light-theme');
+function syncThemeUI() {
+  const isLight = document.documentElement.classList.contains('light-theme');
+  if (typeof window.updateThemeFavicon === 'function') {
+    window.updateThemeFavicon(isLight);
   }
-  // themeBtn is hidden in multi-page setup; settings.html handles toggle via settingsThemeBtn
   const themeBtn = document.getElementById('themeBtn');
   if (themeBtn) {
-    const isLight = document.documentElement.classList.contains('light-theme');
-    themeBtn.textContent = isLight ? '☀️' : '🌙';
-    themeBtn.onclick = () => {
-      const nowLight = document.documentElement.classList.toggle('light-theme');
-      themeBtn.textContent = nowLight ? '☀️' : '🌙';
-      localStorage.setItem('wq_theme', nowLight ? 'light' : 'dark');
-    };
+    themeBtn.setAttribute('aria-checked', isLight ? 'true' : 'false');
+    themeBtn.classList.toggle('is-light', isLight);
+    themeBtn.classList.toggle('is-dark', !isLight);
   }
+  const settingsThemeBtn = document.getElementById('settingsThemeBtn');
+  if (settingsThemeBtn) {
+    settingsThemeBtn.setAttribute('aria-checked', isLight ? 'true' : 'false');
+    settingsThemeBtn.classList.toggle('is-light', isLight);
+    settingsThemeBtn.classList.toggle('is-dark', !isLight);
+    const lbl = settingsThemeBtn.querySelector('.theme-switch-label');
+    if (lbl) {
+      lbl.textContent = isLight ? 'Tone Sáng (Trắng)' : 'Tone Tối (Dark)';
+    } else if (!settingsThemeBtn.querySelector('.theme-switch-track')) {
+      settingsThemeBtn.textContent = isLight ? '☀️ Chế độ sáng' : '🌙 Chế độ tối';
+    }
+  }
+}
+window.syncThemeUI = syncThemeUI;
+
+function toggleAppTheme() {
+  const nowLight = document.documentElement.classList.toggle('light-theme');
+  localStorage.setItem('wq_theme_mode', nowLight ? 'light' : 'dark');
+  localStorage.setItem('wq_theme', nowLight ? 'light' : 'dark');
+  syncThemeUI();
+  if (typeof renderWriter === 'function') {
+    renderWriter();
+  }
+  if (typeof showToast === 'function') {
+    showToast(nowLight ? '☀️ Đã chuyển sang giao diện Sáng' : '🌙 Đã chuyển sang giao diện Tối', 'info');
+  }
+  return nowLight;
+}
+window.toggleAppTheme = toggleAppTheme;
+
+(function initTheme() {
+  const savedTheme = localStorage.getItem('wq_theme_mode');
+  if (!savedTheme || savedTheme === 'light') {
+    document.documentElement.classList.add('light-theme');
+    localStorage.setItem('wq_theme_mode', 'light');
+    localStorage.setItem('wq_theme', 'light');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+  syncThemeUI();
 })();
 
 // ==================== API INTEGRATION ====================
@@ -456,7 +576,7 @@ function applyRange() {
     deck = src.slice(a, b);
   }
   // BUG FIX: deduplicate then shuffle on every deck load
-  deck = deduplicateWords(deck);
+  deck = deduplicateWords(deck).map(enrichWordWithSentence);
   shuffle(deck);
   fcIdx = 0; wIdx = 0; qScore = 0; qTotal = 0;
   quizPool = [];
@@ -476,6 +596,11 @@ function applyRange() {
   if (typeof renderWriterList === 'function') renderWriterList();
   if (typeof renderWriter === 'function') renderWriter();
   if (typeof newQuiz === 'function') newQuiz();
+  if (typeof newSentenceQuestion === 'function') {
+    sPool = [];
+    sAsked = [];
+    newSentenceQuestion();
+  }
   if (typeof renderFavIcon === 'function') renderFavIcon();
 }
 
@@ -501,8 +626,9 @@ function loadProgress() {
   // Nếu có pending deck từ cross-page nav, không overwrite deck
   var hasPending = localStorage.getItem('wq_pending_deck') &&
     (localStorage.getItem('wq_pending_mode') === 'quiz' ||
-     localStorage.getItem('wq_pending_mode') === 'both' ||
-     localStorage.getItem('wq_pending_mode') === 'flashcard');
+      localStorage.getItem('wq_pending_mode') === 'sentence' ||
+      localStorage.getItem('wq_pending_mode') === 'both' ||
+      localStorage.getItem('wq_pending_mode') === 'flashcard');
 
   const saved = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress'));
   if (saved) {
@@ -538,7 +664,7 @@ function loadProgress() {
 }
 
 // ==================== SYNC DATA HELPER ====================
-window.WQSyncData = function() {
+window.WQSyncData = function () {
   favorites = (window.WQStorage && WQStorage.getFavorites()) || JSON.parse(localStorage.getItem('wq_favorites')) || [];
   window.AppState.favorites = favorites;
   updateFavOptionText();
@@ -548,12 +674,12 @@ window.WQSyncData = function() {
 function removePinyinTones(str) {
   if (!str) return '';
   const toneMap = {
-    'ā':'a','á':'a','ǎ':'a','à':'a',
-    'ē':'e','é':'e','ě':'e','è':'e',
-    'ī':'i','í':'i','ǐ':'i','ì':'i',
-    'ō':'o','ó':'o','ǒ':'o','ò':'o',
-    'ū':'u','ú':'u','ǔ':'u','ù':'u',
-    'ü':'u','ǘ':'u','ǚ':'u','ǜ':'u'
+    'ā': 'a', 'á': 'a', 'ǎ': 'a', 'à': 'a',
+    'ē': 'e', 'é': 'e', 'ě': 'e', 'è': 'e',
+    'ī': 'i', 'í': 'i', 'ǐ': 'i', 'ì': 'i',
+    'ō': 'o', 'ó': 'o', 'ǒ': 'o', 'ò': 'o',
+    'ū': 'u', 'ú': 'u', 'ǔ': 'u', 'ù': 'u',
+    'ü': 'u', 'ǘ': 'u', 'ǚ': 'u', 'ǜ': 'u'
   };
   return str.toLowerCase().split('').map(char => toneMap[char] || char).join('')
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -672,8 +798,8 @@ function initSidebarNavigation() {
 
     document.addEventListener('click', (e) => {
       if (sidebar.classList.contains('active') &&
-          !sidebar.contains(e.target) &&
-          e.target !== menuBtn) {
+        !sidebar.contains(e.target) &&
+        e.target !== menuBtn) {
         sidebar.classList.remove('active');
       }
     });
@@ -690,6 +816,7 @@ function updateHeaderTitle() {
     '': 'Trang chủ',
     'flash.html': 'Flashcard',
     'quiz.html': 'Trắc nghiệm',
+    'sentence.html': 'Ghép câu',
     'write.html': 'Nét chữ',
     'stats.html': 'Thống kê',
     'favorites.html': 'Yêu thích',
@@ -701,7 +828,12 @@ function updateHeaderTitle() {
 
 // ==================== DOM CONTENT LOADED ====================
 document.addEventListener('DOMContentLoaded', () => {
-  // Theme is applied at parse time (IIFE above), nothing extra needed here
+  // Ensure theme UI & header toggle button are bound after layout.js inject()
+  syncThemeUI();
+  const themeBtn = document.getElementById('themeBtn');
+  if (themeBtn) {
+    themeBtn.onclick = () => toggleAppTheme();
+  }
 
   // Load voices for TTS
   loadVoices();
@@ -712,11 +844,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Update header title based on current page
   updateHeaderTitle();
 
-  // learnSelectorsWrapper: show only on flash.html, quiz.html, write.html
+  // learnSelectorsWrapper: show only on flash.html, quiz.html, write.html, sentence.html
   const learnSelectorsWrapper = document.getElementById('learnSelectorsWrapper');
   if (learnSelectorsWrapper) {
     const currentPage = location.pathname.split('/').pop() || 'index.html';
-    const learningPages = ['flash.html', 'quiz.html', 'write.html'];
+    const learningPages = ['flash.html', 'quiz.html', 'write.html', 'sentence.html'];
     learnSelectorsWrapper.style.display = learningPages.includes(currentPage) ? 'flex' : 'none';
   }
 
@@ -738,6 +870,11 @@ document.addEventListener('DOMContentLoaded', () => {
       quizAskedWords = [];
       if (typeof renderFlash === 'function') renderFlash();
       if (typeof newQuiz === 'function') newQuiz();
+      if (typeof newSentenceQuestion === 'function') {
+        sPool = [];
+        sAsked = [];
+        newSentenceQuestion();
+      }
       if (typeof renderWriterList === 'function') renderWriterList();
       if (typeof renderWriter === 'function') renderWriter();
       saveProgress();

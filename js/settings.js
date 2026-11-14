@@ -6,10 +6,8 @@
 // Reads current settings from localStorage and syncs the UI controls.
 function updateSettingsUI() {
   // --- Theme ---
-  var themeBtn = document.getElementById('settingsThemeBtn');
-  if (themeBtn) {
-    var isLight = document.documentElement.classList.contains('light-theme');
-    themeBtn.textContent = isLight ? '☀️ Chế độ sáng' : '🌙 Chế độ tối';
+  if (typeof window.syncThemeUI === 'function') {
+    window.syncThemeUI();
   }
 
   // --- Autoplay speed ---
@@ -29,19 +27,11 @@ function initSettingsEvents() {
   // --- Theme toggle ---
   var themeBtn = document.getElementById('settingsThemeBtn');
   if (themeBtn) {
-    themeBtn.addEventListener('click', function() {
-      var nowLight = document.documentElement.classList.toggle('light-theme');
-      themeBtn.textContent = nowLight ? '☀️ Chế độ sáng' : '🌙 Chế độ tối';
-      localStorage.setItem('wq_theme', nowLight ? 'light' : 'dark');
-
-      // Keep any visible themeBtn (header, hidden) in sync
-      var headerThemeBtn = document.getElementById('themeBtn');
-      if (headerThemeBtn) headerThemeBtn.textContent = nowLight ? '☀️' : '🌙';
-
-      if (typeof showToast === 'function') {
-        showToast(nowLight ? '☀️ Đã chuyển sang chế độ sáng' : '🌙 Đã chuyển sang chế độ tối', 'info');
+    themeBtn.onclick = function() {
+      if (typeof window.toggleAppTheme === 'function') {
+        window.toggleAppTheme();
       }
-    });
+    };
   }
 
   // --- Autoplay speed ---

@@ -37,7 +37,7 @@ export default {
 
     try {
       // ==================== VOCABULARY ENDPOINTS ====================
-      
+
       // GET /api/vocabulary/all - Lấy toàn bộ từ vựng theo từng level (cho frontend DATA object)
       if (path === '/api/vocabulary/all' && method === 'GET') {
         const { results } = await env.DB.prepare(`
@@ -46,7 +46,7 @@ export default {
           ORDER BY level, id
         `).all();
 
-        // Group by level, convert to frontend format {h, p, m, ex, exm, pos}
+        // Group by level, convert to frontend format {h, p, m, ex, exp, exm, pos}
         const data = {};
         for (const row of results) {
           const lvl = row.level.replace('HSK', 'HSK '); // HSK1 -> HSK 1
@@ -56,6 +56,7 @@ export default {
             p: row.pinyin,
             m: row.meaning,
             ex: row.example || '',
+            exp: row.example_pinyin || '',
             exm: row.example_meaning || '',
             pos: row.pos || '',
           });
@@ -89,7 +90,7 @@ export default {
         params.push(limit, offset);
 
         const { results } = await env.DB.prepare(query).bind(...params).all();
-        
+
         return jsonResponse({
           success: true,
           count: results.length,
@@ -144,7 +145,7 @@ export default {
       }
 
       // ==================== SEARCH ENDPOINT ====================
-      
+
       // GET /api/search?q=... - Tìm kiếm nhanh
       if (path === '/api/search' && method === 'GET') {
         const query = url.searchParams.get('q');
@@ -224,7 +225,7 @@ export default {
         const { results: userRecord } = await env.DB.prepare(
           'SELECT id FROM users WHERE username = ?'
         ).bind(user_id).all();
-        
+
         const numericUserId = userRecord[0].id;
 
         // Tạo deck
@@ -233,88 +234,150 @@ export default {
         ).bind(numericUserId, name).run();
 
         const deckId = deckResult.meta.last_row_id;
-        
+
         console.log('✅ Created deck:', deckId, 'for user:', numericUserId);
         console.log('📝 Inserting', words.length, 'words...');
 
         // Thêm từ vào deck
         for (let i = 0; i < words.length; i++) {
           const word = words[i];
-          console.log(`  Word ${i+1}:`, word);
+          console.log(`  Word ${i + 1}:`, word);
           await env.DB.prepare(
-            'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, sort_order) VALUES (?, ?, ?, ?, ?)'
-          ).bind(deckId, word.h || word.hanzi, word.p || word.pinyin, word.m || word.meaning, i).run();
-        }
-        
-        console.log('✅ Inserted', words.length, 'words into deck', deckId);
+          'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, example, example_pinyin, example_meaning, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+          ).bind(
+            deckId,
+            word.h || word.hanzi,
+            word.p || word.pinyin,
+            word.m || word.meaning,
+            word.ex || word.e || word.example || null,
+            word.exp || word.example_pinyin || null,
+            word.exm || word.example_meaning || null,
+            i
+          ).run();
+}
 
-        return jsonResponse({
-          success: true,
-          message: 'Deck created',
-          deck_id: deckId,
-        }, 201);
+console.log('✅ Inserted', words.length, 'words into deck', deckId);
+
+return jsonResponse({
+  success: true,
+  message: 'Deck created',
+  deck_id: deckId,
+}, 201);
       }
 
-      // GET /api/decks/:id - Lấy chi tiết 1 bộ từ
-      if (path.match(/^\/api\/decks\/\d+$/) && method === 'GET') {
-        const deckId = path.split('/').pop();
+// PUT /api/decks/:id - Cập nhật bộ từ tự tạo (tên và/hoặc danh sách từ)
+if (path.match(/^\/api\/decks\/\d+$/) && method === 'PUT') {
+  const deckId = path.split('/').pop();
+  const body = await request.json();
+  const { name, words } = body;
 
-        const { results: deck } = await env.DB.prepare(
-          'SELECT * FROM custom_decks WHERE id = ?'
-        ).bind(deckId).all();
+  const { results: deck } = await env.DB.prepare(
+    'SELECT * FROM custom_decks WHERE id = ?'
+  ).bind(deckId).all();
 
-        if (deck.length === 0) {
-          return errorResponse('Deck not found', 404);
-        }
+  if (deck.length === 0) {
+    return errorResponse('Deck not found', 404);
+  }
 
-        const { results: words } = await env.DB.prepare(
-          'SELECT * FROM custom_deck_words WHERE deck_id = ? ORDER BY sort_order'
-        ).bind(deckId).all();
+  if (name) {
+    await env.DB.prepare(
+      'UPDATE custom_decks SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).bind(name, deckId).run();
+  } else {
+    await env.DB.prepare(
+      'UPDATE custom_decks SET updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).bind(deckId).run();
+  }
 
-        return jsonResponse({
-          success: true,
-          data: {
-            ...deck[0],
-            words: words.map(w => ({
-              h: w.hanzi,
-              p: w.pinyin,
-              m: w.meaning,
-            })),
-          },
-        });
-      }
+  if (Array.isArray(words)) {
+    await env.DB.prepare('DELETE FROM custom_deck_words WHERE deck_id = ?').bind(deckId).run();
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      await env.DB.prepare(
+        'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, example, example_pinyin, example_meaning, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(
+        deckId,
+        word.h || word.hanzi,
+        word.p || word.pinyin,
+        word.m || word.meaning,
+        word.ex || word.e || word.example || null,
+        word.exp || word.example_pinyin || null,
+        word.exm || word.example_meaning || null,
+        i
+      ).run();
+    }
+  }
 
-      // DELETE /api/decks/:id - Xóa bộ từ
-      if (path.match(/^\/api\/decks\/\d+$/) && method === 'DELETE') {
-        const deckId = path.split('/').pop();
-        
-        await env.DB.prepare('DELETE FROM custom_decks WHERE id = ?').bind(deckId).run();
-        
-        return jsonResponse({ success: true, message: 'Deck deleted' });
-      }
+  return jsonResponse({
+    success: true,
+    message: 'Deck updated',
+    deck_id: Number(deckId),
+  });
+}
 
-      // ==================== HEALTH CHECK ====================
-      
-      if (path === '/api/health' || path === '/') {
-        return jsonResponse({
-          success: true,
-          message: '🇨🇳 WeiQuan Chinese API',
-          version: '1.0.0',
-          endpoints: {
-            vocabulary: '/api/vocabulary',
-            search: '/api/search?q=...',
-            levels: '/api/levels',
-            decks: '/api/decks',
-          },
-        });
-      }
+// GET /api/decks/:id - Lấy chi tiết 1 bộ từ
+if (path.match(/^\/api\/decks\/\d+$/) && method === 'GET') {
+  const deckId = path.split('/').pop();
 
-      // 404 Not Found
-      return errorResponse('Endpoint not found', 404);
+  const { results: deck } = await env.DB.prepare(
+    'SELECT * FROM custom_decks WHERE id = ?'
+  ).bind(deckId).all();
+
+  if (deck.length === 0) {
+    return errorResponse('Deck not found', 404);
+  }
+
+  const { results: words } = await env.DB.prepare(
+    'SELECT * FROM custom_deck_words WHERE deck_id = ? ORDER BY sort_order'
+  ).bind(deckId).all();
+
+  return jsonResponse({
+    success: true,
+    data: {
+      ...deck[0],
+      words: words.map(w => ({
+        h: w.hanzi,
+        p: w.pinyin,
+        m: w.meaning,
+        ex: w.example || '',
+        exp: w.example_pinyin || '',
+        exm: w.example_meaning || '',
+      })),
+    },
+  });
+}
+
+// DELETE /api/decks/:id - Xóa bộ từ
+if (path.match(/^\/api\/decks\/\d+$/) && method === 'DELETE') {
+  const deckId = path.split('/').pop();
+
+  await env.DB.prepare('DELETE FROM custom_decks WHERE id = ?').bind(deckId).run();
+
+  return jsonResponse({ success: true, message: 'Deck deleted' });
+}
+
+// ==================== HEALTH CHECK ====================
+
+if (path === '/api/health' || path === '/') {
+  return jsonResponse({
+    success: true,
+    message: '🇨🇳 WeiQuan Chinese API',
+    version: '1.0.0',
+    endpoints: {
+      vocabulary: '/api/vocabulary',
+      search: '/api/search?q=...',
+      levels: '/api/levels',
+      decks: '/api/decks',
+    },
+  });
+}
+
+// 404 Not Found
+return errorResponse('Endpoint not found', 404);
 
     } catch (error) {
-      console.error('API Error:', error);
-      return errorResponse(error.message || 'Internal server error', 500);
-    }
+  console.error('API Error:', error);
+  return errorResponse(error.message || 'Internal server error', 500);
+}
   },
 };

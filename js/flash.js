@@ -45,7 +45,7 @@ function renderFlash() {
     return;
   }
 
-  const w = deck[fcIdx];
+  const w = typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(deck[fcIdx]) : deck[fcIdx];
   recordLearnedWord(w.h);
 
   if (fcCard) {
@@ -56,7 +56,8 @@ function renderFlash() {
   fcHanzi.textContent = w.h;
   fcPinyin.textContent = w.p;
   fcMean.textContent = w.m;
-  fcEx.textContent = w.ex || w.e || '';
+  const exStr = w.ex || w.e || '';
+  fcEx.textContent = exStr ? (w.exm ? exStr + ' — ' + w.exm : exStr) : '';
   if (fcCount) fcCount.textContent = (fcIdx + 1) + ' / ' + deck.length;
   if (fcLevel) fcLevel.textContent = level === 'favorites' ? 'Yêu thích' : level;
   renderFavIcon();
@@ -177,7 +178,7 @@ function runAutoplayCycle() {
   if (autoplayProgress) autoplayProgress.style.width = '0%';
   let cardFlipped = false;
 
-  _apInterval = setInterval(function() {
+  _apInterval = setInterval(function () {
     timeSpent += updateInterval;
     var pct = (timeSpent / speed) * 100;
     if (autoplayProgress) autoplayProgress.style.width = pct + '%';
@@ -206,222 +207,233 @@ function checkFlashcardComplete() {
   if (!deck || !deck.length) return;
 
   if (pendingMode === 'both' && fcIdx === deck.length - 1) {
-    setTimeout(function() {
-      var confirmed = confirm('\uD83C\uDF89 B\u1ea1n \u0111\u00e3 xem h\u1ebft Flashcard!\n\n\u270f\ufe0f B\u1ea1n c\u00f3 mu\u1ed1n ti\u1ebfp t\u1ee5c l\u00e0m Tr\u1eafc nghi\u1ec7m kh\u00f4ng?');
-      if (confirmed) {
-        var deckName = window.AppState.level || 'Custom';
-        localStorage.setItem('wq_pending_deck', JSON.stringify({ name: deckName, words: deck }));
-        localStorage.setItem('wq_pending_mode', 'quiz');
-        showToast('\u270f\ufe0f Chuy\u1ec3n sang Tr\u1eafc nghi\u1ec7m!', 'info');
-        window.location.href = '../pages/quiz.html';
-      } else {
-        localStorage.removeItem('wq_pending_mode');
-      }
-    }, 500);
-  }
-}
-window.checkFlashcardComplete = checkFlashcardComplete;
-
-// ---------- DOMContentLoaded ----------
-document.addEventListener('DOMContentLoaded', function() {
-  // 1. Read wq_pending_deck — load custom deck into AppState
-  var pendingDeckStr = localStorage.getItem('wq_pending_deck');
-  if (pendingDeckStr) {
-    localStorage.removeItem('wq_pending_deck');
-    // NOTE: keep wq_pending_mode for checkFlashcardComplete to read later
-    try {
-      var pendingDeck = JSON.parse(pendingDeckStr);
-      window.AppState.level = pendingDeck.name || 'Custom';
-      var newDeck = pendingDeck.words ? pendingDeck.words.slice() : [];
-      if (typeof deduplicateWords === 'function') newDeck = deduplicateWords(newDeck);
-      if (typeof shuffle === 'function') shuffle(newDeck);
-      window.AppState.deck = newDeck;
-      window.AppState.fcIdx = 0;
-    } catch(e) {
-      console.error('wq_pending_deck parse error:', e);
-    }
-  }
-
-  // 2. Read wq_pending_level — navigate here from home "Học ngay"
-  var pendingLevel = localStorage.getItem('wq_pending_level');
-  if (pendingLevel) {
-    localStorage.removeItem('wq_pending_level');
-    window.AppState.level = pendingLevel;
-    // levelSel may not exist yet or shared.js initUIWithData will set it; sync here too
-    var lvlSelEl = document.getElementById('levelSel');
-    if (lvlSelEl) lvlSelEl.value = pendingLevel;
-  }
-
-  // 3. Read wq_navigate_word — search navigation
-  var navigateWordStr = localStorage.getItem('wq_navigate_word');
-  if (navigateWordStr) {
-    localStorage.removeItem('wq_navigate_word');
-    try {
-      var navWord = JSON.parse(navigateWordStr);
-      // Find the word in current deck and jump to it
-      var curDeck = window.AppState.deck;
-      if (curDeck && curDeck.length) {
-        var navIdx = curDeck.findIndex(function(w) { return w.h === navWord.h; });
-        if (navIdx !== -1) {
-          window.AppState.fcIdx = navIdx;
+      setTimeout(async function () {
+        var confirmed = window.wqPopup
+          ? await window.wqPopup.confirm({
+            icon: '🎉',
+            title: 'Hoàn thành Flashcard!',
+            message: 'Bạn đã xem hết Flashcard của bộ từ này.\nBạn có muốn tiếp tục sang phần ✏️ Trắc nghiệm (và 🧩 Ghép câu) không?',
+            confirmText: '✏️ Làm Trắc nghiệm',
+            cancelText: 'Ở lại đây'
+          })
+          : confirm('\uD83C\uDF89 B\u1ea1n \u0111\u00e3 xem h\u1ebft Flashcard!\n\n\u270f\ufe0f B\u1ea1n c\u00f3 mu\u1ed1n ti\u1ebfp t\u1ee5c l\u00e0m Tr\u1eafc nghi\u1ec7m kh\u00f4ng?');
+        if (confirmed) {
+          var deckName = window.AppState.level || 'Custom';
+          localStorage.setItem('wq_pending_deck', JSON.stringify({ name: deckName, words: deck }));
+          localStorage.setItem('wq_pending_mode', 'both');
+          showToast('\u270f\ufe0f Chuy\u1ec3n sang Tr\u1eafc nghi\u1ec7m!', 'info');
+          window.location.href = '../pages/quiz.html';
+        } else {
+          localStorage.removeItem('wq_pending_mode');
         }
+      }, 500);
+    }
+}
+  window.checkFlashcardComplete = checkFlashcardComplete;
+
+  // ---------- DOMContentLoaded ----------
+  document.addEventListener('DOMContentLoaded', function () {
+    // 1. Read wq_pending_deck — load custom deck into AppState
+    var pendingDeckStr = localStorage.getItem('wq_pending_deck');
+    if (pendingDeckStr) {
+      localStorage.removeItem('wq_pending_deck');
+      // NOTE: keep wq_pending_mode for checkFlashcardComplete to read later
+      try {
+        var pendingDeck = JSON.parse(pendingDeckStr);
+        window.AppState.level = pendingDeck.name || 'Custom';
+        var newDeck = pendingDeck.words ? pendingDeck.words.slice() : [];
+        if (typeof window.enrichWordWithSentence === 'function') {
+          newDeck = newDeck.map(function (w) { return window.enrichWordWithSentence(w); });
+        }
+        if (typeof deduplicateWords === 'function') newDeck = deduplicateWords(newDeck);
+        if (typeof shuffle === 'function') shuffle(newDeck);
+        window.AppState.deck = newDeck;
+        window.AppState.fcIdx = 0;
+      } catch (e) {
+        console.error('wq_pending_deck parse error:', e);
       }
-    } catch(e) {
-      console.error('wq_navigate_word parse error:', e);
-    }
-  }
-
-  // 4. Read wq_autoplay_speed from localStorage; set #autoplaySpeed select
-  var savedSpeed = localStorage.getItem('wq_autoplay_speed');
-  if (savedSpeed) {
-    var autoplaySpeedEl = document.getElementById('autoplaySpeed');
-    if (autoplaySpeedEl) autoplaySpeedEl.value = savedSpeed;
-  }
-
-  // 5. Initial render
-  renderFlash();
-  renderFavIcon();
-
-  // ---------- Card flip on click ----------
-  var fcCard = document.getElementById('fcCard');
-  if (fcCard) {
-    // Parallax mousemove (desktop pointer devices only)
-    if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
-      fcCard.addEventListener('mousemove', function(e) {
-        if (fcCard.classList.contains('flip')) return;
-        var rect = fcCard.getBoundingClientRect();
-        var x = e.clientX - rect.left;
-        var y = e.clientY - rect.top;
-        var centerX = rect.width / 2;
-        var centerY = rect.height / 2;
-        var rotY = ((x - centerX) / centerX) * 15;
-        var rotX = -((y - centerY) / centerY) * 15;
-        fcCard.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
-      });
-      fcCard.addEventListener('mouseleave', function() {
-        if (fcCard.classList.contains('flip')) return;
-        fcCard.style.transform = 'rotateY(0deg)';
-      });
     }
 
-    // Click to flip
-    fcCard.addEventListener('click', function(e) {
-      if (e.target.closest && e.target.closest('.icon-btn')) return;
-      stopAutoplay();
-      fcCard.classList.toggle('flip');
-      fcCard.style.transform = fcCard.classList.contains('flip') ? 'rotateY(180deg)' : 'rotateY(0deg)';
-    });
-
-    // Swipe gesture
-    var touchStartX = 0;
-    var touchEndX = 0;
-
-    fcCard.addEventListener('touchstart', function(e) {
-      touchStartX = e.changedTouches[0].screenX;
-    }, { passive: true });
-
-    fcCard.addEventListener('touchend', function(e) {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    }, { passive: true });
-  }
-
-  function handleSwipe() {
-    var swipeThreshold = 50;
-    var fcNext = document.getElementById('fcNext');
-    var fcPrev = document.getElementById('fcPrev');
-    if (touchStartX - touchEndX > swipeThreshold) {
-      if (fcNext) fcNext.click();
-    } else if (touchEndX - touchStartX > swipeThreshold) {
-      if (fcPrev) fcPrev.click();
+    // 2. Read wq_pending_level — navigate here from home "Học ngay"
+    var pendingLevel = localStorage.getItem('wq_pending_level');
+    if (pendingLevel) {
+      localStorage.removeItem('wq_pending_level');
+      window.AppState.level = pendingLevel;
+      // levelSel may not exist yet or shared.js initUIWithData will set it; sync here too
+      var lvlSelEl = document.getElementById('levelSel');
+      if (lvlSelEl) lvlSelEl.value = pendingLevel;
     }
-  }
 
-  // ---------- Navigation buttons ----------
-  var fcNext = document.getElementById('fcNext');
-  if (fcNext) {
-    fcNext.addEventListener('click', function(e) {
-      if (e) e.stopPropagation();
-      stopAutoplay();
-      var deck = window.AppState.deck;
-      if (!deck || !deck.length) return;
-      window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
-      renderFlash();
-      if (typeof saveProgress === 'function') saveProgress();
-      checkFlashcardComplete();
-    });
-  }
+    // 3. Read wq_navigate_word — search navigation
+    var navigateWordStr = localStorage.getItem('wq_navigate_word');
+    if (navigateWordStr) {
+      localStorage.removeItem('wq_navigate_word');
+      try {
+        var navWord = JSON.parse(navigateWordStr);
+        // Find the word in current deck and jump to it
+        var curDeck = window.AppState.deck;
+        if (curDeck && curDeck.length) {
+          var navIdx = curDeck.findIndex(function (w) { return w.h === navWord.h; });
+          if (navIdx !== -1) {
+            window.AppState.fcIdx = navIdx;
+          }
+        }
+      } catch (e) {
+        console.error('wq_navigate_word parse error:', e);
+      }
+    }
 
-  var fcPrev = document.getElementById('fcPrev');
-  if (fcPrev) {
-    fcPrev.addEventListener('click', function(e) {
-      if (e) e.stopPropagation();
-      stopAutoplay();
-      var deck = window.AppState.deck;
-      if (!deck || !deck.length) return;
-      window.AppState.fcIdx = (window.AppState.fcIdx - 1 + deck.length) % deck.length;
-      renderFlash();
-      if (typeof saveProgress === 'function') saveProgress();
-    });
-  }
+    // 4. Read wq_autoplay_speed from localStorage; set #autoplaySpeed select
+    var savedSpeed = localStorage.getItem('wq_autoplay_speed');
+    if (savedSpeed) {
+      var autoplaySpeedEl = document.getElementById('autoplaySpeed');
+      if (autoplaySpeedEl) autoplaySpeedEl.value = savedSpeed;
+    }
 
-  var fcAudio = document.getElementById('fcAudio');
-  if (fcAudio) {
-    fcAudio.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var deck = window.AppState.deck;
-      if (!deck || !deck.length) return;
-      speak(deck[window.AppState.fcIdx].h);
-    });
-  }
+    // 5. Initial render
+    renderFlash();
+    renderFavIcon();
 
-  var fcFav = document.getElementById('fcFav');
-  if (fcFav) {
-    fcFav.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var deck = window.AppState.deck;
-      if (!deck || !deck.length) return;
-      toggleFavorite(deck[window.AppState.fcIdx]);
-    });
-  }
+    // ---------- Card flip on click ----------
+    var fcCard = document.getElementById('fcCard');
+    if (fcCard) {
+      // Parallax mousemove (desktop pointer devices only)
+      if (window.matchMedia && window.matchMedia('(pointer: fine)').matches) {
+        fcCard.addEventListener('mousemove', function (e) {
+          if (fcCard.classList.contains('flip')) return;
+          var rect = fcCard.getBoundingClientRect();
+          var x = e.clientX - rect.left;
+          var y = e.clientY - rect.top;
+          var centerX = rect.width / 2;
+          var centerY = rect.height / 2;
+          var rotY = ((x - centerX) / centerX) * 15;
+          var rotX = -((y - centerY) / centerY) * 15;
+          fcCard.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
+        });
+        fcCard.addEventListener('mouseleave', function () {
+          if (fcCard.classList.contains('flip')) return;
+          fcCard.style.transform = 'rotateY(0deg)';
+        });
+      }
 
-  // ---------- Autoplay button ----------
-  var autoplayBtn = document.getElementById('autoplayBtn');
-  if (autoplayBtn) {
-    autoplayBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      if (_apRunning) {
+      // Click to flip
+      fcCard.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('.icon-btn')) return;
         stopAutoplay();
-      } else {
-        startAutoplay();
+        fcCard.classList.toggle('flip');
+        fcCard.style.transform = fcCard.classList.contains('flip') ? 'rotateY(180deg)' : 'rotateY(0deg)';
+      });
+
+      // Swipe gesture
+      var touchStartX = 0;
+      var touchEndX = 0;
+
+      fcCard.addEventListener('touchstart', function (e) {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      fcCard.addEventListener('touchend', function (e) {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+      }, { passive: true });
+    }
+
+    function handleSwipe() {
+      var swipeThreshold = 50;
+      var fcNext = document.getElementById('fcNext');
+      var fcPrev = document.getElementById('fcPrev');
+      if (touchStartX - touchEndX > swipeThreshold) {
+        if (fcNext) fcNext.click();
+      } else if (touchEndX - touchStartX > swipeThreshold) {
+        if (fcPrev) fcPrev.click();
+      }
+    }
+
+    // ---------- Navigation buttons ----------
+    var fcNext = document.getElementById('fcNext');
+    if (fcNext) {
+      fcNext.addEventListener('click', function (e) {
+        if (e) e.stopPropagation();
+        stopAutoplay();
+        var deck = window.AppState.deck;
+        if (!deck || !deck.length) return;
+        window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
+        renderFlash();
+        if (typeof saveProgress === 'function') saveProgress();
+        checkFlashcardComplete();
+      });
+    }
+
+    var fcPrev = document.getElementById('fcPrev');
+    if (fcPrev) {
+      fcPrev.addEventListener('click', function (e) {
+        if (e) e.stopPropagation();
+        stopAutoplay();
+        var deck = window.AppState.deck;
+        if (!deck || !deck.length) return;
+        window.AppState.fcIdx = (window.AppState.fcIdx - 1 + deck.length) % deck.length;
+        renderFlash();
+        if (typeof saveProgress === 'function') saveProgress();
+      });
+    }
+
+    var fcAudio = document.getElementById('fcAudio');
+    if (fcAudio) {
+      fcAudio.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var deck = window.AppState.deck;
+        if (!deck || !deck.length) return;
+        speak(deck[window.AppState.fcIdx].h);
+      });
+    }
+
+    var fcFav = document.getElementById('fcFav');
+    if (fcFav) {
+      fcFav.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var deck = window.AppState.deck;
+        if (!deck || !deck.length) return;
+        toggleFavorite(deck[window.AppState.fcIdx]);
+      });
+    }
+
+    // ---------- Autoplay button ----------
+    var autoplayBtn = document.getElementById('autoplayBtn');
+    if (autoplayBtn) {
+      autoplayBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (_apRunning) {
+          stopAutoplay();
+        } else {
+          startAutoplay();
+        }
+      });
+    }
+
+    // Show autoplay speed selector when autoplay is clicked / always visible
+    var autoplaySpeedEl = document.getElementById('autoplaySpeed');
+    if (autoplaySpeedEl) {
+      autoplaySpeedEl.addEventListener('change', function () {
+        localStorage.setItem('wq_autoplay_speed', autoplaySpeedEl.value);
+      });
+      // Restore saved speed on init (second read — covers the case where shared.js ran first)
+      var sv = localStorage.getItem('wq_autoplay_speed');
+      if (sv) autoplaySpeedEl.value = sv;
+    }
+
+    // ---------- Keyboard handler ----------
+    document.addEventListener('keydown', function (e) {
+      // On the flash page the whole page is the flashcard — no section guard needed
+      if (e.key === 'ArrowRight') {
+        var fcNextEl = document.getElementById('fcNext');
+        if (fcNextEl) fcNextEl.click();
+      } else if (e.key === 'ArrowLeft') {
+        var fcPrevEl = document.getElementById('fcPrev');
+        if (fcPrevEl) fcPrevEl.click();
+      } else if (e.key === ' ') {
+        e.preventDefault();
+        var card = document.getElementById('fcCard');
+        if (card) card.click();
       }
     });
-  }
-
-  // Show autoplay speed selector when autoplay is clicked / always visible
-  var autoplaySpeedEl = document.getElementById('autoplaySpeed');
-  if (autoplaySpeedEl) {
-    autoplaySpeedEl.addEventListener('change', function() {
-      localStorage.setItem('wq_autoplay_speed', autoplaySpeedEl.value);
-    });
-    // Restore saved speed on init (second read — covers the case where shared.js ran first)
-    var sv = localStorage.getItem('wq_autoplay_speed');
-    if (sv) autoplaySpeedEl.value = sv;
-  }
-
-  // ---------- Keyboard handler ----------
-  document.addEventListener('keydown', function(e) {
-    // On the flash page the whole page is the flashcard — no section guard needed
-    if (e.key === 'ArrowRight') {
-      var fcNextEl = document.getElementById('fcNext');
-      if (fcNextEl) fcNextEl.click();
-    } else if (e.key === 'ArrowLeft') {
-      var fcPrevEl = document.getElementById('fcPrev');
-      if (fcPrevEl) fcPrevEl.click();
-    } else if (e.key === ' ') {
-      e.preventDefault();
-      var card = document.getElementById('fcCard');
-      if (card) card.click();
-    }
   });
-});
