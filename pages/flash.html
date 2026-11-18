@@ -1,91 +1,123 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WenQing Chinese — Flashcard</title>
-<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-<link rel="stylesheet" href="../styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WenQing Chinese — Flashcard</title>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <link rel="stylesheet" href="../styles.css">
 </head>
+
 <body>
 
-<div id="page-main-content">
-  <section class="app-section active panel" id="flash">
-    <div class="statbar"><span id="fcCount"></span><span id="fcLevel"></span></div>
-    <div class="autoplay-bar">
-      <button class="btn" id="autoplayBtn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 12px;">
-        <span id="autoplayBtnText">▶️ Tự động chạy</span>
-      </button>
-      <div class="autoplay-speed" style="display: none;">
-        <label for="autoplaySpeed">Thời gian:</label>
-        <select id="autoplaySpeed">
-          <option value="3000">3 giây</option>
-          <option value="5000" selected>5 giây</option>
-          <option value="8000">8 giây</option>
-        </select>
-      </div>
-      <div id="autoplayProgress" class="autoplay-progress"></div>
-    </div>
-    <div class="fc-wrap">
-      <div class="fc" id="fcCard">
-        <div class="fc-face fc-front">
-          <div class="fc-hanzi" id="fcHanzi"></div>
-          <div class="fc-pinyin" id="fcPinyin"></div>
-          <div class="fc-hint">Bấm để lật thẻ</div>
+  <div id="page-main-content">
+    <section class="app-section active panel" id="flash">
+      <div class="statbar"><span id="fcCount"></span><span id="fcLevel"></span></div>
+      <div class="autoplay-bar">
+        <button class="btn" id="autoplayBtn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 12px;">
+          <span id="autoplayBtnText">Tự động phát</span>
+        </button>
+        <div class="autoplay-speed" style="display: none;">
+          <label for="autoplaySpeed">Thời gian:</label>
+          <select id="autoplaySpeed">
+            <option value="3000">3 giây</option>
+            <option value="5000" selected>5 giây</option>
+            <option value="8000">8 giây</option>
+          </select>
         </div>
-        <div class="fc-face fc-back">
-          <div class="fc-mean" id="fcMean"></div>
-          <div class="fc-ex" id="fcEx"></div>
-          <div class="fc-hint">Bấm để lật lại</div>
+        <div id="autoplayProgress" class="autoplay-progress"></div>
+      </div>
+      <div class="fc-wrap">
+        <div class="fc" id="fcCard">
+          <div class="fc-face fc-front">
+            <div class="fc-hanzi" id="fcHanzi"></div>
+            <div class="fc-pinyin" id="fcPinyin"></div>
+            <div class="fc-hint">Bấm để lật thẻ</div>
+          </div>
+          <div class="fc-face fc-back">
+            <div class="fc-mean" id="fcMean"></div>
+            <div class="fc-ex" id="fcEx"></div>
+            <div class="fc-hint">Bấm để lật lại</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="fc-nav">
-      <button class="icon-btn" id="fcPrev" aria-label="Previous">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </button>
-      <button class="icon-btn" id="fcFav" aria-label="Favorite">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-      </button>
-      <button class="icon-btn" id="fcAudio" aria-label="Speak">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-      </button>
-      <button class="icon-btn" id="fcNext" aria-label="Next">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-      </button>
-    </div>
-  </section>
-</div>
-
-<div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="Hồ sơ cá nhân">
-  <div class="modal-content glass-card" style="max-width:480px; width:90%; max-height:85vh; overflow-y:auto; border-radius:24px; padding:28px; position:relative;">
-    <button id="closeProfileModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;" aria-label="Đóng">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <h2 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-primary); margin-bottom:20px;">👤 Hồ sơ cá nhân</h2>
-    <div id="profileModalBody"></div>
+      <div class="fc-nav">
+        <button class="icon-btn" id="fcPrev" aria-label="Previous">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button class="icon-btn" id="fcFav" aria-label="Favorite">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+        </button>
+        <button class="icon-btn" id="fcAudio" aria-label="Speak">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+        <button class="icon-btn" id="fcNext" aria-label="Next">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </section>
   </div>
-</div>
 
-<div id="wqPopupOverlay" class="wq-popup-overlay" style="display: none;">
-  <div class="wq-popup-card">
-    <div id="wqPopupIcon" class="wq-popup-icon">💡</div>
-    <h3 id="wqPopupTitle" class="wq-popup-title">Thông báo</h3>
-    <div id="wqPopupMessage" class="wq-popup-message"></div>
-    <input type="text" id="wqPopupInput" class="auth-input wq-popup-input" style="display: none;" autocomplete="off" />
-    <div id="wqPopupActions" class="wq-popup-actions"></div>
+  <div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="Hồ sơ cá nhân">
+    <div class="modal-content glass-card"
+      style="max-width:480px; width:90%; max-height:85vh; overflow-y:auto; border-radius:16px; padding:28px; position:relative;">
+      <button id="closeProfileModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;"
+        aria-label="Đóng">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <h2
+        style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:600; color:var(--text-primary); margin-bottom:20px;">
+        Hồ sơ cá nhân</h2>
+      <div id="profileModalBody"></div>
+    </div>
   </div>
-</div>
 
-<div id="toastContainer"></div>
+  <div id="wqPopupOverlay" class="wq-popup-overlay" style="display: none;">
+    <div class="wq-popup-card">
+      <div id="wqPopupIcon" class="wq-popup-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg></div>
+      <h3 id="wqPopupTitle" class="wq-popup-title">Thông báo</h3>
+      <div id="wqPopupMessage" class="wq-popup-message"></div>
+      <input type="text" id="wqPopupInput" class="auth-input wq-popup-input" style="display: none;"
+        autocomplete="off" />
+      <div id="wqPopupActions" class="wq-popup-actions"></div>
+    </div>
+  </div>
 
-<script src="../data/data.js"></script>
-<script src="../js/layout.js"></script>
-<script src="../storage.js" defer></script>
-<script src="../api-client.js" defer></script>
-<script src="../profile.js" defer></script>
-<script src="../js/shared.js" defer></script>
-<script src="../js/flash.js" defer></script>
+  <div id="toastContainer"></div>
+
+  <script src="../data/data.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../storage.js" defer></script>
+  <script src="../api-client.js" defer></script>
+  <script src="../profile.js" defer></script>
+  <script src="../js/shared.js" defer></script>
+  <script src="../js/flash.js" defer></script>
 
 </body>
+
 </html>

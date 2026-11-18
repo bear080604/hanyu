@@ -1,97 +1,130 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WenQing Chinese — Trắc nghiệm</title>
-<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-<link rel="stylesheet" href="../styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WenQing Chinese — Trắc nghiệm</title>
+  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+  <link rel="stylesheet" href="../styles.css">
 </head>
+
 <body>
 
-<div id="page-main-content">
-  <section class="app-section active panel" id="quiz">
-    <div id="quizDeckSelection" class="quiz-deck-selection">
-      <div class="welcome-banner" style="margin-bottom: 28px;">
-        <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">✏️ Chọn bộ từ để luyện tập</h2>
-        <p style="font-size: 0.95rem; color: var(--text-secondary);">Chọn cấp độ HSK hoặc bộ từ tự tạo để bắt đầu làm trắc nghiệm</p>
-      </div>
-      <h3 class="section-subtitle">Chương trình HSK</h3>
-      <div class="hsk-grid" id="quizHskGrid"></div>
-      <div id="quizCustomDecksSection" style="margin-top: 36px;">
-        <h3 class="section-subtitle">📚 Bộ từ tự tạo</h3>
-        <div id="quizCustomDecksList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
-          <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">Chưa có bộ từ tự tạo</div>
+  <div id="page-main-content">
+    <section class="app-section active panel" id="quiz">
+      <div id="quizDeckSelection" class="quiz-deck-selection">
+        <div class="welcome-banner" style="margin-bottom: 28px;">
+          <h2 style="font-size: 1.35rem; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Chọn bộ từ
+            luyện tập</h2>
+          <p style="font-size: 0.95rem; color: var(--text-secondary);">Chọn cấp độ HSK hoặc bộ từ tự tạo để bắt đầu làm
+            trắc nghiệm</p>
+        </div>
+        <h3 class="section-subtitle">Chương trình HSK</h3>
+        <div class="hsk-grid" id="quizHskGrid"></div>
+        <div id="quizCustomDecksSection" style="margin-top: 36px;">
+          <h3 class="section-subtitle">Bộ từ tự tạo</h3>
+          <div id="quizCustomDecksList"
+            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
+            <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">Chưa có bộ từ
+              tự tạo</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div id="quizGameSection" style="display: none;">
-      <div class="statbar">
-        <button class="btn" id="qBackBtn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          Quay lại
-        </button>
-        <span id="qScore">Điểm: 0 / 0</span>
-        <span id="qLevel"></span>
-      </div>
-      <div class="quiz-modes">
-        <button class="quiz-mode-btn active" data-mode="hanzi-to-mean">Hán ➔ Nghĩa</button>
-        <button class="quiz-mode-btn" data-mode="hanzi-only-to-mean">漢字 ➔ Nghĩa</button>
-        <button class="quiz-mode-btn" data-mode="mean-to-hanzi">Nghĩa ➔ Hán</button>
-        <button class="quiz-mode-btn" data-mode="mean-to-hanzi-pure">Nghĩa ➔ 漢字</button>
-        <button class="quiz-mode-btn" data-mode="hanzi-to-pinyin">Hán ➔ Pinyin</button>
-        <button class="quiz-mode-btn" data-mode="audio-to-mean">👂 Nghe ➔ Nghĩa</button>
-      </div>
-      <div class="q-box">
-        <div class="q-prompt">
-          <div class="q-hanzi" id="qHanzi"></div>
-          <div class="q-pinyin" id="qPinyin"></div>
-          <button class="icon-btn" id="qAudio" aria-label="Speak" style="margin-top:12px; display:inline-flex;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+      <div id="quizGameSection" style="display: none;">
+        <div class="statbar">
+            <button class="btn" id="qBackBtn"
+              style="padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+              Quay lại
+            </button>
+            <span id="qScore">Điểm: 0 / 0</span>
+            <span id="qLevel"></span>
+        </div>
+        <div class="quiz-modes">
+          <button class="quiz-mode-btn active" data-mode="hanzi-to-mean">Hán ➔ Nghĩa</button>
+          <button class="quiz-mode-btn" data-mode="hanzi-only-to-mean">漢字 ➔ Nghĩa</button>
+          <button class="quiz-mode-btn" data-mode="mean-to-hanzi">Nghĩa ➔ Hán</button>
+          <button class="quiz-mode-btn" data-mode="mean-to-hanzi-pure">Nghĩa ➔ 漢字</button>
+          <button class="quiz-mode-btn" data-mode="hanzi-to-pinyin">Hán ➔ Pinyin</button>
+          <button class="quiz-mode-btn" data-mode="audio-to-mean">Nghe ➔ Nghĩa</button>
+        </div>
+        <div class="q-box">
+          <div class="q-prompt">
+            <div class="q-hanzi" id="qHanzi"></div>
+            <div class="q-pinyin" id="qPinyin"></div>
+            <button class="icon-btn" id="qAudio" aria-label="Speak" style="margin-top:12px; display:inline-flex;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="q-opts" id="qOpts"></div>
+          <div class="q-result" id="qResult"></div>
+        </div>
+        <div class="fc-nav">
+          <button class="btn" id="qNext">
+            Câu tiếp
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
           </button>
         </div>
-        <div class="q-opts" id="qOpts"></div>
-        <div class="q-result" id="qResult"></div>
       </div>
-      <div class="fc-nav">
-        <button class="btn" id="qNext">
-          Câu tiếp
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-        </button>
-      </div>
+    </section>
+  </div>
+
+  <div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="Hồ sơ cá nhân">
+    <div class="modal-content glass-card"
+      style="max-width:480px; width:90%; max-height:85vh; overflow-y:auto; border-radius:16px; padding:28px; position:relative;">
+      <button id="closeProfileModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;"
+        aria-label="Đóng">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <h2
+        style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:600; color:var(--text-primary); margin-bottom:20px;">
+        Hồ sơ cá nhân</h2>
+      <div id="profileModalBody"></div>
     </div>
-  </section>
-</div>
-
-<div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="Hồ sơ cá nhân">
-  <div class="modal-content glass-card" style="max-width:480px; width:90%; max-height:85vh; overflow-y:auto; border-radius:24px; padding:28px; position:relative;">
-    <button id="closeProfileModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;" aria-label="Đóng">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <h2 style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text-primary); margin-bottom:20px;">👤 Hồ sơ cá nhân</h2>
-    <div id="profileModalBody"></div>
   </div>
-</div>
 
-<div id="wqPopupOverlay" class="wq-popup-overlay" style="display: none;">
-  <div class="wq-popup-card">
-    <div id="wqPopupIcon" class="wq-popup-icon">💡</div>
-    <h3 id="wqPopupTitle" class="wq-popup-title">Thông báo</h3>
-    <div id="wqPopupMessage" class="wq-popup-message"></div>
-    <input type="text" id="wqPopupInput" class="auth-input wq-popup-input" style="display: none;" autocomplete="off" />
-    <div id="wqPopupActions" class="wq-popup-actions"></div>
+  <div id="wqPopupOverlay" class="wq-popup-overlay" style="display: none;">
+    <div class="wq-popup-card">
+      <div id="wqPopupIcon" class="wq-popup-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg></div>
+      <h3 id="wqPopupTitle" class="wq-popup-title">Thông báo</h3>
+      <div id="wqPopupMessage" class="wq-popup-message"></div>
+      <input type="text" id="wqPopupInput" class="auth-input wq-popup-input" style="display: none;"
+        autocomplete="off" />
+      <div id="wqPopupActions" class="wq-popup-actions"></div>
+    </div>
   </div>
-</div>
 
-<div id="toastContainer"></div>
+  <div id="toastContainer"></div>
 
-<script src="../data/data.js"></script>
-<script src="../js/layout.js"></script>
-<script src="../storage.js" defer></script>
-<script src="../api-client.js" defer></script>
-<script src="../profile.js" defer></script>
-<script src="../js/shared.js" defer></script>
-<script src="../js/quiz.js" defer></script>
+  <script src="../data/data.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../storage.js" defer></script>
+  <script src="../api-client.js" defer></script>
+  <script src="../profile.js" defer></script>
+  <script src="../js/shared.js" defer></script>
+  <script src="../js/quiz.js" defer></script>
 
 </body>
+
 </html>

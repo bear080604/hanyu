@@ -161,6 +161,7 @@ let autoplayTimer = null;
 let quizMode = localStorage.getItem('wq_quiz_mode') || 'hanzi-to-mean';
 let quizPool = []; // Pool từ chưa hỏi trong quiz session
 let quizAskedWords = []; // Các từ đã hỏi trong session
+let isShuffled = false; // Trạng thái shuffle hiện tại
 
 const $ = id => document.getElementById(id);
 
@@ -517,7 +518,8 @@ function applyRange(){
   if(v==='all' || level === 'favorites'){deck=src.slice();}
   else{const [a,b]=v.split('-').map(Number);deck=src.slice(a,b);}
   deck = deduplicateWords(deck);
-  shuffle(deck);
+  // Giữ thứ tự shuffle nếu đang bật
+  if (isShuffled) shuffle(deck);
   fcIdx=0;wIdx=0;qScore=0;qTotal=0;
   
   // Reset quiz pool khi thay đổi deck
@@ -530,13 +532,24 @@ function applyRange(){
 
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}}
 $('shuffleBtn').onclick=()=>{
-  shuffle(deck);
+  isShuffled = !isShuffled;
+  const btn = $('shuffleBtn');
+  if (isShuffled) {
+    shuffle(deck);
+    btn.style.background = 'var(--accent-gradient)';
+    btn.style.color = '#fff';
+    btn.title = 'Đang xáo trộn — bấm để tắt';
+  } else {
+    // Khôi phục thứ tự gốc
+    applyRange();
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.title = 'Xáo trộn thứ tự';
+    return; // applyRange đã gọi render rồi
+  }
   fcIdx=0;
-  
-  // Reset quiz pool khi shuffle
   quizPool = [];
   quizAskedWords = [];
-  
   renderFlash();
   newQuiz();
   renderWriterList();
@@ -2283,19 +2296,19 @@ window.addEventListener('click', (e) => {
       item.innerHTML = `
         <div class="custom-deck-info">
           <div class="custom-deck-title">
-            📚 ${deck.name}
+            <span class="deck-name">${deck.name}</span>
             <span class="custom-deck-badge">${deck.wordCount} từ</span>
           </div>
           <div class="custom-deck-meta">
-            <span>📅 ${deck.createdAt}</span>
+            <span>${deck.createdAt}</span>
           </div>
         </div>
         <div class="custom-deck-actions">
-          <button class="btn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem;" data-action="load">
-            📥 Tải lại
+          <button class="btn custom-deck-btn load" data-action="load">
+            Tải lại
           </button>
-          <button class="btn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; background: var(--accent-gradient); color: #fff; border: none;" data-action="study">
-            🎯 Học
+          <button class="btn custom-deck-btn study" data-action="study">
+            Học
           </button>
           <button class="custom-word-btn delete" style="width: 36px; height: 36px;" data-action="delete">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>

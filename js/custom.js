@@ -140,17 +140,17 @@
       item.innerHTML =
         '<div class="custom-deck-info">' +
         '<div class="custom-deck-title">' +
-        '📚 ' + deckObj.name +
+        '<span class="deck-name">' + deckObj.name + '</span>' +
         '<span class="custom-deck-badge">' + (deckObj.wordCount || (deckObj.words ? deckObj.words.length : 0)) + ' từ</span>' +
         '</div>' +
         '<div class="custom-deck-meta">' +
-        '<span>📅 ' + deckObj.createdAt + '</span>' +
+        '<span>' + deckObj.createdAt + '</span>' +
         '</div>' +
         '</div>' +
         '<div class="custom-deck-actions">' +
-        '<button class="btn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem;" data-action="load">📥 Tải lại</button>' +
-        '<button class="btn" style="padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; background: var(--accent-gradient); color: #fff; border: none;" data-action="study">🎯 Học</button>' +
-        '<button class="custom-word-btn delete" style="width: 36px; height: 36px;" data-action="delete" aria-label="Xóa bộ từ">' +
+        '<button class="btn custom-deck-btn load" data-action="load">Tải lại</button>' +
+        '<button class="btn custom-deck-btn study" data-action="study">Học</button>' +
+        '<button class="custom-word-btn delete" data-action="delete" aria-label="Xóa bộ từ">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>' +
         '</button>' +
         '</div>';
