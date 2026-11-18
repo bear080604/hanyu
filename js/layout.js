@@ -17,7 +17,7 @@
   if (typeof caches !== 'undefined' && caches.keys) {
     caches.keys().then(function (keys) {
       keys.forEach(function (k) {
-        if (k === 'wenqing-v1' || k === 'wenqing-v2' || k === 'wenqing-v3' || k === 'wenqing-v4' || k === 'wenqing-v5' || k === 'wenqing-v6' || k === 'wenqing-v7') caches.delete(k);
+        if (k !== 'wenqing-v10') caches.delete(k);
       });
     }).catch(function () { });
   }

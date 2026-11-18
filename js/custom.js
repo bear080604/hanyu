@@ -650,6 +650,13 @@
       subtitle.textContent = (deckObj.name || 'Bộ từ tự tạo') + ' • ' + count + ' từ vựng';
     }
 
+    // Reset cuộn lên đỉnh để luôn thấy lựa chọn đầu tiên (Flashcard)
+    modal.scrollTop = 0;
+    var mc = modal.querySelector('.modal-content');
+    if (mc) mc.scrollTop = 0;
+    var mb = modal.querySelector('.modal-body');
+    if (mb) mb.scrollTop = 0;
+
     modal.classList.add('active');
 
     // Replace buttons to remove stale listeners
