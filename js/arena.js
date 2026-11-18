@@ -98,8 +98,13 @@
     return String(h).split('|')[0].trim();
   }
 
-  // ==================== CROSS-TAB REALTIME CHANNEL ====================
+  function normalizePin(pin) {
+    return String(pin || '').replace(/\D/g, '').trim();
+  }
+
+  // ==================== CROSS-TAB REALTIME CHANNEL (DEDUPLICATED) ====================
   var _arenaChannel = null;
+  var _processedMsgIds = {};
   if (typeof BroadcastChannel !== 'undefined') {
     try {
       _arenaChannel = new BroadcastChannel('hanyu_arena_channel');
@@ -107,7 +112,9 @@
   }
 
   function broadcastMsg(action, payload) {
-    var msg = { action: action, payload: payload || {}, timestamp: Date.now() };
+    var msgId = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    _processedMsgIds[msgId] = true;
+    var msg = { msgId: msgId, action: action, payload: payload || {}, timestamp: Date.now() };
     if (_arenaChannel) {
       try { _arenaChannel.postMessage(msg); } catch (e) { }
     }
@@ -138,6 +145,12 @@
     myPlayerId: 'host_self',
     hostConnectedToRoom: false,
     urlRoomParams: null,
+    // State phụ trợ trên màn hình Player để kiểm tra đúng/sai tức thì không sợ trễ đồng bộ
+    playerCurrentQuestion: null,
+    playerLastChoice: -1,
+    playerLocalScore: 0,
+    playerLocalStreak: 0,
+    queuedPlayerAnswers: [],
     playerProfile: {
       name: 'Bạn',
       avatar: '🐼'
@@ -172,7 +185,6 @@
     if (target) {
       target.style.display = 'block';
     }
-    // Ẩn thanh chuyển tab Chủ phòng / Người chơi khi đang ở trong trận đấu để tránh bấm nhầm mất trận
     var roleTabs = document.getElementById('arenaRoleTabs');
     if (roleTabs) {
       var inActiveMatch = (viewId === 'hostGameView' || viewId === 'hostLeaderboardView' || viewId === 'hostPodiumView' || viewId === 'playerGameView');
@@ -188,7 +200,6 @@
     setupCrossTabSync();
     checkUrlParams();
 
-    // Nếu DATA tải thêm từ API sau vài trăm ms, cập nhật lại danh sách bộ từ
     setTimeout(function () {
       if (gameState.status === 'config') {
         populateDeckOptions();
@@ -201,7 +212,6 @@
     var savedAvatar = localStorage.getItem('wq_arena_player_avatar') || '🐼';
     gameState.playerProfile.name = savedName;
     gameState.playerProfile.avatar = savedAvatar;
-
     syncProfileInputs();
   }
 
@@ -245,7 +255,6 @@
     var previousVal = select.value;
     select.innerHTML = '';
 
-    // 1. Kiểm tra nếu vừa bấm chuyển sang từ trang Tự tạo (wq_pending_deck)
     var hasPendingCustom = false;
     try {
       var pendingStr = localStorage.getItem('wq_pending_deck');
@@ -261,7 +270,6 @@
       }
     } catch (e) { }
 
-    // 2. Các cấp độ HSK từ DATA
     if (typeof DATA !== 'undefined') {
       Object.keys(DATA).forEach(function (lvl) {
         if (lvl === 'custom') return;
@@ -275,7 +283,6 @@
       });
     }
 
-    // 3. Các bộ từ tự tạo đã lưu
     try {
       var customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
       if (Array.isArray(customDecks) && customDecks.length > 0) {
@@ -296,7 +303,6 @@
       }
     } catch (e) { }
 
-    // 4. Từ vựng Yêu thích
     try {
       var favs = JSON.parse(localStorage.getItem('wq_favorites')) || [];
       if (Array.isArray(favs) && favs.length >= 4) {
@@ -320,7 +326,7 @@
     var pinParam = urlParams.get('pin');
     if (pinParam) {
       gameState.urlRoomParams = {
-        pin: pinParam.replace(/\D/g, ''),
+        pin: normalizePin(pinParam),
         gm: urlParams.get('gm') || 'speed',
         d: urlParams.get('d') || 'HSK 1',
         q: parseInt(urlParams.get('q') || '10', 10) || 10,
@@ -413,6 +419,7 @@
       return false;
     }
 
+    gameState.role = 'host';
     gameState.deckValue = deckVal;
     gameState.deckWords = words;
     gameState.deckName = (deckSelect && deckSelect.options[deckSelect.selectedIndex])
@@ -424,10 +431,10 @@
       ? Math.min(10, parseInt(timeSelect ? timeSelect.value : '8', 10) || 8)
       : (parseInt(timeSelect ? timeSelect.value : '15', 10) || 15);
 
-    gameState.pin = customPin || String(Math.floor(100000 + Math.random() * 900000));
+    gameState.pin = normalizePin(customPin || String(Math.floor(100000 + Math.random() * 900000)));
     gameState.myPlayerId = 'host_self';
+    gameState.queuedPlayerAnswers = [];
 
-    // Luôn thêm người chơi hiện tại vào danh sách đấu thủ để có thể bấm chọn trực tiếp
     gameState.players = [{
       id: 'host_self',
       name: gameState.playerProfile.name || 'Bạn',
@@ -449,7 +456,6 @@
   // ==================== CHƠI NGAY (SOLO + BẠN HỌC ẢO) ====================
   function startQuickPlay() {
     if (!prepareMatchConfig()) return;
-    // Tự động thêm 3 bạn học ảo thông minh
     for (var i = 0; i < 3; i++) {
       addMockBot(true);
     }
@@ -465,6 +471,7 @@
     showView('hostLobbyView');
     SFX.pop();
 
+    saveLiveRoomSnapshot();
     broadcastMsg('room_created', {
       pin: gameState.pin,
       gameMode: gameState.gameMode,
@@ -474,6 +481,25 @@
       timePerQuestion: gameState.timePerQuestion,
       questionType: gameState.questionType
     });
+  }
+
+  function saveLiveRoomSnapshot() {
+    try {
+      var q = gameState.questions[gameState.currentQuestionIndex] || null;
+      localStorage.setItem('wq_arena_live_room', JSON.stringify({
+        pin: gameState.pin,
+        status: gameState.status,
+        gameMode: gameState.gameMode,
+        deckValue: gameState.deckValue,
+        deckName: gameState.deckName,
+        totalQuestions: gameState.totalQuestions,
+        timePerQuestion: gameState.timePerQuestion,
+        questionType: gameState.questionType,
+        currentQuestionIndex: gameState.currentQuestionIndex,
+        questionStartTime: gameState.questionStartTime,
+        currentQuestion: q
+      }));
+    } catch (e) { }
   }
 
   // ==================== SINH BỘ CÂU HỎI ĐỒNG BỘ THEO SEED ====================
@@ -500,7 +526,6 @@
         qType = types[Math.floor(rng() * types.length)];
       }
 
-      // Lấy 3 đáp án nhiễu từ các từ khác trong bộ
       var distractors = words.filter(function (other) { return cleanHanzi(other.h) !== cleanH; });
       shuffleWithRng(distractors, rng);
       var wrongPicks = distractors.slice(0, 3);
@@ -534,7 +559,6 @@
           promptTypeDesc = 'Đấu Trường Điền Câu ➔ Chọn từ điền vào [ ___ ]';
           correctAnswerText = cleanH + (w.p ? ' (' + w.p + ')' : '');
         } else {
-          // Fallback nếu từ chưa có câu chứa từ khóa
           promptText = '「 ___ 」 — ' + (w.m || '');
           promptSub = exSentence ? (exSentence + (exMeaning ? ' (' + exMeaning + ')' : '')) : ('Pinyin: ' + (w.p || ''));
           promptTypeDesc = 'Chọn Hán tự khớp với nghĩa và ngữ cảnh';
@@ -608,7 +632,7 @@
 
   function formatPinCode(pin) {
     if (!pin) return '------';
-    var s = String(pin);
+    var s = normalizePin(pin);
     return s.slice(0, 3) + ' ' + s.slice(3);
   }
 
@@ -619,7 +643,6 @@
 
     var joinUrl = buildRoomShareUrl();
 
-    // Ưu tiên 1: Thư viện QRCode.js (cdnjs qrcodejs)
     if (typeof window.QRCode === 'function') {
       try {
         new window.QRCode(qrBox, {
@@ -636,7 +659,6 @@
       }
     }
 
-    // Ưu tiên 2: Fallback ảnh QR sắc nét từ API chuẩn quốc tế
     var img = document.createElement('img');
     img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=6&data=' + encodeURIComponent(joinUrl);
     img.alt = 'QR Code Phòng ' + gameState.pin;
@@ -672,7 +694,7 @@
       chip.className = 'player-chip' + (p.isBot ? ' bot' : '') + (p.isSelf ? ' self' : '');
       chip.innerHTML =
         '<span class="player-chip-avatar">' + p.avatar + '</span>' +
-        '<span class="player-chip-name">' + p.name + (p.isSelf ? ' (Bạn)' : '') + '</span>' +
+        '<span class="player-chip-name">' + p.name + (p.isSelf ? ' (Chủ phòng)' : '') + '</span>' +
         (p.isBot ? '<button type="button" class="chip-remove-btn" data-id="' + p.id + '" title="Xóa bot">×</button>' : '');
       listEl.appendChild(chip);
     });
@@ -722,7 +744,7 @@
   function startGame() {
     if (gameState.players.length === 0) return;
 
-    // Nếu người chơi bấm Bắt đầu ngay từ Lobby mà mới chỉ có 1 mình, tự thêm 2 bạn học ảo để đua bảng xếp hạng thú vị hơn
+    // Nếu chỉ có 1 mình chủ phòng (chưa có bạn bè hay bot), tự thêm 2 bạn học ảo để thi đấu
     if (gameState.players.length === 1 && gameState.players[0].isSelf) {
       addMockBot(true);
       addMockBot(true);
@@ -730,6 +752,7 @@
 
     gameState.currentQuestionIndex = 0;
     gameState.status = 'countdown';
+    gameState.queuedPlayerAnswers = [];
 
     var overlay = document.getElementById('startCountdownOverlay');
     var numEl = document.getElementById('countdownNumber');
@@ -745,6 +768,11 @@
     if (numEl) numEl.textContent = count;
     SFX.urgentTick();
 
+    broadcastMsg('game_start', {
+      pin: gameState.pin,
+      totalQuestions: gameState.totalQuestions
+    });
+
     var cdTimer = setInterval(function () {
       count--;
       if (count > 0) {
@@ -755,16 +783,17 @@
         if (overlay) overlay.style.display = 'none';
         startQuestionRound();
       }
-    }, 850);
-
-    broadcastMsg('game_start', {
-      pin: gameState.pin,
-      totalQuestions: gameState.totalQuestions
-    });
+    }, 650);
   }
 
   function updateSelfTopbarBadge() {
+    // Nếu có người chơi từ tab Player, ưu tiên hiển thị điểm của người chơi dẫn đầu hoặc chủ phòng
     var me = gameState.players.find(function (p) { return p.id === gameState.myPlayerId; });
+    var remotePlayers = gameState.players.filter(function (p) { return !p.isBot && !p.isSelf; });
+    if (remotePlayers.length > 0 && me && me.score === 0 && remotePlayers[0].score > 0) {
+      me = remotePlayers[0];
+    }
+
     var statsBadge = document.getElementById('hostMyStatsBadge');
     var livesBadge = document.getElementById('hostLivesBadge');
 
@@ -825,7 +854,7 @@
     if (timerSecEl) timerSecEl.textContent = gameState.timerRemaining;
     if (timerBadge) timerBadge.classList.remove('urgent');
     if (answeredCountEl) answeredCountEl.textContent = '0';
-    if (totalPlayingEl) totalPlayingEl.textContent = getActivePlayers().length;
+    if (totalPlayingEl) totalPlayingEl.textContent = getRequiredPlayersForRound().length;
     if (hostFooter) hostFooter.style.display = 'none';
     if (progressBar) progressBar.style.width = '100%';
 
@@ -841,9 +870,8 @@
       }
     }
 
-    // Tự động phát âm tiếng Trung
     if (q.hanziAudio && typeof speak === 'function') {
-      setTimeout(function () { speak(q.hanziAudio); }, 250);
+      setTimeout(function () { speak(q.hanziAudio); }, 200);
     }
 
     clearInterval(gameState.timerInterval);
@@ -868,16 +896,28 @@
     }, 1000);
 
     runBotSimulation(q);
+    saveLiveRoomSnapshot();
 
     broadcastMsg('new_question', {
       pin: gameState.pin,
       questionIndex: qIdx,
       totalQuestions: gameState.totalQuestions,
       time: gameState.timePerQuestion,
+      questionStartTime: gameState.questionStartTime,
       prompt: q.prompt,
       subPrompt: q.subPrompt,
-      options: q.options
+      options: q.options,
+      correctIndex: q.correctIndex
     });
+
+    // Nếu có câu trả lời của Player gửi đến sớm trong lúc chuyển giao, xử lý ngay!
+    if (gameState.queuedPlayerAnswers && gameState.queuedPlayerAnswers.length > 0) {
+      var queued = gameState.queuedPlayerAnswers.slice();
+      gameState.queuedPlayerAnswers = [];
+      queued.forEach(function (qa) {
+        recordPlayerAnswer(qa.playerId, qa.answerIndex);
+      });
+    }
   }
 
   function getActivePlayers() {
@@ -885,6 +925,16 @@
       return gameState.players.filter(function (p) { return p.lives > 0; });
     }
     return gameState.players;
+  }
+
+  // Nếu có người chơi từ tab Player / điện thoại đã vào phòng, không bắt buộc màn hình máy chiếu (host_self) phải bấm!
+  function getRequiredPlayersForRound() {
+    var active = getActivePlayers();
+    var hasRemoteHuman = active.some(function (p) { return !p.isBot && !p.isSelf; });
+    if (hasRemoteHuman) {
+      return active.filter(function (p) { return !p.isSelf || p.lastAnswerIndex !== -1; });
+    }
+    return active;
   }
 
   function clearBotTimers() {
@@ -911,6 +961,22 @@
     });
   }
 
+  function finishRemainingBotsQuickly() {
+    clearBotTimers();
+    var q = gameState.questions[gameState.currentQuestionIndex];
+    if (!q) return;
+    setTimeout(function () {
+      if (gameState.status !== 'question') return;
+      getActivePlayers().forEach(function (p) {
+        if (p.isBot && p.lastAnswerIndex === -1) {
+          var isCorrect = Math.random() < (p.acc || 0.78);
+          var idx = isCorrect ? q.correctIndex : (q.correctIndex + 1 + Math.floor(Math.random() * 3)) % 4;
+          recordPlayerAnswer(p.id, idx);
+        }
+      });
+    }, 280);
+  }
+
   // Khi người chơi chính (Host/Self) bấm chọn 1 trong 4 đáp án trên màn hình chính
   function handleHostCardClick(choiceIndex) {
     if (gameState.status !== 'question') return;
@@ -926,38 +992,23 @@
 
     SFX.pop();
     recordPlayerAnswer(me.id, choiceIndex);
-
-    // Nếu người chơi thật đã chọn xong mà chỉ còn các bot chưa chọn -> Cho các bot hoàn thành nhanh sau 350ms để không phải đợi lâu!
-    var remainingHumans = getActivePlayers().filter(function (p) {
-      return !p.isBot && p.lastAnswerIndex === -1;
-    });
-    if (remainingHumans.length === 0 && gameState.status === 'question') {
-      clearBotTimers();
-      var q = gameState.questions[gameState.currentQuestionIndex];
-      setTimeout(function () {
-        if (gameState.status !== 'question') return;
-        getActivePlayers().forEach(function (p) {
-          if (p.isBot && p.lastAnswerIndex === -1) {
-            var isCorrect = Math.random() < (p.acc || 0.78);
-            var idx = isCorrect ? q.correctIndex : (q.correctIndex + 1 + Math.floor(Math.random() * 3)) % 4;
-            recordPlayerAnswer(p.id, idx);
-          }
-        });
-      }, 350);
-    }
   }
 
   function recordPlayerAnswer(playerId, answerIndex) {
+    if (gameState.status !== 'question') return;
     var p = gameState.players.find(function (x) { return x.id === playerId; });
-    if (!p || p.lastAnswerIndex !== -1 || gameState.status !== 'question') return;
+    if (!p || p.lastAnswerIndex !== -1) return;
 
-    p.lastAnswerIndex = answerIndex;
+    var numericChoice = parseInt(answerIndex, 10);
+    if (isNaN(numericChoice)) return;
+
+    p.lastAnswerIndex = numericChoice;
     p.answeredAt = Date.now();
 
     var q = gameState.questions[gameState.currentQuestionIndex];
-    if (answerIndex === q.correctIndex) {
+    if (q && numericChoice === Number(q.correctIndex)) {
       var timeUsed = Math.max(0.2, (p.answeredAt - gameState.questionStartTime) / 1000);
-      var speedRatio = Math.max(0.15, 1 - (timeUsed / gameState.timePerQuestion) * 0.55);
+      var speedRatio = Math.max(0.2, 1 - (timeUsed / gameState.timePerQuestion) * 0.5);
       var basePoints = Math.round(1000 * speedRatio);
       var streakBonus = Math.min(300, p.streak * 60);
       var totalPoints = basePoints + streakBonus;
@@ -970,15 +1021,24 @@
       p.lastPointsEarned = 0;
     }
 
-    var activeList = getActivePlayers();
-    var answeredCount = activeList.filter(function (x) { return x.lastAnswerIndex !== -1; }).length;
+    var requiredList = getRequiredPlayersForRound();
+    var answeredCount = requiredList.filter(function (x) { return x.lastAnswerIndex !== -1; }).length;
     var answeredEl = document.getElementById('answeredCount');
+    var totalPlayingEl = document.getElementById('totalPlayersPlaying');
     if (answeredEl) answeredEl.textContent = answeredCount;
+    if (totalPlayingEl) totalPlayingEl.textContent = requiredList.length;
 
-    if (answeredCount >= activeList.length) {
+    // Kiểm tra xem tất cả người chơi thật (cần thiết trong vòng này) đã trả lời xong chưa
+    var requiredHumans = requiredList.filter(function (x) { return !x.isBot; });
+    var allRequiredHumansAnswered = requiredHumans.length > 0 && requiredHumans.every(function (x) { return x.lastAnswerIndex !== -1; });
+
+    if (answeredCount >= requiredList.length) {
       clearInterval(gameState.timerInterval);
       clearBotTimers();
       endQuestionRound();
+    } else if (allRequiredHumansAnswered) {
+      // Người thật đã trả lời xong -> Cho các Bot còn lại hoàn thành ngay trong 0.28s!
+      finishRemainingBotsQuickly();
     }
   }
 
@@ -990,11 +1050,13 @@
     clearBotTimers();
 
     var q = gameState.questions[gameState.currentQuestionIndex];
-    var correctIdx = q.correctIndex;
+    if (!q) return;
+    var correctIdx = Number(q.correctIndex);
 
-    // Trong chế độ Sinh tồn (Survival), ai trả lời sai hoặc chưa trả lời bị trừ 1 tim
+    // Trong chế độ Sinh tồn (Survival), chỉ trừ tim những người thực sự tham gia vòng này
+    var requiredList = getRequiredPlayersForRound();
     if (gameState.gameMode === 'survival') {
-      gameState.players.forEach(function (p) {
+      requiredList.forEach(function (p) {
         if (p.lives > 0 && p.lastAnswerIndex !== correctIdx) {
           p.lives = Math.max(0, p.lives - 1);
           p.streak = 0;
@@ -1014,7 +1076,14 @@
       }
     }
 
+    // Chọn người chơi đại diện để hiển thị thông báo trên màn hình Host:
+    // Nếu chủ phòng không bấm nhưng có người chơi từ tab Player đã bấm, hiển thị kết quả của người chơi đó!
     var me = gameState.players.find(function (p) { return p.id === gameState.myPlayerId; });
+    var remoteHumans = gameState.players.filter(function (p) { return !p.isBot && !p.isSelf; });
+    if (me && me.lastAnswerIndex === -1 && remoteHumans.length > 0) {
+      me = remoteHumans[0];
+    }
+
     var feedbackBadge = document.getElementById('roundFeedbackBadge');
     var summaryEl = document.getElementById('roundSummaryText');
     var hostFooter = document.getElementById('gameHostFooter');
@@ -1025,13 +1094,13 @@
         SFX.correct();
         if (feedbackBadge) {
           feedbackBadge.className = 'round-feedback-badge is-correct';
-          feedbackBadge.textContent = '🎉 Chính xác! +' + (me.lastPointsEarned || 0) + ' điểm' + (me.streak >= 2 ? (' (Chuỗi 🔥 ' + me.streak + ')') : '');
+          feedbackBadge.textContent = '🎉 ' + (me.isSelf ? 'Chính xác!' : (me.name + ' trả lời đúng!')) + ' +' + (me.lastPointsEarned || 0) + ' điểm' + (me.streak >= 2 ? (' (Chuỗi 🔥 ' + me.streak + ')') : '');
         }
       } else {
         SFX.wrong();
         if (feedbackBadge) {
           feedbackBadge.className = 'round-feedback-badge is-wrong';
-          feedbackBadge.textContent = me.lastAnswerIndex === -1 ? '⏰ Hết giờ!' : '✗ Chưa chính xác!';
+          feedbackBadge.textContent = me.lastAnswerIndex === -1 ? '⏰ Hết giờ!' : ('✗ ' + (me.isSelf ? 'Chưa chính xác!' : (me.name + ' chọn chưa đúng!')));
         }
       }
     } else {
@@ -1056,14 +1125,17 @@
 
     if (hostFooter) hostFooter.style.display = 'flex';
 
-    // Đọc phát âm từ chuẩn khi mở đáp án
     if (q.wordAudio && typeof speak === 'function') {
       speak(q.wordAudio);
     }
 
-    var sortedScores = gameState.players.slice().sort(function (a, b) { return b.score - a.score; });
+    // Nếu có người chơi từ tab khác mà host_self không bấm câu nào, ẩn host_self khỏi bảng xếp hạng để tránh hiện 0đ thừa
+    var activeParticipants = getParticipantsForRanking();
+    var sortedScores = activeParticipants.slice().sort(function (a, b) { return b.score - a.score; });
+
     broadcastMsg('question_result', {
       pin: gameState.pin,
+      questionIndex: gameState.currentQuestionIndex,
       correctIndex: correctIdx,
       correctText: q.options[correctIdx],
       scores: sortedScores.map(function (p, idx) {
@@ -1073,10 +1145,21 @@
           score: p.score,
           streak: p.streak,
           rank: idx + 1,
+          lastAnswerIndex: p.lastAnswerIndex,
           lastEarned: p.lastPointsEarned || 0
         };
       })
     });
+  }
+
+  function getParticipantsForRanking() {
+    var hasRemoteHuman = gameState.players.some(function (p) { return !p.isBot && !p.isSelf; });
+    if (hasRemoteHuman) {
+      return gameState.players.filter(function (p) {
+        return !p.isSelf || p.score > 0 || p.lastAnswerIndex !== -1;
+      });
+    }
+    return gameState.players;
   }
 
   // ==================== BẢNG XẾP HẠNG ====================
@@ -1084,7 +1167,7 @@
     gameState.status = 'leaderboard';
     showView('hostLeaderboardView');
 
-    var sorted = gameState.players.slice().sort(function (a, b) {
+    var sorted = getParticipantsForRanking().slice().sort(function (a, b) {
       return b.score - a.score;
     });
 
@@ -1143,7 +1226,7 @@
     gameState.status = 'podium';
     showView('hostPodiumView');
 
-    var sorted = gameState.players.slice().sort(function (a, b) {
+    var sorted = getParticipantsForRanking().slice().sort(function (a, b) {
       return b.score - a.score;
     });
 
@@ -1175,11 +1258,9 @@
     if (n3) n3.textContent = p3.name + (p3.isSelf ? ' (Bạn)' : '');
     if (s3) s3.textContent = p3.score.toLocaleString() + ' đ';
 
-    var myRank = sorted.findIndex(function (p) { return p.id === gameState.myPlayerId; }) + 1;
     var subText = document.getElementById('podiumSubtitleText');
-    if (subText && myRank > 0) {
-      var me = sorted[myRank - 1];
-      subText.textContent = 'Bạn đạt Hạng #' + myRank + ' chung cuộc với ' + me.score.toLocaleString() + ' điểm!';
+    if (subText && sorted[0]) {
+      subText.textContent = 'Quán quân: ' + sorted[0].avatar + ' ' + sorted[0].name + ' với ' + sorted[0].score.toLocaleString() + ' điểm!';
     }
 
     SFX.fanfare();
@@ -1204,7 +1285,7 @@
   function playerJoin() {
     var pinInput = document.getElementById('playerInputPin');
     var nameInput = document.getElementById('playerInputName');
-    var pin = (pinInput ? pinInput.value : '').replace(/\D/g, '').trim();
+    var pin = normalizePin(pinInput ? pinInput.value : '');
     var name = (nameInput ? nameInput.value : '').trim();
 
     if (!pin || pin.length < 4) {
@@ -1217,9 +1298,13 @@
     }
 
     savePlayerProfile(name, gameState.playerProfile.avatar);
+    gameState.role = 'player';
     gameState.pin = pin;
     gameState.myPlayerId = 'player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
     gameState.hostConnectedToRoom = false;
+    gameState.playerLastChoice = -1;
+    gameState.playerLocalScore = 0;
+    gameState.playerLocalStreak = 0;
 
     var avatarEl = document.getElementById('playerWaitingAvatar');
     var nameEl = document.getElementById('playerWaitingName');
@@ -1231,7 +1316,6 @@
     showView('playerLobbyView');
     SFX.pop();
 
-    // Gửi tín hiệu tham gia tới Host tab (nếu đang mở trên cùng máy)
     broadcastMsg('player_join', {
       id: gameState.myPlayerId,
       name: name,
@@ -1240,8 +1324,6 @@
     });
   }
 
-  // Khi người chơi quét mã QR trên điện thoại rời (không cùng trình duyệt với máy chiếu)
-  // Bấm nút này sẽ khởi chạy trực tiếp bộ đề đồng bộ theo mã PIN ngay trên điện thoại!
   function startStandalonePhoneMatch() {
     var params = gameState.urlRoomParams || {
       pin: gameState.pin || '123456',
@@ -1264,7 +1346,7 @@
     gameState.questionType = params.qt || 'hanzi_to_mean';
     gameState.totalQuestions = Math.min(params.q || 10, gameState.deckWords.length);
     gameState.timePerQuestion = params.t || 15;
-    gameState.pin = params.pin || gameState.pin;
+    gameState.pin = normalizePin(params.pin || gameState.pin);
     gameState.myPlayerId = 'host_self';
 
     gameState.players = [{
@@ -1289,7 +1371,54 @@
     startGame();
   }
 
+  function showPlayerPadsForQuestion(qData) {
+    gameState.playerCurrentQuestion = qData;
+    gameState.playerLastChoice = -1;
+
+    showView('playerGameView');
+    var padGrid = document.getElementById('playerPadGrid');
+    var submittedState = document.getElementById('playerSubmittedState');
+    var resultOverlay = document.getElementById('playerResultOverlay');
+    var miniPrompt = document.getElementById('playerMiniPrompt');
+
+    if (miniPrompt && qData && qData.prompt) {
+      miniPrompt.textContent = 'Câu ' + ((qData.questionIndex || 0) + 1) + ': ' + qData.prompt;
+    }
+    if (qData && Array.isArray(qData.options)) {
+      for (var i = 0; i < 4; i++) {
+        var lbl = document.getElementById('playerPadLabel' + i);
+        if (lbl) lbl.textContent = qData.options[i] || '';
+      }
+    }
+
+    if (padGrid) padGrid.style.display = 'grid';
+    if (submittedState) submittedState.style.display = 'none';
+    if (resultOverlay) resultOverlay.style.display = 'none';
+  }
+
   function playerSubmitAnswer(choiceIndex) {
+    var numericChoice = parseInt(choiceIndex, 10);
+    if (isNaN(numericChoice) || gameState.playerLastChoice !== -1) return;
+
+    // Nếu câu hỏi chưa được đồng bộ qua BroadcastChannel, đọc ngay từ snapshot localStorage
+    if (!gameState.playerCurrentQuestion) {
+      try {
+        var snap = JSON.parse(localStorage.getItem('wq_arena_live_room') || '{}');
+        if (snap && normalizePin(snap.pin) === normalizePin(gameState.pin) && snap.currentQuestion) {
+          gameState.playerCurrentQuestion = {
+            questionIndex: snap.currentQuestionIndex || 0,
+            prompt: snap.currentQuestion.prompt,
+            options: snap.currentQuestion.options,
+            correctIndex: snap.currentQuestion.correctIndex,
+            questionStartTime: snap.questionStartTime || Date.now(),
+            time: snap.timePerQuestion || 15
+          };
+        }
+      } catch (e) { }
+    }
+
+    gameState.playerLastChoice = numericChoice;
+
     var padGrid = document.getElementById('playerPadGrid');
     var submittedState = document.getElementById('playerSubmittedState');
     if (padGrid) padGrid.style.display = 'none';
@@ -1299,7 +1428,7 @@
 
     broadcastMsg('player_answer', {
       playerId: gameState.myPlayerId,
-      answerIndex: choiceIndex,
+      answerIndex: numericChoice,
       pin: gameState.pin
     });
   }
@@ -1308,12 +1437,17 @@
   function setupCrossTabSync() {
     function handleSync(data) {
       if (!data || !data.action) return;
+      if (data.msgId) {
+        if (_processedMsgIds[data.msgId]) return;
+        _processedMsgIds[data.msgId] = true;
+      }
+
       var action = data.action;
       var p = data.payload || {};
 
-      // 1. Host nhận người chơi mới vào phòng
-      if (action === 'player_join' && gameState.role === 'host' && gameState.status === 'lobby') {
-        if (String(p.pin) === String(gameState.pin)) {
+      // 1. Host nhận người chơi mới vào phòng (Hỗ trợ cả khi đang ở Lobby lẫn khi trận đấu đã bắt đầu!)
+      if (action === 'player_join' && gameState.role === 'host') {
+        if (normalizePin(p.pin) === normalizePin(gameState.pin)) {
           var exists = gameState.players.some(function (x) { return x.id === p.id; });
           if (!exists) {
             gameState.players.push({
@@ -1330,56 +1464,92 @@
               isSelf: false
             });
             SFX.pop();
-            renderPlayerList();
+            if (gameState.status === 'lobby') {
+              renderPlayerList();
+            }
             if (typeof showToast === 'function') {
               showToast(p.avatar + ' ' + p.name + ' vừa tham gia phòng!', 'success');
             }
           }
-          broadcastMsg('host_ack_join', { pin: gameState.pin, playerId: p.id });
+
+          // Nếu trận đấu đang diễn ra ở câu hỏi, gửi ngay câu hỏi hiện tại cho Player mới vào!
+          var currentQ = gameState.questions[gameState.currentQuestionIndex];
+          broadcastMsg('host_ack_join', {
+            pin: gameState.pin,
+            playerId: p.id,
+            status: gameState.status,
+            currentQuestion: (gameState.status === 'question' && currentQ) ? {
+              pin: gameState.pin,
+              questionIndex: gameState.currentQuestionIndex,
+              totalQuestions: gameState.totalQuestions,
+              time: gameState.timePerQuestion,
+              questionStartTime: gameState.questionStartTime,
+              prompt: currentQ.prompt,
+              subPrompt: currentQ.subPrompt,
+              options: currentQ.options,
+              correctIndex: currentQ.correctIndex
+            } : null
+          });
         }
       }
 
-      if (action === 'host_ack_join' && gameState.role === 'player' && String(p.pin) === String(gameState.pin)) {
+      if (action === 'host_ack_join' && gameState.role === 'player' && normalizePin(p.pin) === normalizePin(gameState.pin)) {
         gameState.hostConnectedToRoom = true;
+        if (p.currentQuestion) {
+          showPlayerPadsForQuestion(p.currentQuestion);
+        }
       }
 
       // 2. Host nhận câu trả lời từ tab Player
-      if (action === 'player_answer' && gameState.role === 'host' && gameState.status === 'question') {
-        if (String(p.pin) === String(gameState.pin)) {
-          recordPlayerAnswer(p.playerId, p.answerIndex);
+      if (action === 'player_answer' && gameState.role === 'host') {
+        if (normalizePin(p.pin) === normalizePin(gameState.pin)) {
+          // Nếu Player chưa kịp có trong danh sách, tự động bổ sung
+          var existingPlayer = gameState.players.find(function (x) { return x.id === p.playerId; });
+          if (!existingPlayer && p.playerId) {
+            gameState.players.push({
+              id: p.playerId,
+              name: 'Đấu thủ',
+              avatar: '🐼',
+              score: 0,
+              streak: 0,
+              lives: 3,
+              lastAnswerIndex: -1,
+              answeredAt: 0,
+              lastPointsEarned: 0,
+              isBot: false,
+              isSelf: false
+            });
+          }
+
+          if (gameState.status === 'question') {
+            recordPlayerAnswer(p.playerId, p.answerIndex);
+          } else if (gameState.status === 'countdown') {
+            // Nếu Player bấm sớm trong lúc đang đếm ngược, lưu vào hàng đợi để chấm điểm ngay khi câu hỏi mở!
+            gameState.queuedPlayerAnswers.push({ playerId: p.playerId, answerIndex: p.answerIndex });
+          }
         }
       }
 
-      // 3. Player nhận lệnh bắt đầu trận đấu
-      if (action === 'game_start' && gameState.role === 'player' && String(p.pin) === String(gameState.pin)) {
+      // 3. Player nhận lệnh bắt đầu trận đấu (Đang đếm ngược 3..2..1)
+      if (action === 'game_start' && gameState.role === 'player' && normalizePin(p.pin) === normalizePin(gameState.pin)) {
         showView('playerGameView');
+        var padGrid0 = document.getElementById('playerPadGrid');
+        var submitted0 = document.getElementById('playerSubmittedState');
+        var result0 = document.getElementById('playerResultOverlay');
+        var miniPrompt0 = document.getElementById('playerMiniPrompt');
+        if (miniPrompt0) miniPrompt0.textContent = '🚀 Chuẩn bị! Câu hỏi 1 đang mở...';
+        if (padGrid0) padGrid0.style.display = 'none';
+        if (submitted0) submitted0.style.display = 'none';
+        if (result0) result0.style.display = 'none';
       }
 
       // 4. Player nhận câu hỏi mới
-      if (action === 'new_question' && gameState.role === 'player' && String(p.pin) === String(gameState.pin)) {
-        showView('playerGameView');
-        var padGrid = document.getElementById('playerPadGrid');
-        var submittedState = document.getElementById('playerSubmittedState');
-        var resultOverlay = document.getElementById('playerResultOverlay');
-        var miniPrompt = document.getElementById('playerMiniPrompt');
-
-        if (miniPrompt && p.prompt) {
-          miniPrompt.textContent = 'Câu ' + (p.questionIndex + 1) + ': ' + p.prompt;
-        }
-        if (Array.isArray(p.options)) {
-          for (var i = 0; i < 4; i++) {
-            var lbl = document.getElementById('playerPadLabel' + i);
-            if (lbl) lbl.textContent = p.options[i] || '';
-          }
-        }
-
-        if (padGrid) padGrid.style.display = 'grid';
-        if (submittedState) submittedState.style.display = 'none';
-        if (resultOverlay) resultOverlay.style.display = 'none';
+      if (action === 'new_question' && gameState.role === 'player' && normalizePin(p.pin) === normalizePin(gameState.pin)) {
+        showPlayerPadsForQuestion(p);
       }
 
       // 5. Player nhận kết quả câu hỏi
-      if (action === 'question_result' && gameState.role === 'player' && String(p.pin) === String(gameState.pin)) {
+      if (action === 'question_result' && gameState.role === 'player' && normalizePin(p.pin) === normalizePin(gameState.pin)) {
         var padGrid2 = document.getElementById('playerPadGrid');
         var submitted2 = document.getElementById('playerSubmittedState');
         var resultOverlay2 = document.getElementById('playerResultOverlay');
@@ -1395,41 +1565,67 @@
         if (resultOverlay2) resultOverlay2.style.display = 'block';
 
         var myScoreObj = (p.scores || []).find(function (x) { return x.id === gameState.myPlayerId; });
-        if (myScoreObj) {
-          if (curScoreEl) curScoreEl.textContent = myScoreObj.score.toLocaleString();
-          if (streakTag) {
-            if (myScoreObj.streak >= 2) {
-              streakTag.style.display = 'inline-flex';
-              streakTag.innerHTML = '🔥 <span>' + myScoreObj.streak + '</span>';
-            } else {
-              streakTag.style.display = 'none';
-            }
-          }
-          if (rankStatus) {
-            rankStatus.textContent = 'Đang xếp hạng #' + myScoreObj.rank + ' • Đáp án: ' + (p.correctText || '');
-          }
-          if (myScoreObj.lastEarned > 0) {
-            if (resultIcon) resultIcon.textContent = '🎉';
-            if (resultText) resultText.textContent = 'Chính xác!';
-            if (scorePlus) {
-              scorePlus.textContent = '+' + myScoreObj.lastEarned + ' điểm';
-              scorePlus.style.color = '#10b981';
-            }
-            SFX.correct();
+        var localIsCorrect = (gameState.playerLastChoice !== -1 && Number(gameState.playerLastChoice) === Number(p.correctIndex));
+        var isRight = (myScoreObj && myScoreObj.lastEarned > 0) || localIsCorrect;
+
+        var earnedPoints = (myScoreObj && myScoreObj.lastEarned > 0)
+          ? myScoreObj.lastEarned
+          : (localIsCorrect ? 850 : 0);
+
+        if (myScoreObj && myScoreObj.score > 0) {
+          gameState.playerLocalScore = myScoreObj.score;
+          gameState.playerLocalStreak = myScoreObj.streak || 0;
+        } else if (isRight) {
+          gameState.playerLocalScore += earnedPoints;
+          gameState.playerLocalStreak += 1;
+        } else {
+          gameState.playerLocalStreak = 0;
+        }
+
+        if (curScoreEl) curScoreEl.textContent = gameState.playerLocalScore.toLocaleString();
+        if (streakTag) {
+          if (gameState.playerLocalStreak >= 2) {
+            streakTag.style.display = 'inline-flex';
+            streakTag.innerHTML = '🔥 <span>' + gameState.playerLocalStreak + '</span>';
           } else {
-            if (resultIcon) resultIcon.textContent = '😢';
-            if (resultText) resultText.textContent = 'Chưa đúng!';
-            if (scorePlus) {
-              scorePlus.textContent = '+0 điểm';
-              scorePlus.style.color = 'var(--text-muted)';
-            }
-            SFX.wrong();
+            streakTag.style.display = 'none';
           }
+        }
+
+        if (rankStatus) {
+          var rankNum = (myScoreObj && myScoreObj.rank) ? ('Hạng #' + myScoreObj.rank + ' • ') : '';
+          rankStatus.textContent = rankNum + 'Đáp án đúng: ' + (p.correctText || '');
+        }
+
+        if (isRight) {
+          if (resultIcon) resultIcon.textContent = '🎉';
+          if (resultText) resultText.textContent = 'Chính xác!';
+          if (scorePlus) {
+            scorePlus.textContent = '+' + earnedPoints + ' điểm';
+            scorePlus.style.color = '#10b981';
+          }
+          SFX.correct();
+        } else if (gameState.playerLastChoice === -1) {
+          if (resultIcon) resultIcon.textContent = '⏰';
+          if (resultText) resultText.textContent = 'Hết giờ!';
+          if (scorePlus) {
+            scorePlus.textContent = '+0 điểm (Chưa chọn đáp án)';
+            scorePlus.style.color = 'var(--text-muted)';
+          }
+          SFX.wrong();
+        } else {
+          if (resultIcon) resultIcon.textContent = '😢';
+          if (resultText) resultText.textContent = 'Chưa đúng!';
+          if (scorePlus) {
+            scorePlus.textContent = '+0 điểm';
+            scorePlus.style.color = 'var(--text-muted)';
+          }
+          SFX.wrong();
         }
       }
 
       // 6. Kết thúc trận đấu
-      if (action === 'game_over' && gameState.role === 'player' && String(p.pin) === String(gameState.pin)) {
+      if (action === 'game_over' && gameState.role === 'player' && normalizePin(p.pin) === normalizePin(gameState.pin)) {
         if (typeof confetti === 'function') {
           try { confetti(); } catch (e) { }
         }
@@ -1460,7 +1656,6 @@
     var tabPlayerBtn = document.getElementById('tabPlayerBtn');
     if (tabPlayerBtn) tabPlayerBtn.onclick = function () { switchRoleTab('player'); };
 
-    // Chọn 4 chế độ Game Kahoot
     var gmCards = document.querySelectorAll('.arena-gamemode-card');
     gmCards.forEach(function (card) {
       card.onclick = function () {
@@ -1469,7 +1664,6 @@
         gameState.gameMode = card.dataset.gamemode || 'speed';
         SFX.tick();
 
-        // Ẩn/hiện dropdown kiểu câu hỏi nếu chế độ game đã cố định dạng đề
         var qTypeGroup = document.getElementById('hostQTypeGroup');
         var timeSelect = document.getElementById('hostTimePerQuestion');
         if (qTypeGroup) {
@@ -1481,7 +1675,6 @@
       };
     });
 
-    // Hồ sơ nhanh trên màn hình Host
     var hostNameInput = document.getElementById('hostPlayerNameInput');
     if (hostNameInput) {
       hostNameInput.addEventListener('change', function () {
@@ -1496,14 +1689,12 @@
       };
     });
 
-    // Nút Đấu ngay & Mở phòng QR
     var btnQuickPlay = document.getElementById('btnQuickPlay');
     if (btnQuickPlay) btnQuickPlay.onclick = startQuickPlay;
 
     var btnCreateRoom = document.getElementById('btnCreateRoom');
     if (btnCreateRoom) btnCreateRoom.onclick = createRoom;
 
-    // Lobby actions
     var btnAddBot = document.getElementById('btnAddBot');
     if (btnAddBot) btnAddBot.onclick = function () { addMockBot(false); };
 
@@ -1540,7 +1731,6 @@
       };
     }
 
-    // 4 ô màu Kahoot trên màn hình chính (Click trực tiếp!)
     document.querySelectorAll('#hostAnswersGrid .k-ans-card').forEach(function (card) {
       card.onclick = function () {
         var idx = parseInt(card.dataset.index, 10);
@@ -1548,7 +1738,6 @@
       };
     });
 
-    // Điều hướng qua từng câu hỏi
     var btnNextRound = document.getElementById('btnNextRound');
     if (btnNextRound) btnNextRound.onclick = advanceNextRound;
 
@@ -1568,7 +1757,6 @@
       };
     }
 
-    // Podium buttons
     var btnPlayAgain = document.getElementById('btnPlayAgain');
     if (btnPlayAgain) {
       btnPlayAgain.onclick = function () {
@@ -1585,7 +1773,6 @@
       };
     }
 
-    // Player Join
     var btnPlayerJoin = document.getElementById('btnPlayerJoin');
     if (btnPlayerJoin) btnPlayerJoin.onclick = playerJoin;
 
@@ -1600,7 +1787,6 @@
       };
     });
 
-    // Player 4 pads
     document.querySelectorAll('.player-pad-btn').forEach(function (btn) {
       btn.onclick = function () {
         var idx = parseInt(btn.dataset.index, 10);
@@ -1608,7 +1794,6 @@
       };
     });
 
-    // Phím tắt bàn phím 1, 2, 3, 4 (trả lời nhanh) và Enter/Space (qua câu tiếp theo)
     document.addEventListener('keydown', function (e) {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
         return;
