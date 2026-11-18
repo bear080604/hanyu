@@ -3642,26 +3642,168 @@ details[open] summary {
 }
 
 
-/* Study Mode Selection Modal */
+/* Study Mode Selection Modal — Unslop Redesign */
+#studyModeModal .modal-content {
+  border-radius: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-medium);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+#studyModeModal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-raised);
+}
+
+#studyModeModal .modal-header h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+#studyModeModal .modal-subtitle {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 4px 0 0;
+}
+
+#studyModeModal .modal-body {
+  padding: 18px 20px 22px;
+}
+
+.study-mode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .study-mode-option {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .study-mode-option:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 28px rgba(139, 92, 246, 0.25);
+  background: var(--bg-card-hover);
+  border-color: var(--border-medium);
+  transform: translateY(-1px);
 }
 
 .study-mode-option:active {
-  transform: translateY(-2px) scale(0.98);
+  transform: translateY(0);
 }
 
-.study-mode-option[data-mode="both"] {
-  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+.study-mode-option.featured {
+  background: var(--accent-red-subtle);
+  border-color: var(--accent-red-border);
 }
 
-.study-mode-option[data-mode="both"]:hover {
-  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
+.study-mode-option.featured:hover {
+  background: rgba(192, 57, 43, 0.14);
+  border-color: var(--accent-red);
+}
+
+.mode-icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-raised);
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.mode-icon-wrap.featured {
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.mode-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.mode-name {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mode-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.badge-recommended {
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: var(--accent-red);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+
+.mode-arrow {
+  color: var(--text-muted);
+  transition: transform 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.study-mode-option:hover .mode-arrow {
+  transform: translateX(3px);
+  color: var(--text-primary);
+}
+
+:root.light-theme #studyModeModal .modal-content {
+  background: #ffffff;
+  border-color: var(--border-subtle);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+:root.light-theme #studyModeModal .modal-header {
+  background: var(--bg-raised);
+}
+
+:root.light-theme .study-mode-option {
+  background: #ffffff;
+  border-color: var(--border-subtle);
+}
+
+:root.light-theme .study-mode-option:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-medium);
+}
+
+:root.light-theme .study-mode-option.featured {
+  background: var(--accent-red-subtle);
+  border-color: var(--accent-red-border);
+}
+
+:root.light-theme .study-mode-option.featured:hover {
+  background: rgba(184, 58, 44, 0.12);
+  border-color: var(--accent-red);
 }
 
 /* Import JSON Modal Styles */

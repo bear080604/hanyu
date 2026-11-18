@@ -182,28 +182,34 @@
         }
       };
 
-      item.querySelector('[data-action="study"]').onclick = function (e) {
+      item.querySelector('[data-action="study"]').onclick = async function (e) {
         e.stopPropagation();
-        // Nếu là cloud deck chưa có words, fetch trước
-        if (deckObj.cloudId && (!deckObj.words || deckObj.words.length === 0)) {
-          if (window.WeiQuanAPI) {
-            window.WeiQuanAPI.getDeckById(deckObj.cloudId).then(function (res) {
-              if (res && res.success && res.data && res.data.words) {
-                deckObj.words = res.data.words.map(function (w) {
-                  return typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(w) : w;
-                });
-                showStudyModeModal(deckObj);
-              }
-            }).catch(function () {
-              if (window.showToast) window.showToast('❌ Không thể tải từ cloud!', 'error');
-            });
+        var targetId = deckObj.cloudId || deckObj.id;
+        // Nếu là cloud deck chưa có words trong memory, fetch từ API
+        if ((!deckObj.words || deckObj.words.length === 0) && targetId && window.WeiQuanAPI) {
+          try {
+            if (window.showToast) window.showToast('⏳ Đang tải từ vựng...', 'info');
+            var res = await window.WeiQuanAPI.getDeckById(targetId);
+            if (res && res.success && res.data && Array.isArray(res.data.words) && res.data.words.length > 0) {
+              deckObj.words = res.data.words;
+              saveCustomHistory();
+            }
+          } catch (err) {
+            console.warn('Không thể tải chi tiết bộ từ từ server:', err);
           }
-        } else {
-          deckObj.words = (deckObj.words || []).map(function (w) {
-            return typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(w) : w;
-          });
-          showStudyModeModal(deckObj);
         }
+
+        var words = (deckObj.words || []).map(function (w) {
+          return typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(w) : w;
+        });
+
+        if (words.length === 0) {
+          if (window.showToast) window.showToast('Bộ từ này đang trống, chưa có từ vựng để học!', 'error');
+          return;
+        }
+
+        deckObj.words = words;
+        showStudyModeModal(deckObj);
       };
 
       item.querySelector('[data-action="delete"]').onclick = function (e) {
@@ -625,64 +631,74 @@
   // ==================== STUDY ====================
 
   function studyCustomDeck() {
-        if (currentCustomWords.length === 0) {
-          if (window.showToast) {
-            window.showToast('Bộ từ đang trống! Hãy thêm từ trước.', 'error');
-          }
-          return;
-        }
-        showStudyModeModal({ name: 'Bộ từ tự tạo', words: currentCustomWords.slice() });
+    if (currentCustomWords.length === 0) {
+      if (window.showToast) {
+        window.showToast('Bộ từ đang trống! Hãy thêm từ trước khi học.', 'error');
       }
+      return;
+    }
+    showStudyModeModal({ name: 'Bộ từ tự tạo', words: currentCustomWords.slice() });
+  }
 
   function showStudyModeModal(deckObj) {
-        var modal = document.getElementById('studyModeModal');
-        if (!modal) return;
+    var modal = document.getElementById('studyModeModal');
+    if (!modal) return;
 
-        modal.classList.add('active');
+    var subtitle = document.getElementById('studyModeDeckSubtitle');
+    var count = deckObj.words ? deckObj.words.length : 0;
+    if (subtitle) {
+      subtitle.textContent = (deckObj.name || 'Bộ từ tự tạo') + ' • ' + count + ' từ vựng';
+    }
 
-        // Replace buttons to remove stale listeners
-        var options = modal.querySelectorAll('.study-mode-option');
-        options.forEach(function (btn) {
-          var newBtn = btn.cloneNode(true);
-          btn.parentNode.replaceChild(newBtn, btn);
-        });
+    modal.classList.add('active');
 
-        modal.querySelectorAll('.study-mode-option').forEach(function (btn) {
-          btn.onclick = function () {
-            var mode = btn.dataset.mode;
-            modal.classList.remove('active');
-            startStudySession(mode, deckObj);
-          };
-        });
-      }
+    // Replace buttons to remove stale listeners
+    var options = modal.querySelectorAll('.study-mode-option');
+    options.forEach(function (btn) {
+      var newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+    });
+
+    modal.querySelectorAll('.study-mode-option').forEach(function (btn) {
+      btn.onclick = function () {
+        var mode = btn.dataset.mode;
+        modal.classList.remove('active');
+        startStudySession(mode, deckObj);
+      };
+    });
+  }
 
   function startStudySession(mode, deckObj) {
-        var name = deckObj.name || 'Bộ từ tự tạo';
-        var words = (deckObj.words || []).slice();
+    var name = deckObj.name || 'Bộ từ tự tạo';
+    var words = (deckObj.words || []).slice();
 
-        // Shuffle before navigating
-        shuffle(words);
+    if (words.length === 0) {
+      if (window.showToast) window.showToast('Bộ từ này đang trống!', 'error');
+      return;
+    }
 
-        var pendingDeck = JSON.stringify({ name: name, words: words });
+    if ((mode === 'quiz' || mode === 'sentence' || mode === 'both') && words.length < 2) {
+      if (window.showToast) window.showToast('Cần ít nhất 2 từ để học chế độ này!', 'error');
+      return;
+    }
 
-        if (mode === 'flashcard') {
-          localStorage.setItem('wq_pending_deck', pendingDeck);
-          localStorage.setItem('wq_pending_mode', 'flashcard');
-          window.location.href = '../pages/flash.html';
-        } else if (mode === 'quiz') {
-          localStorage.setItem('wq_pending_deck', pendingDeck);
-          localStorage.setItem('wq_pending_mode', 'quiz');
-          window.location.href = '../pages/quiz.html';
-        } else if (mode === 'sentence') {
-          localStorage.setItem('wq_pending_deck', pendingDeck);
-          localStorage.setItem('wq_pending_mode', 'sentence');
-          window.location.href = '../pages/sentence.html';
-        } else if (mode === 'both') {
-          localStorage.setItem('wq_pending_deck', pendingDeck);
-          localStorage.setItem('wq_pending_mode', 'both');
-          window.location.href = '../pages/flash.html';
-        }
-      }
+    // Shuffle before navigating
+    shuffle(words);
+
+    var pendingDeck = JSON.stringify({ id: deckObj.id || null, name: name, words: words });
+    localStorage.setItem('wq_pending_deck', pendingDeck);
+    localStorage.setItem('wq_pending_mode', mode);
+
+    if (mode === 'flashcard' || mode === 'both') {
+      window.location.href = '../pages/flash.html';
+    } else if (mode === 'quiz') {
+      window.location.href = '../pages/quiz.html';
+    } else if (mode === 'sentence') {
+      window.location.href = '../pages/sentence.html';
+    } else if (mode === 'write') {
+      window.location.href = '../pages/write.html';
+    }
+  }
 
   // ==================== JSON IMPORT ====================
 

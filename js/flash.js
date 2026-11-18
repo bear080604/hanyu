@@ -245,11 +245,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // 1. Read wq_pending_deck — load custom deck into AppState
   var pendingDeckStr = localStorage.getItem('wq_pending_deck');
   if (pendingDeckStr) {
-    localStorage.removeItem('wq_pending_deck');
-    // NOTE: keep wq_pending_mode for checkFlashcardComplete to read later
     try {
       var pendingDeck = JSON.parse(pendingDeckStr);
-      window.AppState.level = pendingDeck.name || 'Custom';
+      var deckName = pendingDeck.name || 'Bộ từ tự tạo';
+      window.AppState.level = deckName;
       var newDeck = pendingDeck.words ? pendingDeck.words.slice() : [];
       if (typeof window.enrichWordWithSentence === 'function') {
         newDeck = newDeck.map(function (w) { return window.enrichWordWithSentence(w); });
@@ -258,6 +257,9 @@ document.addEventListener('DOMContentLoaded', function () {
       if (typeof shuffle === 'function') shuffle(newDeck);
       window.AppState.deck = newDeck;
       window.AppState.fcIdx = 0;
+      if (typeof DATA !== 'undefined') {
+        DATA['custom'] = newDeck;
+      }
     } catch (e) {
       console.error('wq_pending_deck parse error:', e);
     }

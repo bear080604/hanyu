@@ -1915,8 +1915,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (pendingDeckStr && (pendingMode === 'sentence' || pendingMode === 'both')) {
     try {
       var pendingDeck = JSON.parse(pendingDeckStr);
-      localStorage.removeItem('wq_pending_deck');
-      localStorage.removeItem('wq_pending_mode');
+      if (typeof DATA !== 'undefined') {
+        DATA['custom'] = (pendingDeck.words || []).map(function(w) {
+          return typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(w) : w;
+        });
+      }
       startSentenceWithDeck(pendingDeck);
     } catch (err) {
       console.warn('Failed to parse pending deck for sentence:', err);

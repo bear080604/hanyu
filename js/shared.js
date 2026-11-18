@@ -647,38 +647,73 @@ function initUIWithData() {
   if (!lvlSel) return;
   if (!DATA || Object.keys(DATA).length === 0) return;
 
+  // 1. Kiểm tra xem có pending custom deck đang chờ học không
+  let pendingDeck = null;
+  try {
+    const pStr = localStorage.getItem('wq_pending_deck');
+    if (pStr) {
+      pendingDeck = JSON.parse(pStr);
+    }
+  } catch (e) {
+    console.warn('wq_pending_deck parse error:', e);
+  }
+
   lvlSel.innerHTML = '';
+
+  // Nếu có custom deck hợp lệ, đưa lên đầu danh sách bộ từ
+  if (pendingDeck && Array.isArray(pendingDeck.words) && pendingDeck.words.length > 0) {
+    DATA['custom'] = pendingDeck.words.map(w => typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(w) : w);
+    const oCustom = document.createElement('option');
+    oCustom.value = 'custom';
+    oCustom.textContent = '📦 ' + (pendingDeck.name || 'Bộ từ tự tạo') + ' (' + pendingDeck.words.length + ' từ)';
+    lvlSel.appendChild(oCustom);
+  }
+
   Object.keys(DATA).forEach(k => {
-    if (DATA[k] && DATA[k].length > 0) {
+    if (k !== 'custom' && DATA[k] && DATA[k].length > 0) {
       const o = document.createElement('option');
       o.value = k;
       o.textContent = k + ' (' + DATA[k].length + ' từ)';
       lvlSel.appendChild(o);
     }
   });
+
   const oFav = document.createElement('option');
   oFav.value = 'favorites';
   oFav.textContent = '⭐ Yêu thích (' + favorites.length + ')';
   lvlSel.appendChild(oFav);
 
-  // Restore saved level
-  const saved = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress'));
-  if (saved && saved.level) {
-    level = saved.level;
-    lvlSel.value = level;
+  if (pendingDeck && DATA['custom']) {
+    level = 'custom';
+    lvlSel.value = 'custom';
+    window.AppState.level = pendingDeck.name || 'Bộ từ tự tạo';
+    deck = DATA['custom'].slice();
+    window.AppState.deck = deck;
   } else {
+    // Restore saved level
+    const saved = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress'));
+    if (saved && saved.level && (DATA[saved.level] || saved.level === 'favorites')) {
+      level = saved.level;
+    }
     lvlSel.value = level;
+    window.AppState.level = level;
   }
 
   lvlSel.onchange = () => {
     level = lvlSel.value;
+    if (level !== 'custom') {
+      localStorage.removeItem('wq_pending_deck');
+      localStorage.removeItem('wq_pending_mode');
+    }
     buildRanges(level);
     applyRange();
     saveProgress();
   };
 
   buildRanges(level);
-  loadProgress();
+  if (level !== 'custom') {
+    loadProgress();
+  }
   applyRange();
 }
 
@@ -700,7 +735,7 @@ function buildRanges(lvl) {
   if (currentLevel === 'favorites') {
     const all = document.createElement('option');
     all.value = 'all';
-    all.textContent = 'Tất cả';
+    all.textContent = 'Tất cả (' + favorites.length + ' từ)';
     sel.appendChild(all);
     sel.onchange = () => { applyRange(); saveProgress(); };
     return;
@@ -709,13 +744,15 @@ function buildRanges(lvl) {
   const n = DATA[currentLevel].length, size = 50;
   const all = document.createElement('option');
   all.value = 'all';
-  all.textContent = 'Tất cả';
+  all.textContent = 'Tất cả (' + n + ' từ)';
   sel.appendChild(all);
-  for (let i = 0; i < n; i += size) {
-    const o = document.createElement('option');
-    o.value = i + '-' + Math.min(i + size, n);
-    o.textContent = 'Từ ' + (i + 1) + '–' + Math.min(i + size, n);
-    sel.appendChild(o);
+  if (n > size) {
+    for (let i = 0; i < n; i += size) {
+      const o = document.createElement('option');
+      o.value = i + '-' + Math.min(i + size, n);
+      o.textContent = 'Từ ' + (i + 1) + '–' + Math.min(i + size, n);
+      sel.appendChild(o);
+    }
   }
   sel.onchange = () => { applyRange(); saveProgress(); };
 }
@@ -728,11 +765,13 @@ function applyRange() {
   let src;
   if (level === 'favorites') {
     src = favorites;
+  } else if (level === 'custom') {
+    src = DATA['custom'] || [];
   } else {
     if (!DATA[level]) return;
     src = DATA[level];
   }
-  if (v === 'all' || level === 'favorites') {
+  if (v === 'all' || level === 'favorites' || level === 'custom') {
     deck = src.slice();
   } else {
     const [a, b] = v.split('-').map(Number);
@@ -754,7 +793,18 @@ function applyRange() {
   window.AppState.quizPool = quizPool;
   window.AppState.quizAskedWords = quizAskedWords;
 
-  // Notify page-specific renderers if they exist
+  if (level === 'custom') {
+    let customName = 'Bộ từ tự tạo';
+    try {
+      const p = JSON.parse(localStorage.getItem('wq_pending_deck') || '{}');
+      if (p.name) customName = p.name;
+    } catch (e) {}
+    window.AppState.level = customName;
+  } else {
+    window.AppState.level = level;
+  }
+
+  // Multi-page: trigger active page renderers
   if (typeof renderFlash === 'function') renderFlash();
   if (typeof renderWriterList === 'function') renderWriterList();
   if (typeof renderWriter === 'function') renderWriter();
@@ -786,16 +836,20 @@ function saveProgress() {
 }
 
 function loadProgress() {
+  if (level === 'custom') return;
   // Nếu có pending deck từ cross-page nav, không overwrite deck
   var hasPending = localStorage.getItem('wq_pending_deck') &&
     (localStorage.getItem('wq_pending_mode') === 'quiz' ||
       localStorage.getItem('wq_pending_mode') === 'sentence' ||
+      localStorage.getItem('wq_pending_mode') === 'write' ||
       localStorage.getItem('wq_pending_mode') === 'both' ||
       localStorage.getItem('wq_pending_mode') === 'flashcard');
 
+  if (hasPending) return;
+
   const saved = (window.WQStorage && WQStorage.getProgress()) || JSON.parse(localStorage.getItem('wq_progress'));
   if (saved) {
-    if (saved.level) {
+    if (saved.level && (DATA[saved.level] || saved.level === 'favorites')) {
       level = saved.level;
       window.AppState.level = level;
       const lvlSelEl = document.getElementById('levelSel');
@@ -806,15 +860,13 @@ function loadProgress() {
     if (saved.rangeVal && rangeSel) {
       rangeSel.value = saved.rangeVal;
     }
-    if (!hasPending) {
-      applyRange();
-    }
-    if (!hasPending && saved.fcIdx !== undefined && saved.fcIdx < deck.length) {
+    applyRange();
+    if (saved.fcIdx !== undefined && saved.fcIdx < deck.length) {
       fcIdx = saved.fcIdx;
       window.AppState.fcIdx = fcIdx;
       if (typeof renderFlash === 'function') renderFlash();
     }
-    if (!hasPending && saved.wIdx !== undefined && saved.wIdx < deck.length) {
+    if (saved.wIdx !== undefined && saved.wIdx < deck.length) {
       wIdx = saved.wIdx;
       window.AppState.wIdx = wIdx;
       if (typeof renderWriterList === 'function') renderWriterList();
