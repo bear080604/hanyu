@@ -1088,6 +1088,24 @@ function newSentenceQuestion() {
   }
 
   if (!sPool || sPool.length === 0) {
+    var pendingMode = localStorage.getItem('wq_pending_mode');
+    if (sAsked && sAsked.length > 0 && (pendingMode === 'both' || pendingMode === 'sentence')) {
+      localStorage.removeItem('wq_pending_mode');
+      var finalScore = sScore;
+      var finalTotal = sTotal;
+      setTimeout(async function () {
+        if (window.wqPopup) {
+          await window.wqPopup.alert({
+            icon: '🏆',
+            title: 'Hoàn thành toàn diện!',
+            message: 'Chúc mừng bạn đã hoàn thành trọn vẹn lộ trình: Flashcard ➔ Trắc nghiệm ➔ Ghép câu cho bộ từ này!\nĐiểm ghép câu: ' + finalScore + ' / ' + finalTotal
+          });
+        } else if (typeof showToast === 'function') {
+          showToast('🏆 Chúc mừng bạn đã hoàn thành trọn vẹn lộ trình học!', 'success');
+        }
+      }, 500);
+    }
+
     sPool = validDeck.slice();
     shuffle(sPool);
     sAsked = [];

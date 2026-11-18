@@ -200,6 +200,18 @@ function runAutoplayCycle() {
     }
     if (timeSpent >= speed) {
       clearInterval(_apInterval);
+      var deck = window.AppState.deck;
+      var isAtLastCard = deck && window.AppState.fcIdx === deck.length - 1;
+      var pendingMode = localStorage.getItem('wq_pending_mode');
+
+      // Nếu đang phát tự động đến từ cuối cùng và ở chế độ 'both':
+      // Chờ người dùng xem xong cả 2 mặt của từ cuối rồi mới dừng và hỏi chuyển sang trắc nghiệm
+      if (isAtLastCard && pendingMode === 'both') {
+        stopAutoplay();
+        promptFlashcardComplete();
+        return;
+      }
+
       window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
       renderFlash();
       if (typeof saveProgress === 'function') saveProgress();
@@ -208,37 +220,39 @@ function runAutoplayCycle() {
   }, updateInterval);
 }
 
-// ---------- checkFlashcardComplete ----------
-function checkFlashcardComplete() {
+// ---------- promptFlashcardComplete ----------
+// CHỈ kích hoạt khi người dùng ĐÃ Ở TỪ CUỐI CÙNG và BẤM TIẾP TỤC (fcNext)
+// Tránh việc vừa chuyển sang từ cuối chưa kịp đọc, chưa kịp lật đã bị popup chặn họng!
+async function promptFlashcardComplete() {
   var deck = window.AppState.deck;
-  var fcIdx = window.AppState.fcIdx;
   var pendingMode = localStorage.getItem('wq_pending_mode');
   if (!deck || !deck.length) return;
 
-  if (pendingMode === 'both' && fcIdx === deck.length - 1) {
-    setTimeout(async function () {
-      var confirmed = window.wqPopup
-        ? await window.wqPopup.confirm({
-          icon: '🎉',
-          title: 'Hoàn thành Flashcard!',
-          message: 'Bạn đã xem hết Flashcard của bộ từ này.\nBạn có muốn tiếp tục sang phần ✏️ Trắc nghiệm (và 🧩 Ghép câu) không?',
-          confirmText: '✏️ Làm Trắc nghiệm',
-          cancelText: 'Ở lại đây'
-        })
-        : confirm('\uD83C\uDF89 B\u1ea1n \u0111\u00e3 xem h\u1ebft Flashcard!\n\n\u270f\ufe0f B\u1ea1n c\u00f3 mu\u1ed1n ti\u1ebfp t\u1ee5c l\u00e0m Tr\u1eafc nghi\u1ec7m kh\u00f4ng?');
-      if (confirmed) {
-        var deckName = window.AppState.level || 'Custom';
-        localStorage.setItem('wq_pending_deck', JSON.stringify({ name: deckName, words: deck }));
-        localStorage.setItem('wq_pending_mode', 'both');
-        showToast('\u270f\ufe0f Chuy\u1ec3n sang Tr\u1eafc nghi\u1ec7m!', 'info');
-        window.location.href = '../pages/quiz.html';
-      } else {
-        localStorage.removeItem('wq_pending_mode');
-      }
-    }, 500);
+  var confirmed = window.wqPopup
+    ? await window.wqPopup.confirm({
+      icon: '🎉',
+      title: 'Đã xem hết Flashcard!',
+      message: 'Bạn đã xem xong toàn bộ các từ vựng trong bộ này.\nBạn có muốn chuyển sang phần ✏️ Trắc nghiệm để kiểm tra phản xạ không?',
+      confirmText: '✏️ Làm Trắc nghiệm',
+      cancelText: 'Ôn lại từ đầu'
+    })
+    : confirm('🎉 Bạn đã xem xong toàn bộ Flashcard!\nBạn có muốn chuyển sang phần Trắc nghiệm không?');
+
+  if (confirmed) {
+    var deckName = window.AppState.level || 'Custom';
+    localStorage.setItem('wq_pending_deck', JSON.stringify({ name: deckName, words: deck }));
+    localStorage.setItem('wq_pending_mode', 'both');
+    if (typeof showToast === 'function') showToast('✏️ Chuyển sang Trắc nghiệm!', 'info');
+    window.location.href = '../pages/quiz.html';
+  } else {
+    // Người dùng chọn ôn lại: đưa về từ đầu tiên, KHÔNG xóa wq_pending_mode để học xong vẫn chuyển tiếp được!
+    window.AppState.fcIdx = 0;
+    renderFlash();
+    if (typeof saveProgress === 'function') saveProgress();
   }
 }
-window.checkFlashcardComplete = checkFlashcardComplete;
+window.promptFlashcardComplete = promptFlashcardComplete;
+window.checkFlashcardComplete = promptFlashcardComplete;
 
 // ---------- DOMContentLoaded ----------
 document.addEventListener('DOMContentLoaded', function () {
@@ -368,10 +382,20 @@ document.addEventListener('DOMContentLoaded', function () {
       stopAutoplay();
       var deck = window.AppState.deck;
       if (!deck || !deck.length) return;
+
+      var isAtLastCard = window.AppState.fcIdx === deck.length - 1;
+      var pendingMode = localStorage.getItem('wq_pending_mode');
+
+      // Nếu đang ở thẻ cuối cùng và bấm Next:
+      // Nghĩa là người dùng đã xem xong thẻ cuối cùng và chủ động muốn đi tiếp!
+      if (isAtLastCard && pendingMode === 'both') {
+        promptFlashcardComplete();
+        return;
+      }
+
       window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
       renderFlash();
       if (typeof saveProgress === 'function') saveProgress();
-      checkFlashcardComplete();
     });
   }
 

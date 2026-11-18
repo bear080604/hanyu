@@ -218,7 +218,7 @@ function answer(idx) {
         : confirm('🎉 Bạn đã hoàn thành Trắc nghiệm (' + qScore + '/' + qTotal + ')!\nBạn có muốn chuyển sang phần 🧩 Ghép câu & Hoàn thiện câu không?');
       if (goSentence) {
         localStorage.setItem('wq_pending_deck', JSON.stringify({ name: level || 'Custom', words: deck }));
-        localStorage.setItem('wq_pending_mode', 'sentence');
+        localStorage.setItem('wq_pending_mode', 'both');
         window.location.href = '../pages/sentence.html';
       } else {
         localStorage.removeItem('wq_pending_mode');
