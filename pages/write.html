@@ -11,27 +11,72 @@
 
 <div id="page-main-content">
   <section class="app-section active panel" id="write">
-    <div class="statbar"><span id="wWord"></span><span id="wLevel"></span></div>
+    <!-- Header thông tin từ & Điều hướng Trước/Sau -->
+    <div class="writer-topbar">
+      <div class="writer-deck-meta">
+        <span class="writer-level-badge" id="wLevel">HSK 1</span>
+        <span class="writer-counter" id="wWord">1 / 10 từ</span>
+      </div>
+      <div class="writer-nav-controls">
+        <button class="btn btn-nav-step" id="wPrevBtn" aria-label="Từ trước" title="Từ trước (Mũi tên trái)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <span>Trước</span>
+        </button>
+        <button class="btn btn-nav-step" id="wNextBtn" aria-label="Từ sau" title="Từ sau (Mũi tên phải)">
+          <span>Sau</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
+      </div>
+    </div>
+
     <div class="w-wrap">
-      <div class="w-info">
-        <div class="p" id="wPinyin"></div>
-        <div class="m" id="wMean"></div>
+      <!-- Card thông tin từ vựng: Hán tự, Pinyin, Nghĩa tiếng Việt -->
+      <div class="writer-card-info">
+        <div class="writer-head-row">
+          <div class="writer-full-hanzi" id="wFullHanzi">--</div>
+          <button class="icon-btn writer-action-btn" id="wAudio" aria-label="Phát âm" title="Nghe phát âm">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+          </button>
+          <button class="icon-btn writer-action-btn" id="wFav" aria-label="Yêu thích" title="Lưu từ yêu thích">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          </button>
+        </div>
+        <div class="writer-pinyin" id="wPinyin">--</div>
+        <div class="writer-meaning" id="wMean">Đang tải từ vựng...</div>
       </div>
-      <div id="writer-target"></div>
-      <div class="fc-nav">
-        <button class="btn" id="wAnimate">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Xem nét
+
+      <!-- Thanh chọn chữ đơn trong từ ghép (Ví dụ: [ 你 ]  [ 好 ]) -->
+      <div class="writer-char-selector" id="wCharSelector"></div>
+
+      <!-- Ô giấy kẻ Mễ tự cách (米字格) chứa canvas HanziWriter -->
+      <div class="writer-canvas-outer">
+        <div class="writer-canvas-wrap" id="writerCanvasWrap">
+          <div id="writer-target"></div>
+        </div>
+        <div class="writer-hint-text" id="wHintText">Bấm "Xem nét" để xem thứ tự bút thuận hoặc "Tập viết" để tự vẽ</div>
+      </div>
+
+      <!-- Cụm nút thao tác luyện viết -->
+      <div class="writer-actions-bar">
+        <button class="btn btn-writer primary" id="wAnimate">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span>Xem nét</span>
         </button>
-        <button class="btn" id="wQuiz">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-          Tập viết
+        <button class="btn btn-writer accent" id="wQuiz">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+          <span>Tập viết</span>
         </button>
-        <button class="icon-btn" id="wAudio" aria-label="Speak">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        <button class="btn btn-writer outline" id="wReset" title="Xóa nét để viết lại">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+          <span>Làm lại</span>
         </button>
       </div>
-      <div class="w-char-pick" id="wPick"></div>
+
+      <!-- Danh sách từ trong bộ (Duyệt nhanh) -->
+      <div class="writer-deck-strip">
+        <div class="writer-strip-label">Danh sách từ trong bộ:</div>
+        <div class="w-char-pick" id="wPick"></div>
+      </div>
     </div>
   </section>
 </div>

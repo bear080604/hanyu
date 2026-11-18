@@ -456,9 +456,9 @@ function getWordLookupMap() {
   if (_cachedWordMap && _cachedDataSize === dataKeys) {
     // Also merge current active deck words dynamically
     var activeDeck = (window.AppState && window.AppState.deck) || (typeof deck !== 'undefined' ? deck : []) || [];
-    activeDeck.forEach(function(w) {
+    activeDeck.forEach(function (w) {
       if (w && w.h && (w.p || w.m)) {
-        w.h.split('|').forEach(function(v) {
+        w.h.split('|').forEach(function (v) {
           v = v.trim();
           if (v && !_cachedWordMap.has(v)) {
             _cachedWordMap.set(v, { p: w.p || '', m: w.m || '' });
@@ -472,16 +472,16 @@ function getWordLookupMap() {
   var map = new Map();
 
   // 1. Load _EXTRA_WORD_DICT
-  Object.keys(_EXTRA_WORD_DICT).forEach(function(k) {
+  Object.keys(_EXTRA_WORD_DICT).forEach(function (k) {
     map.set(k, _EXTRA_WORD_DICT[k]);
   });
 
   // 2. Load WQ_SENTENCE_BANK
   if (typeof window !== 'undefined' && window.WQ_SENTENCE_BANK) {
-    Object.keys(window.WQ_SENTENCE_BANK).forEach(function(k) {
+    Object.keys(window.WQ_SENTENCE_BANK).forEach(function (k) {
       var entry = window.WQ_SENTENCE_BANK[k];
       if (entry && (entry.p || entry.m)) {
-        k.split('|').forEach(function(v) {
+        k.split('|').forEach(function (v) {
           v = v.trim();
           if (v) map.set(v, { p: entry.p || '', m: entry.m || '' });
         });
@@ -491,10 +491,10 @@ function getWordLookupMap() {
 
   // 3. Load DATA (HSK 1..6)
   if (typeof DATA !== 'undefined' && DATA) {
-    Object.keys(DATA).forEach(function(lvl) {
-      (DATA[lvl] || []).forEach(function(w) {
+    Object.keys(DATA).forEach(function (lvl) {
+      (DATA[lvl] || []).forEach(function (w) {
         if (!w || !w.h) return;
-        w.h.split('|').forEach(function(v) {
+        w.h.split('|').forEach(function (v) {
           v = v.trim();
           if (!v) return;
           if (!map.has(v)) {
@@ -514,14 +514,14 @@ function getWordLookupMap() {
   // 4. Load custom decks & custom sentences from localStorage (including per-token meanings)
   try {
     var cSent = JSON.parse(localStorage.getItem('wq_custom_sentences')) || {};
-    Object.keys(cSent).forEach(function(k) {
+    Object.keys(cSent).forEach(function (k) {
       var item = cSent[k];
       if (!item) return;
       if ((item.p || item.m) && !map.has(k)) {
         map.set(k, { p: item.p || '', m: item.m || '' });
       }
       if (Array.isArray(item.tokens)) {
-        item.tokens.forEach(function(tk) {
+        item.tokens.forEach(function (tk) {
           if (tk && typeof tk === 'object') {
             var th = (tk.h || tk.t || tk.w || '').trim();
             if (th && (tk.p || tk.m)) {
@@ -531,9 +531,9 @@ function getWordLookupMap() {
         });
       }
       if (Array.isArray(item.examples)) {
-        item.examples.forEach(function(exItem) {
+        item.examples.forEach(function (exItem) {
           if (exItem && Array.isArray(exItem.tokens)) {
-            exItem.tokens.forEach(function(tk) {
+            exItem.tokens.forEach(function (tk) {
               if (tk && typeof tk === 'object') {
                 var th = (tk.h || tk.t || tk.w || '').trim();
                 if (th && (tk.p || tk.m)) {
@@ -546,10 +546,10 @@ function getWordLookupMap() {
       }
     });
     var cDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
-    cDecks.forEach(function(d) {
-      (d.words || []).forEach(function(w) {
+    cDecks.forEach(function (d) {
+      (d.words || []).forEach(function (w) {
         if (w && w.h && (w.p || w.m)) {
-          w.h.split('|').forEach(function(v) {
+          w.h.split('|').forEach(function (v) {
             v = v.trim();
             if (v && !map.has(v)) {
               map.set(v, { p: w.p || '', m: w.m || '' });
@@ -557,7 +557,7 @@ function getWordLookupMap() {
           });
         }
         if (w && Array.isArray(w.tokens)) {
-          w.tokens.forEach(function(tk) {
+          w.tokens.forEach(function (tk) {
             if (tk && typeof tk === 'object') {
               var th = (tk.h || tk.t || tk.w || '').trim();
               if (th && (tk.p || tk.m)) {
@@ -567,9 +567,9 @@ function getWordLookupMap() {
           });
         }
         if (w && Array.isArray(w.examples)) {
-          w.examples.forEach(function(exItem) {
+          w.examples.forEach(function (exItem) {
             if (exItem && Array.isArray(exItem.tokens)) {
-              exItem.tokens.forEach(function(tk) {
+              exItem.tokens.forEach(function (tk) {
                 if (tk && typeof tk === 'object') {
                   var th = (tk.h || tk.t || tk.w || '').trim();
                   if (th && (tk.p || tk.m)) {
@@ -582,7 +582,7 @@ function getWordLookupMap() {
         }
       });
     });
-  } catch (e) {}
+  } catch (e) { }
 
   _cachedWordMap = map;
   _cachedDataSize = dataKeys;
@@ -713,7 +713,7 @@ function showWordTooltip(targetEl, info, modeOpts) {
 function hideWordTooltip() {
   if (!_tooltipEl) return;
   _tooltipEl.classList.remove('visible');
-  _tooltipHideTimer = setTimeout(function() {
+  _tooltipHideTimer = setTimeout(function () {
     if (_tooltipEl && !_tooltipEl.classList.contains('visible')) {
       _tooltipEl.style.display = 'none';
     }
@@ -722,21 +722,21 @@ function hideWordTooltip() {
 
 function bindTooltipEvents(el, getInfoFn) {
   if (!el) return;
-  el.addEventListener('mouseenter', function() {
+  el.addEventListener('mouseenter', function () {
     var res = getInfoFn();
     if (res && res.info) showWordTooltip(el, res.info, res.opts);
   });
-  el.addEventListener('mouseleave', function() {
+  el.addEventListener('mouseleave', function () {
     hideWordTooltip();
   });
-  el.addEventListener('focus', function() {
+  el.addEventListener('focus', function () {
     var res = getInfoFn();
     if (res && res.info) showWordTooltip(el, res.info, res.opts);
   });
-  el.addEventListener('blur', function() {
+  el.addEventListener('blur', function () {
     hideWordTooltip();
   });
-  el.addEventListener('touchstart', function() {
+  el.addEventListener('touchstart', function () {
     var res = getInfoFn();
     if (res && res.info) {
       showWordTooltip(el, res.info, res.opts);
@@ -749,7 +749,7 @@ function renderInteractiveChineseSpan(container, text, highlightWord) {
   if (!container || !text) return;
   var map = getWordLookupMap();
   var knownSet = new Set();
-  map.forEach(function(_, k) {
+  map.forEach(function (_, k) {
     if (k.length >= 2) knownSet.add(k);
   });
   if (highlightWord && highlightWord.length >= 2) knownSet.add(highlightWord);
@@ -774,15 +774,15 @@ function renderInteractiveChineseSpan(container, text, highlightWord) {
     }
     var clause = text.slice(i, clauseEnd);
     var tokens = segmentChunk(clause, knownSet);
-    tokens.forEach(function(tok) {
+    tokens.forEach(function (tok) {
       var wordSpan = document.createElement('span');
       var isTarget = highlightWord && tok === highlightWord;
       wordSpan.className = 's-ctx-word' + (isTarget ? ' s-highlight-word' : '');
       wordSpan.textContent = tok;
-      bindTooltipEvents(wordSpan, function() {
+      bindTooltipEvents(wordSpan, function () {
         return { info: lookupWordInfo(tok) };
       });
-      wordSpan.onclick = function(e) {
+      wordSpan.onclick = function (e) {
         e.stopPropagation();
         var info = lookupWordInfo(tok);
         if (info) showWordTooltip(wordSpan, info);
@@ -812,7 +812,7 @@ function getCleanHanzi(h) {
 
 function findMatchedVariant(ex, h) {
   if (!ex || !h) return getCleanHanzi(h);
-  var variants = h.split('|').map(function(s) { return s.trim(); }).filter(Boolean);
+  var variants = h.split('|').map(function (s) { return s.trim(); }).filter(Boolean);
   for (var i = 0; i < variants.length; i++) {
     if (ex.indexOf(variants[i]) !== -1) return variants[i];
   }
@@ -837,23 +837,23 @@ function segmentChineseSentence(sentence, targetWord, deckWords) {
   var knownWords = new Set();
   if (targetWord) knownWords.add(targetWord);
   var lookupMap = getWordLookupMap();
-  lookupMap.forEach(function(_, k) {
+  lookupMap.forEach(function (_, k) {
     if (k.length >= 2) knownWords.add(k);
   });
   if (Array.isArray(deckWords)) {
-    deckWords.forEach(function(item) {
+    deckWords.forEach(function (item) {
       if (!item || !item.h) return;
-      item.h.split('|').forEach(function(v) {
+      item.h.split('|').forEach(function (v) {
         v = v.trim();
         if (v.length >= 2) knownWords.add(v);
       });
     });
   }
   if (typeof DATA !== 'undefined') {
-    Object.keys(DATA).forEach(function(lvl) {
-      (DATA[lvl] || []).forEach(function(item) {
+    Object.keys(DATA).forEach(function (lvl) {
+      (DATA[lvl] || []).forEach(function (item) {
         if (!item || !item.h) return;
-        item.h.split('|').forEach(function(v) {
+        item.h.split('|').forEach(function (v) {
           v = v.trim();
           if (v.length >= 2) knownWords.add(v);
         });
@@ -862,10 +862,10 @@ function segmentChineseSentence(sentence, targetWord, deckWords) {
   }
 
   // Split by comma/pause punctuation first, keeping clauses clean
-  var clauses = body.split(/[，、；：,;:]+/).map(function(c) { return c.trim(); }).filter(Boolean);
+  var clauses = body.split(/[，、；：,;:]+/).map(function (c) { return c.trim(); }).filter(Boolean);
   var rawTokens = [];
 
-  clauses.forEach(function(clause) {
+  clauses.forEach(function (clause) {
     // Protect targetWord inside clause so it is never split apart
     if (targetWord && targetWord.length >= 2 && clause.indexOf(targetWord) !== -1) {
       var parts = clause.split(targetWord);
@@ -883,7 +883,7 @@ function segmentChineseSentence(sentence, targetWord, deckWords) {
   });
 
   // Filter out empty or pure-punctuation tokens
-  var tokens = rawTokens.map(function(t) { return t.trim(); }).filter(function(t) {
+  var tokens = rawTokens.map(function (t) { return t.trim(); }).filter(function (t) {
     return t.length > 0 && !/^[，。？！、；：“”‘’（）().,?!\s]+$/.test(t);
   });
 
@@ -892,7 +892,7 @@ function segmentChineseSentence(sentence, targetWord, deckWords) {
     var merged = false;
     for (var j = 0; j < tokens.length - 1; j++) {
       if (tokens[j] !== targetWord && tokens[j + 1] !== targetWord &&
-          tokens[j].length === 1 && tokens[j + 1].length === 1) {
+        tokens[j].length === 1 && tokens[j + 1].length === 1) {
         tokens.splice(j, 2, tokens[j] + tokens[j + 1]);
         merged = true;
         break;
@@ -967,7 +967,7 @@ function segmentChunk(text, knownWords) {
 // ==================== PREPARE SENTENCE DECK ====================
 function buildSentencePoolFromDeck(rawDeck) {
   if (!Array.isArray(rawDeck)) return [];
-  var enriched = rawDeck.map(enrichWord).filter(function(w) {
+  var enriched = rawDeck.map(enrichWord).filter(function (w) {
     return w && w.h && w.ex && w.ex.trim().length >= 2;
   });
   return deduplicateWords(enriched);
@@ -976,7 +976,7 @@ function buildSentencePoolFromDeck(rawDeck) {
 function requeueWordForReview(wordObj) {
   if (!wordObj || !wordObj.h) return;
   var cleanKey = getCleanHanzi(wordObj.h);
-  var alreadyInPool = sPool.some(function(w) { return w && getCleanHanzi(w.h) === cleanKey; });
+  var alreadyInPool = sPool.some(function (w) { return w && getCleanHanzi(w.h) === cleanKey; });
   if (alreadyInPool) return;
   var copy = Object.assign({}, wordObj, { _isRetry: true });
   var offset = Math.min(sPool.length, 2 + Math.floor(Math.random() * 2));
@@ -1147,7 +1147,7 @@ function setupArrangeQuestion(wordObj, validDeck) {
   var explicitPunct = punctMatch ? punctMatch[0] : '。';
 
   if (Array.isArray(wordObj.tokens) && wordObj.tokens.length >= 2) {
-    sTargetTokens = wordObj.tokens.map(function(tk) {
+    sTargetTokens = wordObj.tokens.map(function (tk) {
       if (typeof tk === 'string') return tk.replace(/[，。？！、；：“”‘’（）().,?!\s]+/g, '').trim();
       if (tk && typeof tk === 'object') return String(tk.h || tk.t || tk.w || '').replace(/[，。？！、；：“”‘’（）().,?!\s]+/g, '').trim();
       return '';
@@ -1159,7 +1159,7 @@ function setupArrangeQuestion(wordObj, validDeck) {
     sEndPunct = seg.punct || '。';
   }
 
-  var shuffled = sTargetTokens.map(function(t, idx) {
+  var shuffled = sTargetTokens.map(function (t, idx) {
     return { id: 'tile_' + idx, text: t, used: false };
   });
 
@@ -1170,7 +1170,7 @@ function setupArrangeQuestion(wordObj, validDeck) {
       attempts++;
     } while (
       attempts < 6 &&
-      shuffled.map(function(x) { return x.text; }).join('') === sTargetTokens.join('')
+      shuffled.map(function (x) { return x.text; }).join('') === sTargetTokens.join('')
     );
   }
 
@@ -1200,7 +1200,7 @@ function renderArrangeUI() {
     ph.textContent = 'Bấm chọn các từ bên dưới theo đúng thứ tự...';
     zoneEl.appendChild(ph);
   } else {
-    sAnswerItems.forEach(function(item, ansIdx) {
+    sAnswerItems.forEach(function (item, ansIdx) {
       var btn = document.createElement('button');
       btn.type = 'button';
       var statusClass = '';
@@ -1210,7 +1210,7 @@ function renderArrangeUI() {
       }
       btn.className = 's-tile s-tile-answer' + statusClass;
       btn.textContent = item.text;
-      bindTooltipEvents(btn, function() {
+      bindTooltipEvents(btn, function () {
         var baseInfo = lookupWordInfo(item.text);
         if (sAnswered && !isPosCorrect && sTargetTokens[ansIdx]) {
           var expected = sTargetTokens[ansIdx];
@@ -1226,7 +1226,7 @@ function renderArrangeUI() {
         }
         return { info: baseInfo };
       });
-      btn.onclick = function() {
+      btn.onclick = function () {
         hideWordTooltip();
         if (sAnswered) {
           if (!isPosCorrect) {
@@ -1248,16 +1248,16 @@ function renderArrangeUI() {
   }
 
   bankEl.innerHTML = '';
-  sBankItems.forEach(function(item) {
+  sBankItems.forEach(function (item) {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 's-tile s-tile-bank' + (item.used ? ' used' : '');
     btn.textContent = item.text;
     btn.disabled = item.used || sAnswered;
-    bindTooltipEvents(btn, function() {
+    bindTooltipEvents(btn, function () {
       return { info: lookupWordInfo(item.text) };
     });
-    btn.onclick = function() {
+    btn.onclick = function () {
       hideWordTooltip();
       if (sAnswered || item.used) return;
       addTileToAnswer(item.id);
@@ -1267,7 +1267,7 @@ function renderArrangeUI() {
 }
 
 function addTileToAnswer(tileId) {
-  var bankItem = sBankItems.find(function(b) { return b.id === tileId; });
+  var bankItem = sBankItems.find(function (b) { return b.id === tileId; });
   if (!bankItem || bankItem.used) return;
   bankItem.used = true;
   sAnswerItems.push({ id: bankItem.id, text: bankItem.text });
@@ -1278,7 +1278,7 @@ function addTileToAnswer(tileId) {
 function removeTileFromAnswer(ansIdx) {
   var removed = sAnswerItems.splice(ansIdx, 1)[0];
   if (!removed) return;
-  var bankItem = sBankItems.find(function(b) { return b.id === removed.id; });
+  var bankItem = sBankItems.find(function (b) { return b.id === removed.id; });
   if (bankItem) bankItem.used = false;
   renderArrangeUI();
 }
@@ -1286,7 +1286,7 @@ function removeTileFromAnswer(ansIdx) {
 function resetArrangeAnswer() {
   if (sAnswered) return;
   sAnswerItems = [];
-  sBankItems.forEach(function(b) { b.used = false; });
+  sBankItems.forEach(function (b) { b.used = false; });
   renderArrangeUI();
 }
 
@@ -1304,7 +1304,7 @@ function checkArrangeAnswer() {
   sAnswered = true;
   sTotal++;
 
-  var userStr = sAnswerItems.map(function(x) { return x.text; }).join('');
+  var userStr = sAnswerItems.map(function (x) { return x.text; }).join('');
   var targetStr = sTargetTokens.join('');
   var isCorrect = userStr === targetStr;
 
@@ -1350,7 +1350,7 @@ function retryWrongTiles() {
   }
 
   sAnswerItems = keptAnswer;
-  sBankItems.forEach(function(b) {
+  sBankItems.forEach(function (b) {
     b.used = keptIds.has(b.id);
   });
 
@@ -1412,11 +1412,11 @@ function setupFillQuestion(wordObj, validDeck) {
 
   // If wordObj.options is explicitly provided in JSON, use those first
   if (Array.isArray(wordObj.options) && wordObj.options.length > 0) {
-    wordObj.options.forEach(function(rawOpt) {
+    wordObj.options.forEach(function (rawOpt) {
       if (opts.length >= 4) return;
       var oH = typeof rawOpt === 'string' ? rawOpt.trim() : String((rawOpt && (rawOpt.h || rawOpt.t || rawOpt.w)) || '').trim();
       if (!oH || getCleanHanzi(oH) === getCleanHanzi(targetCleanH)) return;
-      if (opts.some(function(existing) { return getCleanHanzi(existing.h) === getCleanHanzi(oH); })) return;
+      if (opts.some(function (existing) { return getCleanHanzi(existing.h) === getCleanHanzi(oH); })) return;
       var fbInfo = lookupWordInfo(oH) || {};
       opts.push({
         h: oH,
@@ -1426,12 +1426,12 @@ function setupFillQuestion(wordObj, validDeck) {
     });
   }
 
-  var poolDistractors = validDeck.filter(function(w) {
+  var poolDistractors = validDeck.filter(function (w) {
     return w && getCleanHanzi(w.h) !== getCleanHanzi(targetCleanH);
   });
   // If validDeck has fewer than 4 words, supplement from DATA
   if (poolDistractors.length < 3 && typeof DATA !== 'undefined' && DATA['HSK 1']) {
-    DATA['HSK 1'].forEach(function(w) {
+    DATA['HSK 1'].forEach(function (w) {
       if (w && getCleanHanzi(w.h) !== getCleanHanzi(targetCleanH)) {
         poolDistractors.push(w);
       }
@@ -1440,7 +1440,7 @@ function setupFillQuestion(wordObj, validDeck) {
   shuffle(poolDistractors);
   for (var i = 0; i < poolDistractors.length && opts.length < 4; i++) {
     var d = poolDistractors[i];
-    if (!opts.some(function(o) { return getCleanHanzi(o.h) === getCleanHanzi(d.h); })) {
+    if (!opts.some(function (o) { return getCleanHanzi(o.h) === getCleanHanzi(d.h); })) {
       opts.push(d);
     }
   }
@@ -1448,14 +1448,14 @@ function setupFillQuestion(wordObj, validDeck) {
   sFillOptions = opts;
 
   optsBox.innerHTML = '';
-  opts.forEach(function(opt, optIdx) {
+  opts.forEach(function (opt, optIdx) {
     var btn = document.createElement('div');
     btn.className = 'q-opt s-fill-opt';
     var cleanH = getCleanHanzi(opt.h);
     btn.innerHTML =
       '<div class="s-opt-hanzi">' + cleanH + '</div>' +
       '<div class="s-opt-hint-label">Trỏ vào để xem Pinyin</div>';
-    bindTooltipEvents(btn, function() {
+    bindTooltipEvents(btn, function () {
       var fallback = lookupWordInfo(cleanH) || {};
       return {
         info: {
@@ -1466,7 +1466,7 @@ function setupFillQuestion(wordObj, validDeck) {
         opts: { hideMeaning: !sAnswered }
       };
     });
-    btn.onclick = function() {
+    btn.onclick = function () {
       hideWordTooltip();
       answerFillQuestion(optIdx);
     };
@@ -1484,7 +1484,7 @@ function answerFillQuestion(optIdx) {
   var isCorrect = getCleanHanzi(chosen.h) === getCleanHanzi(expectedH);
 
   var optEls = document.querySelectorAll('#sFillOpts .q-opt');
-  optEls.forEach(function(el, idx) {
+  optEls.forEach(function (el, idx) {
     el.classList.add('disabled');
     var o = sFillOptions[idx];
     var subEl = el.querySelector('.s-opt-hint-label');
@@ -1498,7 +1498,7 @@ function answerFillQuestion(optIdx) {
   if (slotEl) {
     slotEl.textContent = sTargetMatch;
     slotEl.classList.add(isCorrect ? 'filled-correct' : 'filled-wrong');
-    bindTooltipEvents(slotEl, function() {
+    bindTooltipEvents(slotEl, function () {
       return {
         info: {
           h: sTargetMatch,
@@ -1515,7 +1515,7 @@ function answerFillQuestion(optIdx) {
   } else {
     requeueWordForReview(sCur);
     if (optEls[optIdx]) optEls[optIdx].classList.add('wrong');
-    sFillOptions.forEach(function(o, i) {
+    sFillOptions.forEach(function (o, i) {
       if (getCleanHanzi(o.h) === getCleanHanzi(expectedH) && optEls[i]) {
         optEls[i].classList.add('correct');
       }
@@ -1549,7 +1549,7 @@ function useSentenceHint() {
     // Add the next correct token from sBankItems
     if (matchLen < sTargetTokens.length) {
       var neededText = sTargetTokens[matchLen];
-      var candidate = sBankItems.find(function(b) { return !b.used && b.text === neededText; });
+      var candidate = sBankItems.find(function (b) { return !b.used && b.text === neededText; });
       if (candidate) {
         addTileToAnswer(candidate.id);
       }
@@ -1566,7 +1566,7 @@ function useSentenceHint() {
     var optEls = document.querySelectorAll('#sFillOpts .q-opt');
     for (var i = 0; i < sFillOptions.length; i++) {
       if (getCleanHanzi(sFillOptions[i].h) !== getCleanHanzi(sCur.h) &&
-          optEls[i] && !optEls[i].classList.contains('disabled')) {
+        optEls[i] && !optEls[i].classList.contains('disabled')) {
         optEls[i].classList.add('disabled');
         break;
       }
@@ -1602,7 +1602,7 @@ function showFeedback(isCorrect) {
       titleEl.style.color = 'var(--neon-red)';
       var retryBtn = document.getElementById('sRetryWrongBtn');
       if (retryBtn) {
-        retryBtn.onclick = function() {
+        retryBtn.onclick = function () {
           retryWrongTiles();
         };
       }
@@ -1685,10 +1685,10 @@ function renderSentenceHskGrid() {
     'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
   ];
 
-  Object.keys(DATA).forEach(function(lvl, index) {
+  Object.keys(DATA).forEach(function (lvl, index) {
     var words = DATA[lvl];
     if (!words || words.length === 0) return;
-    var sentenceCount = words.filter(function(w) {
+    var sentenceCount = words.filter(function (w) {
       var ew = enrichWord(w);
       return ew && ew.ex;
     }).length;
@@ -1700,15 +1700,15 @@ function renderSentenceHskGrid() {
     card.style.setProperty('--card-color', color);
     card.innerHTML =
       '<div class="hsk-card-header">' +
-        '<h4>' + lvl + '</h4>' +
-        '<span class="word-count">' + sentenceCount + ' câu</span>' +
+      '<h4>' + lvl + '</h4>' +
+      '<span class="word-count">' + sentenceCount + ' câu</span>' +
       '</div>' +
       '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.9rem;">' +
-        'Luyện sắp xếp câu & điền từ với ' + sentenceCount + ' câu mẫu' +
+      'Luyện sắp xếp câu & điền từ với ' + sentenceCount + ' câu mẫu' +
       '</div>' +
       '<button class="btn start-learn-btn" style="background: ' + color + '; border: none; color: #fff;">🧩 Bắt đầu luyện câu</button>';
 
-    card.querySelector('.start-learn-btn').onclick = function() {
+    card.querySelector('.start-learn-btn').onclick = function () {
       startSentenceWithDeck({ name: lvl, words: words });
     };
     grid.appendChild(card);
@@ -1728,14 +1728,14 @@ function renderSentenceCustomDecks() {
 
   // Also sync from Cloudflare API so all cloud decks (Bài 4..9, 9) appear even on fresh visit
   if (window.WeiQuanAPI) {
-    window.WeiQuanAPI.getDecks('default_user').then(function(res) {
+    window.WeiQuanAPI.getDecks('default_user').then(function (res) {
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         var localMap = {};
-        customDecks.forEach(function(d) {
+        customDecks.forEach(function (d) {
           if (d.cloudId) localMap[d.cloudId] = d;
           else if (d.id) localMap[d.id] = d;
         });
-        var merged = res.data.map(function(d) {
+        var merged = res.data.map(function (d) {
           var existing = localMap[d.id];
           return {
             id: d.id,
@@ -1751,7 +1751,7 @@ function renderSentenceCustomDecks() {
       } else {
         _renderCustomDeckCards(list, customDecks);
       }
-    }).catch(function() {
+    }).catch(function () {
       _renderCustomDeckCards(list, customDecks);
     });
   } else {
@@ -1763,37 +1763,37 @@ function _renderCustomDeckCards(list, customDecks) {
   if (!customDecks || customDecks.length === 0) {
     list.innerHTML =
       '<div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">' +
-        'Chưa có bộ từ tự tạo. <a href="custom.html" style="color: var(--accent-purple); text-decoration: underline;">Tạo ngay</a>' +
+      'Chưa có bộ từ tự tạo. <a href="custom.html" style="color: var(--accent-purple); text-decoration: underline;">Tạo ngay</a>' +
       '</div>';
     return;
   }
 
   list.innerHTML = '';
-  customDecks.forEach(function(d) {
+  customDecks.forEach(function (d) {
     var count = d.wordCount || (d.words && d.words.length) || 0;
     var card = document.createElement('div');
     card.className = 'hsk-card';
     card.style.setProperty('--card-color', 'var(--accent-gradient)');
     card.innerHTML =
       '<div class="hsk-card-header">' +
-        '<h4>📚 ' + d.name + '</h4>' +
-        '<span class="word-count">' + count + ' câu</span>' +
+      '<h4>📚 ' + d.name + '</h4>' +
+      '<span class="word-count">' + count + ' câu</span>' +
       '</div>' +
       '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.85rem;">' +
-        '📅 ' + (d.createdAt || 'Đã đồng bộ Cloud') +
+      '📅 ' + (d.createdAt || 'Đã đồng bộ Cloud') +
       '</div>' +
       '<button class="btn start-learn-btn" style="background: var(--accent-gradient); border: none; color: #fff;">🧩 Luyện câu ngay</button>';
 
-    card.querySelector('.start-learn-btn').onclick = function() {
+    card.querySelector('.start-learn-btn').onclick = function () {
       var cloudId = d.cloudId || d.id;
       if (cloudId && (!d.words || d.words.length === 0) && window.WeiQuanAPI) {
         if (window.showToast) showToast('⏳ Đang tải bộ từ "' + d.name + '"...', 'info');
-        window.WeiQuanAPI.getDeckById(cloudId).then(function(res) {
+        window.WeiQuanAPI.getDeckById(cloudId).then(function (res) {
           if (res && res.success && res.data && res.data.words) {
             d.words = res.data.words.map(enrichWord);
             startSentenceWithDeck({ name: d.name, words: d.words });
           }
-        }).catch(function() {
+        }).catch(function () {
           if (window.showToast) showToast('❌ Không thể tải bộ từ từ Cloud!', 'error');
         });
       } else {
@@ -1812,7 +1812,7 @@ function startSentenceWithDeck(deckObj) {
     return;
   }
 
-  var enrichedWords = deckObj.words.map(enrichWord).filter(function(w) {
+  var enrichedWords = deckObj.words.map(enrichWord).filter(function (w) {
     return w && w.h && w.ex;
   });
 
@@ -1853,11 +1853,11 @@ function backToSentenceSelection() {
 }
 
 // ==================== DOM CONTENT LOADED ====================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   // Mode buttons
-  document.querySelectorAll('.sentence-mode-btn').forEach(function(btn) {
-    btn.onclick = function() {
-      document.querySelectorAll('.sentence-mode-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.querySelectorAll('.sentence-mode-btn').forEach(function (btn) {
+    btn.onclick = function () {
+      document.querySelectorAll('.sentence-mode-btn').forEach(function (b) { b.classList.remove('active'); });
       btn.classList.add('active');
       sMode = btn.dataset.mode;
       localStorage.setItem('wq_sentence_mode', sMode);
@@ -1873,7 +1873,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Restore saved mode button state
   var savedModeBtn = document.querySelector('.sentence-mode-btn[data-mode="' + sMode + '"]');
   if (savedModeBtn) {
-    document.querySelectorAll('.sentence-mode-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.sentence-mode-btn').forEach(function (b) { b.classList.remove('active'); });
     savedModeBtn.classList.add('active');
   }
 
@@ -1891,7 +1891,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var sAudioBtn = document.getElementById('sAudioBtn');
   if (sAudioBtn) {
-    sAudioBtn.onclick = function() {
+    sAudioBtn.onclick = function () {
       if (sCur && sCur.ex && typeof speak === 'function') {
         speak(sCur.ex);
       }
@@ -1902,7 +1902,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (sHintBtn) sHintBtn.onclick = useSentenceHint;
 
   // Keyboard support
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     var gameSection = document.getElementById('sentenceGameSection');
     if (!gameSection || gameSection.style.display === 'none') return;
 
@@ -1934,7 +1934,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       var pendingDeck = JSON.parse(pendingDeckStr);
       if (typeof DATA !== 'undefined') {
-        DATA['custom'] = (pendingDeck.words || []).map(function(w) {
+        DATA['custom'] = (pendingDeck.words || []).map(function (w) {
           return typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(w) : w;
         });
       }

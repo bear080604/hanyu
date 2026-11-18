@@ -17,7 +17,7 @@
   if (typeof caches !== 'undefined' && caches.keys) {
     caches.keys().then(function (keys) {
       keys.forEach(function (k) {
-        if (k !== 'wenqing-v11') caches.delete(k);
+        if (k !== 'wenqing-v12') caches.delete(k);
       });
     }).catch(function () { });
   }
