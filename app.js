@@ -32,7 +32,16 @@ window.showToast = showToast;
 
 // Modal Popup System (thay thế hoàn toàn alert, confirm, prompt)
 window.wqPopup = {
-  alert(message, { title = 'Thông báo', icon = '💡' } = {}) {
+  alert(msgOrOpts, opts = {}) {
+    if (msgOrOpts && typeof msgOrOpts === 'object') {
+      opts = msgOrOpts;
+      msgOrOpts = opts.message || '';
+    }
+    const message = String(msgOrOpts || '');
+    const title = opts.title || 'Thông báo';
+    const icon = opts.icon || '💡';
+    const okText = opts.okText || opts.confirmText || 'Đồng ý';
+
     return new Promise((resolve) => {
       const overlay = document.getElementById('wqPopupOverlay');
       const titleEl = document.getElementById('wqPopupTitle');
@@ -50,7 +59,7 @@ window.wqPopup = {
 
       const okBtn = document.createElement('button');
       okBtn.className = 'wq-popup-btn wq-popup-btn-primary';
-      okBtn.textContent = 'Đồng ý';
+      okBtn.textContent = okText;
       okBtn.onclick = () => { overlay.style.display = 'none'; resolve(); };
       actionsEl.appendChild(okBtn);
 
@@ -58,7 +67,17 @@ window.wqPopup = {
       okBtn.focus();
     });
   },
-  confirm(message, { title = 'Xác nhận', icon = '❓', okText = 'Xác nhận', cancelText = 'Hủy' } = {}) {
+  confirm(msgOrOpts, opts = {}) {
+    if (msgOrOpts && typeof msgOrOpts === 'object') {
+      opts = msgOrOpts;
+      msgOrOpts = opts.message || '';
+    }
+    const message = String(msgOrOpts || '');
+    const title = opts.title || 'Xác nhận';
+    const icon = opts.icon || '❓';
+    const okText = opts.okText || opts.confirmText || 'Xác nhận';
+    const cancelText = opts.cancelText || 'Hủy';
+
     return new Promise((resolve) => {
       const overlay = document.getElementById('wqPopupOverlay');
       const titleEl = document.getElementById('wqPopupTitle');

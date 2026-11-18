@@ -684,7 +684,7 @@
       return;
     }
 
-    if ((mode === 'quiz' || mode === 'sentence' || mode === 'both') && words.length < 2) {
+    if ((mode === 'quiz' || mode === 'sentence' || mode === 'both' || mode === 'arena') && words.length < 2) {
       if (window.showToast) window.showToast('Cần ít nhất 2 từ để học chế độ này!', 'error');
       return;
     }
@@ -704,6 +704,8 @@
       window.location.href = '../pages/sentence.html';
     } else if (mode === 'write') {
       window.location.href = '../pages/write.html';
+    } else if (mode === 'arena') {
+      window.location.href = '../pages/arena.html';
     }
   }
 

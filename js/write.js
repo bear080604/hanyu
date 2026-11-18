@@ -3,19 +3,21 @@
 // HanziWriter is loaded via CDN on write.html.
 
 var _writerInstance = null;
+var _writerAnimTimer = null;
 var _selectedCharSubIndex = 0; // Ký tự con đang chọn trong từ ghép (0 = chữ 1, 1 = chữ 2, ...)
 var _currentWriterMode = 'outline'; // 'outline' | 'quiz'
 
 // ==================== HANZI CHARACTER EXTRACTION ====================
 // HanziWriter CHỈ hỗ trợ 1 ký tự Hán tự đơn lẻ.
-// Hàm này tách từ ghép (ví dụ '你好') thành mảng ['你', '好'] để tránh lỗi không hiện chữ.
+// Hàm này tách từ ghép (ví dụ '你好' hoặc '爸爸 | 爸') thành mảng ['你', '好'] để tránh lỗi không hiện chữ.
 function extractHanziChars(str) {
   if (!str) return [];
-  var clean = String(str).trim();
-  var matches = clean.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g);
+  // Chỉ lấy dạng chính trước dấu '|' (tránh lặp biến thể kiểu '爸爸 | 爸')
+  var primary = String(str).split('|')[0].trim();
+  var matches = primary.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g);
   if (matches && matches.length > 0) return matches;
   // Fallback: bỏ khoảng trắng và dấu câu
-  return clean.replace(/[，。？！、\s\-_.,?!/]/g, '').split('').filter(Boolean);
+  return primary.replace(/[，。？！、\s\-_.,?!/|]/g, '').split('').filter(Boolean);
 }
 
 // ==================== CUSTOM DECK INIT ====================
@@ -65,7 +67,7 @@ function renderWriterList() {
   curDeck.forEach(function (w, i) {
     var btn = document.createElement('button');
     btn.className = 'w-char-btn' + (i === curIdx ? ' active' : '');
-    btn.textContent = w.h;
+    btn.textContent = String(w.h || '').split('|')[0].trim();
     btn.title = (w.p || '') + ' — ' + (w.m || '');
     btn.onclick = function () {
       if (window.AppState) window.AppState.wIdx = i;
@@ -184,6 +186,10 @@ function buildWriter(char, targetDivId) {
   if (!targetDiv) return;
 
   // Destroy previous instance safely
+  if (_writerAnimTimer) {
+    clearTimeout(_writerAnimTimer);
+    _writerAnimTimer = null;
+  }
   if (_writerInstance && typeof _writerInstance.cancelQuiz === 'function') {
     try { _writerInstance.cancelQuiz(); } catch (e) { }
   }
@@ -232,7 +238,7 @@ function buildWriter(char, targetDivId) {
     }
 
     // Tự động chạy animation mẫu 1 lần nhẹ nhàng để người học quan sát
-    setTimeout(function () {
+    _writerAnimTimer = setTimeout(function () {
       if (_writerInstance && typeof _writerInstance.animateCharacter === 'function') {
         try { _writerInstance.animateCharacter(); } catch (e) { }
       }

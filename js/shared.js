@@ -75,7 +75,16 @@ window.showToast = showToast;
 
 // ==================== MODAL POPUP SYSTEM ====================
 window.wqPopup = {
-  alert(message, { title = 'Thông báo', icon = '💡' } = {}) {
+  alert(msgOrOpts, opts = {}) {
+    if (msgOrOpts && typeof msgOrOpts === 'object') {
+      opts = msgOrOpts;
+      msgOrOpts = opts.message || '';
+    }
+    const message = String(msgOrOpts || '');
+    const title = opts.title || 'Thông báo';
+    const icon = opts.icon || '💡';
+    const okText = opts.okText || opts.confirmText || 'Đồng ý';
+
     return new Promise((resolve) => {
       const overlay = document.getElementById('wqPopupOverlay');
       const titleEl = document.getElementById('wqPopupTitle');
@@ -93,7 +102,7 @@ window.wqPopup = {
 
       const okBtn = document.createElement('button');
       okBtn.className = 'wq-popup-btn wq-popup-btn-primary';
-      okBtn.textContent = 'Đồng ý';
+      okBtn.textContent = okText;
       okBtn.onclick = () => { overlay.style.display = 'none'; resolve(); };
       actionsEl.appendChild(okBtn);
 
@@ -101,7 +110,17 @@ window.wqPopup = {
       okBtn.focus();
     });
   },
-  confirm(message, { title = 'Xác nhận', icon = '❓', okText = 'Xác nhận', cancelText = 'Hủy' } = {}) {
+  confirm(msgOrOpts, opts = {}) {
+    if (msgOrOpts && typeof msgOrOpts === 'object') {
+      opts = msgOrOpts;
+      msgOrOpts = opts.message || '';
+    }
+    const message = String(msgOrOpts || '');
+    const title = opts.title || 'Xác nhận';
+    const icon = opts.icon || '❓';
+    const okText = opts.okText || opts.confirmText || 'Xác nhận';
+    const cancelText = opts.cancelText || 'Hủy';
+
     return new Promise((resolve) => {
       const overlay = document.getElementById('wqPopupOverlay');
       const titleEl = document.getElementById('wqPopupTitle');
@@ -134,7 +153,17 @@ window.wqPopup = {
       okBtn.focus();
     });
   },
-  prompt(message, { title = 'Nhập thông tin', icon = '✏️', placeholder = '', defaultValue = '' } = {}) {
+  prompt(msgOrOpts, opts = {}) {
+    if (msgOrOpts && typeof msgOrOpts === 'object') {
+      opts = msgOrOpts;
+      msgOrOpts = opts.message || '';
+    }
+    const message = String(msgOrOpts || '');
+    const title = opts.title || 'Nhập thông tin';
+    const icon = opts.icon || '✏️';
+    const placeholder = opts.placeholder || '';
+    const defaultValue = opts.defaultValue || '';
+
     return new Promise((resolve) => {
       const overlay = document.getElementById('wqPopupOverlay');
       const titleEl = document.getElementById('wqPopupTitle');
@@ -900,10 +929,15 @@ function removePinyinTones(str) {
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+function getPageHref(pageFile) {
+  const isInPages = location.pathname.indexOf('/pages/') !== -1;
+  return isInPages ? pageFile : ('pages/' + pageFile);
+}
+
 // Multi-page: save word to localStorage then navigate to flash.html
 function navigateToWord(word) {
   localStorage.setItem('wq_navigate_word', JSON.stringify(word));
-  window.location.href = '../pages/flash.html';
+  window.location.href = getPageHref('flash.html');
 }
 
 // ==================== HOME DASHBOARD ====================
@@ -978,7 +1012,7 @@ function renderHomeHskGrid() {
 
     card.querySelector('.start-learn-btn').onclick = () => {
       localStorage.setItem('wq_pending_level', lvl);
-      window.location.href = '../pages/flash.html';
+      window.location.href = getPageHref('flash.html');
     };
 
     homeHskGrid.appendChild(card);
@@ -1033,6 +1067,7 @@ function updateHeaderTitle() {
     'quiz.html': 'Trắc nghiệm',
     'sentence.html': 'Ghép câu',
     'write.html': 'Nét chữ',
+    'arena.html': 'Đấu trường',
     'stats.html': 'Thống kê',
     'favorites.html': 'Yêu thích',
     'custom.html': 'Tự tạo',
