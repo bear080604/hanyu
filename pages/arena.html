@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WenQing Chinese — Đấu Trường Kahoot</title>
+  <!-- Thư viện QRCode siêu nhẹ tạo mã quét phòng -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- Hiệu ứng pháo hoa Confetti ăn mừng bục vinh quang -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body>
+
+  <div id="page-main-content">
+    <section class="app-section active panel" id="arenaSection">
+
+      <!-- THANH CHỌN VAI TRÒ BAN ĐẦU: HOST (TẠO PHÒNG) HOẶC PLAYER (THAM GIA) -->
+      <div class="arena-role-tabs" id="arenaRoleTabs">
+        <button class="arena-role-tab active" id="tabHostBtn" data-tab="host">
+          <span class="tab-icon">👑</span>
+          <span class="tab-title">Chủ phòng (Chiếu màn hình)</span>
+        </button>
+        <button class="arena-role-tab" id="tabPlayerBtn" data-tab="player">
+          <span class="tab-icon">📱</span>
+          <span class="tab-title">Người chơi (Quét mã / Nhập PIN)</span>
+        </button>
+      </div>
+
+      <!-- ==================== 1. HOST: MÀN HÌNH CẤU HÌNH PHÒNG ==================== -->
+      <div class="arena-view" id="hostConfigView">
+        <div class="glass-card arena-card">
+          <div class="arena-card-header">
+            <span class="arena-badge">Đấu trường Kahoot</span>
+            <h2 class="arena-title">Tạo phòng thi đấu từ vựng</h2>
+            <p class="arena-desc">Chiếu mã QR lên máy chiếu hoặc màn hình để bạn bè quét mã tham gia thi đấu trực tiếp!</p>
+          </div>
+
+          <div class="arena-form-grid">
+            <div class="arena-form-group">
+              <label class="arena-label">Chọn bộ từ vựng thi đấu:</label>
+              <select id="hostDeckSelect" class="auth-input arena-select"></select>
+            </div>
+
+            <div class="arena-form-group">
+              <label class="arena-label">Dạng câu hỏi:</label>
+              <select id="hostQuestionType" class="auth-input arena-select">
+                <option value="hanzi_to_mean">Nhìn Hán tự ➔ Chọn Nghĩa tiếng Việt</option>
+                <option value="mean_to_hanzi">Nhìn Nghĩa tiếng Việt ➔ Chọn Hán tự</option>
+                <option value="hanzi_to_pinyin">Nhìn Hán tự ➔ Chọn Pinyin</option>
+                <option value="mixed">Hỗn hợp tất cả dạng câu hỏi</option>
+              </select>
+            </div>
+
+            <div class="arena-form-row">
+              <div class="arena-form-group half">
+                <label class="arena-label">Số lượng câu:</label>
+                <select id="hostQuestionCount" class="auth-input arena-select">
+                  <option value="5">5 câu (Nhanh)</option>
+                  <option value="10" selected>10 câu (Tiêu chuẩn)</option>
+                  <option value="15">15 câu</option>
+                  <option value="20">20 câu (Thử thách)</option>
+                </select>
+              </div>
+              <div class="arena-form-group half">
+                <label class="arena-label">Thời gian mỗi câu:</label>
+                <select id="hostTimePerQuestion" class="auth-input arena-select">
+                  <option value="10">10 giây (Siêu nhanh)</option>
+                  <option value="15" selected>15 giây (Vừa vặn)</option>
+                  <option value="20">20 giây (Thoải mái)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="arena-card-footer">
+            <button class="btn btn-hero-primary" id="btnCreateRoom">
+              <span>🚀 Tạo phòng thi đấu ngay</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 2. HOST: PHÒNG CHỜ (LOBBY VIEW) ==================== -->
+      <div class="arena-view" id="hostLobbyView" style="display: none;">
+        <div class="glass-card arena-card lobby-card">
+          <div class="lobby-header">
+            <div class="lobby-pin-wrap">
+              <div class="lobby-pin-label">MÃ PIN PHÒNG:</div>
+              <div class="lobby-pin-code" id="displayRoomPin">------</div>
+            </div>
+            <div class="lobby-meta-info" id="lobbyDeckInfo">HSK 1 • 10 câu</div>
+          </div>
+
+          <div class="lobby-body">
+            <div class="lobby-qr-container">
+              <canvas id="lobbyQrCanvas"></canvas>
+              <div class="lobby-qr-hint">
+                <span>📱 Bật camera điện thoại quét mã QR để vào thi đấu</span>
+                <button class="btn-copy-link" id="btnCopyJoinLink" title="Sao chép link mời">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                  <span>Chép link</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="lobby-players-panel">
+              <div class="lobby-players-header">
+                <h3>Người chơi tham gia (<span id="playerCount">0</span>)</h3>
+                <button class="btn-add-bot" id="btnAddBot" title="Thêm đối thủ ảo để thử nghiệm ngay nếu chưa có bạn">
+                  + Thêm bạn học ảo 🤖
+                </button>
+              </div>
+              <div class="lobby-players-list" id="lobbyPlayersList">
+                <div class="empty-lobby-text">Đang chờ người chơi quét mã vào phòng...</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lobby-footer">
+            <button class="btn btn-secondary" id="btnCancelRoom">Hủy phòng</button>
+            <button class="btn btn-hero-primary btn-start-game" id="btnStartGame" disabled>
+              <span>BẮT ĐẦU TRẬN ĐẤU (0) ➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 3. HOST: MÀN HÌNH TRẬN ĐẤU (GAMEPLAY VIEW) ==================== -->
+      <div class="arena-view" id="hostGameView" style="display: none;">
+        <!-- Đếm ngược bắt đầu 3... 2... 1... -->
+        <div class="countdown-overlay" id="startCountdownOverlay" style="display: none;">
+          <div class="countdown-num" id="countdownNumber">3</div>
+          <div class="countdown-text">Chuẩn bị sẵn sàng!</div>
+        </div>
+
+        <div class="game-stage">
+          <!-- Topbar trận đấu -->
+          <div class="game-topbar">
+            <div class="game-question-counter" id="hostQCounter">Câu 1 / 10</div>
+            <div class="game-timer-badge" id="hostTimerBadge">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="hostTimerSec">15</span>s
+            </div>
+            <div class="game-answers-count">
+              <span id="answeredCount">0</span> / <span id="totalPlayersPlaying">0</span> đã trả lời
+            </div>
+          </div>
+
+          <!-- Thanh tiến trình thời gian -->
+          <div class="game-time-progress-bg">
+            <div class="game-time-progress-bar" id="hostTimeProgressBar"></div>
+          </div>
+
+          <!-- Khung câu hỏi lớn trung tâm -->
+          <div class="game-question-card">
+            <div class="question-type-badge" id="hostQTypeBadge">Chọn nghĩa đúng của từ Hán</div>
+            <div class="question-main-text" id="hostQuestionText">你好</div>
+            <div class="question-sub-text" id="hostQuestionSub">nǐ hǎo</div>
+            <button class="icon-btn question-audio-btn" id="hostQAudioBtn" title="Phát âm">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            </button>
+          </div>
+
+          <!-- 4 khối màu đáp án phong cách Kahoot -->
+          <div class="kahoot-answers-grid" id="hostAnswersGrid">
+            <div class="k-ans-card k-red" data-index="0">
+              <div class="k-shape"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 2 22 22 22"></polygon></svg></div>
+              <div class="k-text" id="hostAns0">--</div>
+            </div>
+            <div class="k-ans-card k-blue" data-index="1">
+              <div class="k-shape"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 22 12 12 22 2 12"></polygon></svg></div>
+              <div class="k-text" id="hostAns1">--</div>
+            </div>
+            <div class="k-ans-card k-yellow" data-index="2">
+              <div class="k-shape"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg></div>
+              <div class="k-text" id="hostAns2">--</div>
+            </div>
+            <div class="k-ans-card k-green" data-index="3">
+              <div class="k-shape"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg></div>
+              <div class="k-text" id="hostAns3">--</div>
+            </div>
+          </div>
+
+          <!-- Footer điều hướng câu hỏi của Host -->
+          <div class="game-host-footer" id="gameHostFooter" style="display: none;">
+            <div class="round-summary-text" id="roundSummaryText">Hết giờ! Đáp án đúng là: ...</div>
+            <button class="btn btn-hero-primary" id="btnNextRound">Xem Bảng Xếp Hạng ➔</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 4. HOST: BẢNG XẾP HẠNG TẠM THỜI (LEADERBOARD VIEW) ==================== -->
+      <div class="arena-view" id="hostLeaderboardView" style="display: none;">
+        <div class="glass-card arena-card leaderboard-card">
+          <div class="leaderboard-header">
+            <span class="arena-badge">Bảng Xếp Hạng</span>
+            <h2 id="leaderboardRoundTitle">Top Dẫn Đầu</h2>
+          </div>
+
+          <div class="leaderboard-list" id="hostLeaderboardList"></div>
+
+          <div class="leaderboard-footer">
+            <button class="btn btn-hero-primary" id="btnContinueGame">
+              <span>Câu hỏi tiếp theo ➔</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 5. HOST: BỤC VINH QUANG PODIUM CHUNG CUỘC ==================== -->
+      <div class="arena-view" id="hostPodiumView" style="display: none;">
+        <div class="glass-card arena-card podium-card">
+          <div class="podium-header">
+            <div class="podium-trophy">🏆</div>
+            <h2 class="podium-title">Vinh Danh Quán Quân</h2>
+            <p class="podium-subtitle">Trận đấu đã khép lại! Chúc mừng các cao thủ xuất sắc nhất!</p>
+          </div>
+
+          <!-- 3 bục Top 1, 2, 3 -->
+          <div class="podium-stage">
+            <!-- Hạng 2: Bạc -->
+            <div class="podium-col rank-2" id="podiumRank2">
+              <div class="podium-avatar">🥈</div>
+              <div class="podium-name" id="podiumName2">--</div>
+              <div class="podium-score" id="podiumScore2">0 đ</div>
+              <div class="podium-pillar pillar-2"><span>2</span></div>
+            </div>
+
+            <!-- Hạng 1: Vàng -->
+            <div class="podium-col rank-1" id="podiumRank1">
+              <div class="podium-crown">👑</div>
+              <div class="podium-avatar">🥇</div>
+              <div class="podium-name" id="podiumName1">--</div>
+              <div class="podium-score" id="podiumScore1">0 đ</div>
+              <div class="podium-pillar pillar-1"><span>1</span></div>
+            </div>
+
+            <!-- Hạng 3: Đồng -->
+            <div class="podium-col rank-3" id="podiumRank3">
+              <div class="podium-avatar">🥉</div>
+              <div class="podium-name" id="podiumName3">--</div>
+              <div class="podium-score" id="podiumScore3">0 đ</div>
+              <div class="podium-pillar pillar-3"><span>3</span></div>
+            </div>
+          </div>
+
+          <div class="podium-footer">
+            <button class="btn btn-secondary" id="btnExitArena">Về trang chủ</button>
+            <button class="btn btn-hero-primary" id="btnPlayAgain">🎮 Đấu trận mới</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 6. PLAYER: MÀN HÌNH NHẬP TÊN THAM GIA ==================== -->
+      <div class="arena-view" id="playerJoinView" style="display: none;">
+        <div class="glass-card arena-card player-join-card">
+          <div class="player-join-header">
+            <span class="arena-badge">Tham gia đấu trường</span>
+            <h2>Gia nhập phòng thi</h2>
+            <p>Nhập mã PIN và tên của bạn để thi đấu cùng mọi người!</p>
+          </div>
+
+          <div class="player-join-form">
+            <div class="arena-form-group">
+              <label class="arena-label">MÃ PIN PHÒNG:</label>
+              <input type="number" id="playerInputPin" class="auth-input pin-input" placeholder="VD: 739125" pattern="[0-9]*" inputmode="numeric">
+            </div>
+
+            <div class="arena-form-group">
+              <label class="arena-label">Tên hiển thị của bạn:</label>
+              <input type="text" id="playerInputName" class="auth-input" placeholder="Gõ tên của bạn..." maxlength="18" autocomplete="nickname">
+            </div>
+
+            <div class="arena-form-group">
+              <label class="arena-label">Chọn linh vật đại diện:</label>
+              <div class="avatar-pick-grid" id="avatarPickGrid">
+                <button class="avatar-btn active" data-avatar="🐼">🐼</button>
+                <button class="avatar-btn" data-avatar="🦊">🦊</button>
+                <button class="avatar-btn" data-avatar="🐯">🐯</button>
+                <button class="avatar-btn" data-avatar="🐉">🐉</button>
+                <button class="avatar-btn" data-avatar="🐱">🐱</button>
+                <button class="avatar-btn" data-avatar="🐰">🐰</button>
+                <button class="avatar-btn" data-avatar="🦁">🦁</button>
+                <button class="avatar-btn" data-avatar="🐻">🐻</button>
+                <button class="avatar-btn" data-avatar="🐸">🐸</button>
+                <button class="avatar-btn" data-avatar="🦄">🦄</button>
+              </div>
+            </div>
+
+            <button class="btn btn-hero-primary" id="btnPlayerJoin">
+              <span>🚀 Vào phòng ngay</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 7. PLAYER: PHÒNG CHỜ TRÊN ĐIỆN THOẠI ==================== -->
+      <div class="arena-view" id="playerLobbyView" style="display: none;">
+        <div class="glass-card arena-card player-waiting-card">
+          <div class="player-big-avatar" id="playerWaitingAvatar">🐼</div>
+          <h2 class="player-waiting-name" id="playerWaitingName">Bạn</h2>
+          <div class="player-waiting-badge">Đã vào phòng!</div>
+          <p class="player-waiting-hint">Hãy nhìn lên màn hình lớn của chủ phòng.<br>Trận đấu sẽ bắt đầu ngay khi chủ phòng bấm Bắt đầu!</p>
+          <div class="pulsing-loader"></div>
+        </div>
+      </div>
+
+      <!-- ==================== 8. PLAYER: MÀN HÌNH BẤM ĐÁP ÁN 4 NÚT ==================== -->
+      <div class="arena-view" id="playerGameView" style="display: none;">
+        <div class="player-game-header">
+          <div class="player-score-tag">Điểm: <span id="playerCurrentScore">0</span></div>
+          <div class="player-streak-tag" id="playerStreakTag" style="display: none;">🔥 Chuỗi: <span>0</span></div>
+        </div>
+
+        <!-- 4 nút bấm to chiếm trọn màn hình điện thoại -->
+        <div class="player-pad-grid" id="playerPadGrid">
+          <button class="player-pad-btn p-red" data-index="0">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 2 22 22 22"></polygon></svg>
+          </button>
+          <button class="player-pad-btn p-blue" data-index="1">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 22 12 12 22 2 12"></polygon></svg>
+          </button>
+          <button class="player-pad-btn p-yellow" data-index="2">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
+          </button>
+          <button class="player-pad-btn p-green" data-index="3">
+            <svg width="42" height="42" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
+          </button>
+        </div>
+
+        <!-- Trạng thái sau khi bấm chọn -->
+        <div class="player-submitted-state" id="playerSubmittedState" style="display: none;">
+          <div class="submitted-icon">⏳</div>
+          <div class="submitted-title">Đã ghi nhận câu trả lời!</div>
+          <div class="submitted-desc">Hãy nhìn lên màn hình lớn để xem kết quả...</div>
+        </div>
+
+        <!-- Trạng thái kết quả sau khi hết giờ -->
+        <div class="player-result-overlay" id="playerResultOverlay" style="display: none;">
+          <div class="result-big-icon" id="playerResultIcon">🎉</div>
+          <div class="result-main-text" id="playerResultText">Chính xác!</div>
+          <div class="result-score-plus" id="playerScorePlus">+850 điểm</div>
+          <div class="result-rank-status" id="playerRankStatus">Bạn đang xếp hạng #1</div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <!-- Scripts -->
+  <script src="../data/data.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../storage.js" defer></script>
+  <script src="../api-client.js" defer></script>
+  <script src="../profile.js" defer></script>
+  <script src="../js/shared.js" defer></script>
+  <script src="../js/arena.js" defer></script>
+
+</body>
+
+</html>

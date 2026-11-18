@@ -17,7 +17,7 @@
   if (typeof caches !== 'undefined' && caches.keys) {
     caches.keys().then(function (keys) {
       keys.forEach(function (k) {
-        if (k !== 'wenqing-v12') caches.delete(k);
+        if (k !== 'wenqing-v13') caches.delete(k);
       });
     }).catch(function () { });
   }
@@ -54,6 +54,7 @@
     quiz: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>',
     sentence: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>',
     write: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path></svg>',
+    arena: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>',
     stats: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>',
     favorites: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>',
     custom: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>',
@@ -66,6 +67,7 @@
     { page: 'quiz', href: root + 'pages/quiz.html', icon: SVG_ICONS.quiz, label: 'Trắc nghiệm' },
     { page: 'sentence', href: root + 'pages/sentence.html', icon: SVG_ICONS.sentence, label: 'Ghép câu' },
     { page: 'write', href: root + 'pages/write.html', icon: SVG_ICONS.write, label: 'Nét chữ' },
+    { page: 'arena', href: root + 'pages/arena.html', icon: SVG_ICONS.arena, label: 'Đấu trường' },
     { page: 'stats', href: root + 'pages/stats.html', icon: SVG_ICONS.stats, label: 'Thống kê' },
     { page: 'favorites', href: root + 'pages/favorites.html', icon: SVG_ICONS.favorites, label: 'Yêu thích' },
     { page: 'custom', href: root + 'pages/custom.html', icon: SVG_ICONS.custom, label: 'Tự tạo' },
@@ -79,6 +81,7 @@
     'quiz.html': 'Trắc nghiệm',
     'sentence.html': 'Ghép câu',
     'write.html': 'Nét chữ',
+    'arena.html': 'Đấu trường',
     'stats.html': 'Thống kê',
     'favorites.html': 'Yêu thích',
     'custom.html': 'Tự tạo',
