@@ -41,20 +41,11 @@
       <!-- ==================== 1. ADMIN: MÀN HÌNH CHỌN GAME & TẠO PHÒNG ==================== -->
       <div class="arena-view" id="hostConfigView" style="display: none;">
         <div class="glass-card arena-card">
-          <!-- Thanh trạng thái Admin đã đăng nhập -->
-          <div class="admin-status-bar">
-            <div class="admin-status-left">
-              <span class="admin-verified-dot"></span>
-              <span>Quản trị viên: <b id="adminCurrentName">admin</b> (Quyền Tạo &amp; Điều khiển phòng)</span>
-            </div>
-            <button type="button" class="btn-admin-logout" id="btnAdminLogout">Đăng xuất Admin</button>
-          </div>
-
           <div class="arena-card-header">
             <span class="arena-badge">Bảng Điều Khiển Admin</span>
             <h2 class="arena-title">Thiết Lập Phòng Thi Đấu Kahoot (5 Pha)</h2>
             <p class="arena-desc">Mỗi câu hỏi sẽ tự động đi qua 5 pha chuẩn Kahoot: Đọc đề 3s (ẩn đáp án) ➔ Bung 4 đáp
-              án ➔ Khóa cá nhân &amp; Ngắt sớm ➔ Lật bài &amp; Biểu đồ cột A/B/C/D ➔ Bảng xếp hạng Top 5.</p>
+              án ➔ Khóa cá nhân &amp; Ngắt sớm ➔ Lật bài &amp; Biểu đồ cột A/B/C/D ➔ Bảng xếp hạng thi đấu.</p>
           </div>
 
           <!-- 4 CHẾ ĐỘ GAME KAHOOT -->
@@ -220,7 +211,8 @@
               </div>
               <div class="lobby-expiry-pill" id="lobbyExpiryBadge">⏳ Lưu trữ: 30 phút</div>
               <div class="lobby-meta-info" id="lobbyDeckInfo">HSK 1 • 10 câu</div>
-              <button type="button" class="btn-lobby-new-game" id="btnLobbyCreateNewGame" title="Tạo phòng thi đấu mới">➕ Tạo game mới</button>
+              <button type="button" class="btn-lobby-new-game" id="btnLobbyCreateNewGame"
+                title="Tạo phòng thi đấu mới">➕ Tạo game mới</button>
             </div>
           </div>
 
@@ -427,12 +419,12 @@
         </div>
       </div>
 
-      <!-- ==================== 4. ADMIN: PHA 5 - BẢNG XẾP HẠNG TRUNG GIAN TOP 5 ==================== -->
+      <!-- ==================== 4. ADMIN: PHA 5 - BẢNG XẾP HẠNG TRUNG GIAN ==================== -->
       <div class="arena-view" id="hostLeaderboardView" style="display: none;">
         <div class="glass-card arena-card leaderboard-card">
           <div class="leaderboard-header">
             <span class="arena-badge">PHA 5: BẢNG XẾP HẠNG TRUNG GIAN</span>
-            <h2 id="leaderboardRoundTitle">Top 5 Dẫn Đầu</h2>
+            <h2 id="leaderboardRoundTitle">Bảng Xếp Hạng Đấu Thủ</h2>
             <!-- Banner thông báo chuỗi thắng nổi bật -->
             <div class="leaderboard-streak-callout" id="leaderboardStreakCallout" style="display: none;">
               🔥 Gấu vừa lập chuỗi 3 câu đúng liên tiếp!
@@ -500,7 +492,8 @@
               <span>Bạn đang đăng nhập Quản trị viên (Admin)</span>
             </div>
             <div class="admin-quick-switch-actions">
-              <button type="button" class="btn-admin-switch-act" id="btnAdminGoCreateFromJoin">🎮 Bảng Tạo &amp; Điều Khiển Game ➔</button>
+              <button type="button" class="btn-admin-switch-act" id="btnAdminGoCreateFromJoin">🎮 Bảng Tạo &amp; Điều
+                Khiển Game ➔</button>
             </div>
           </div>
 
@@ -606,7 +599,8 @@
               <span>Bạn đang ở chế độ Người chơi để test phòng <b>#<span id="adminLobbyPinText">------</span></b></span>
             </div>
             <div class="admin-quick-switch-actions">
-              <button type="button" class="btn-admin-switch-act" id="btnAdminReturnHostFromLobby">🎮 Quay lại Bảng Host Điều Khiển ➔</button>
+              <button type="button" class="btn-admin-switch-act" id="btnAdminReturnHostFromLobby">🎮 Quay lại Bảng Host
+                Điều Khiển ➔</button>
               <button type="button" class="btn-admin-switch-sec" id="btnAdminCreateNewFromLobby">➕ Tạo game mới</button>
             </div>
           </div>
@@ -636,7 +630,8 @@
                 <span>🚀 BẮT ĐẦU THI ĐẤU NGAY ➔</span>
               </button>
               <div class="public-solo-hint">
-                <span>🌐 <b>Phòng Công Khai:</b> Tự do thi đấu leo Top Bảng Xếp Hạng bất cứ lúc nào mà không cần chờ Admin!</span>
+                <span>🌐 <b>Phòng Công Khai:</b> Tự do thi đấu leo Top Bảng Xếp Hạng bất cứ lúc nào mà không cần chờ
+                  Admin!</span>
               </div>
             </div>
           </div>
@@ -745,7 +740,8 @@
           <div class="result-streak-pill" id="playerResultStreakPill" style="display: none;">🔥 Chuỗi 3 câu đúng liên
             tiếp!</div>
           <div class="result-rank-status" id="playerRankStatus">Nhìn lên màn hình lớn để xem thống kê cả phòng</div>
-          <button type="button" class="btn btn-hero-primary btn-solo-next-q" id="playerSoloNextBtn" style="display: none; margin-top: 18px; width: 100%;">
+          <button type="button" class="btn btn-hero-primary btn-solo-next-q" id="playerSoloNextBtn"
+            style="display: none; margin-top: 18px; width: 100%;">
             <span>Câu tiếp theo ➔</span>
           </button>
         </div>
