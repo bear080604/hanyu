@@ -7992,3 +7992,193 @@ details[open] summary {
   flex-direction: column;
   gap: 10px;
 }
+
+/* ==================== ROOM RETENTION, SAVED ROOMS & URL SESSION RECOVERY ==================== */
+.lobby-expiry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.13);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.arena-saved-rooms-panel {
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+}
+
+.arena-saved-rooms-head {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.arena-saved-rooms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.saved-room-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+}
+
+.saved-room-item.is-active-room {
+  border-color: var(--accent-red);
+  background: var(--accent-red-subtle);
+}
+
+.saved-room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.saved-room-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.saved-room-pin {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--accent-red);
+  letter-spacing: 0.04em;
+}
+
+.saved-room-status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 9px;
+  border-radius: 999px;
+}
+
+.saved-room-players {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.saved-room-meta {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.saved-room-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-resume-room {
+  border: 1px solid var(--accent-red);
+  background: var(--accent-red);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-resume-room:hover {
+  filter: brightness(1.08);
+}
+
+.btn-delete-room {
+  border: 1px solid var(--border-medium);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  padding: 5px 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-delete-room:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.player-waiting-badges-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.player-waiting-badges-row .player-waiting-badge {
+  margin-bottom: 0;
+}
+
+.player-room-expiry-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #d97706;
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+
+.btn-player-leave-room {
+  border: 1px solid var(--border-medium);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-player-leave-room:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.btn-player-leave-mini {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-raised);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-player-leave-mini:hover {
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}

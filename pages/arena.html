@@ -134,6 +134,29 @@
                 </select>
               </div>
             </div>
+
+            <div class="arena-form-row">
+              <div class="arena-form-group">
+                <label class="arena-label" for="hostRoomDuration">⏳ Thời hạn lưu trữ phòng chơi (Tồn tại để mọi người vào chơi / tải lại trang không mất):</label>
+                <select id="hostRoomDuration" class="auth-input arena-select">
+                  <option value="15m">15 phút</option>
+                  <option value="30m" selected>30 phút (Tiêu chuẩn)</option>
+                  <option value="1h">1 giờ</option>
+                  <option value="6h">6 giờ</option>
+                  <option value="1d">1 ngày (24 giờ)</option>
+                  <option value="7d">7 ngày</option>
+                  <option value="forever">♾️ Vĩnh viễn (Không giới hạn thời gian)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Danh sách phòng đang lưu trữ chưa hết hạn để Admin mở lại bất cứ lúc nào -->
+          <div class="arena-saved-rooms-panel" id="hostSavedRoomsPanel" style="display: none;">
+            <div class="arena-saved-rooms-head">
+              <span>📂 Phòng đang lưu trữ (Tải lại trang hoặc thoát ra vẫn còn nguyên)</span>
+            </div>
+            <div class="arena-saved-rooms-list" id="hostSavedRoomsList"></div>
           </div>
 
           <div class="arena-card-footer">
@@ -163,6 +186,7 @@
               <div class="lobby-live-count-pill">
                 <span>👥 Đã vào phòng: <b id="lobbyTopPlayerCount">0</b> người</span>
               </div>
+              <div class="lobby-expiry-pill" id="lobbyExpiryBadge">⏳ Lưu trữ: 30 phút</div>
               <div class="lobby-meta-info" id="lobbyDeckInfo">HSK 1 • 10 câu</div>
             </div>
           </div>
@@ -466,7 +490,10 @@
         <div class="glass-card arena-card player-waiting-card">
           <div class="player-big-avatar" id="playerWaitingAvatar">🐼</div>
           <h2 class="player-waiting-name" id="playerWaitingName">Bạn</h2>
-          <div class="player-waiting-badge">Đã kết nối phòng #<span id="playerConnectedPin">------</span></div>
+          <div class="player-waiting-badges-row">
+            <span class="player-waiting-badge">Đã kết nối phòng #<span id="playerConnectedPin">------</span></span>
+            <span class="player-room-expiry-badge" id="playerRoomExpiryBadge" style="display: none;">⏳ Lưu trữ: 30 phút</span>
+          </div>
 
           <!-- Hiển thị trực tiếp số lượng & danh sách người chơi đã xuất hiện trong phòng -->
           <div class="player-lobby-roster-box">
@@ -477,8 +504,11 @@
             <div class="player-lobby-roster-list" id="playerLobbyRosterList"></div>
           </div>
 
-          <p class="player-waiting-hint">Bạn đã có mặt trên màn hình lớn! Trận đấu sẽ bắt đầu ngay khi Admin bấm <b>Bắt đầu</b>.</p>
+          <p class="player-waiting-hint">Bạn đã có mặt trên màn hình lớn! Tải lại trang hoặc lỡ thoát ra vào lại đều tự động giữ nguyên vị trí trong phòng.</p>
           <div class="pulsing-loader"></div>
+          <div style="margin-top: 16px;">
+            <button type="button" class="btn-player-leave-room" id="btnPlayerLeaveLobby">🚪 Rời phòng / Đổi mã PIN khác</button>
+          </div>
         </div>
       </div>
 
@@ -492,6 +522,7 @@
           </div>
           <div class="player-q-prompt" id="playerMiniPrompt">Câu 1</div>
           <div class="player-streak-tag" id="playerStreakTag" style="display: none;">🔥 <span>0</span></div>
+          <button type="button" class="btn-player-leave-mini" id="btnPlayerLeaveGame" title="Rời phòng thi đấu">🚪 Rời</button>
         </div>
 
         <!-- PHA 1 TRÊN ĐIỆN THOẠI: Đọc đề 3 giây (Chưa hiện 4 nút bấm đáp án) -->

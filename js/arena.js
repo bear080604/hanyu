@@ -258,6 +258,62 @@
     });
   }
 
+  // ==================== ROOM RETENTION / EXPIRATION PRESETS ====================
+  var ROOM_DURATION_MAP = {
+    '15m': { ms: 15 * 60 * 1000, label: '15 phút' },
+    '30m': { ms: 30 * 60 * 1000, label: '30 phút' },
+    '1h': { ms: 60 * 60 * 1000, label: '1 giờ' },
+    '6h': { ms: 6 * 60 * 60 * 1000, label: '6 giờ' },
+    '1d': { ms: 24 * 60 * 60 * 1000, label: '1 ngày (24h)' },
+    '7d': { ms: 7 * 24 * 60 * 60 * 1000, label: '7 ngày' },
+    'forever': { ms: 0, label: 'Vĩnh viễn' }
+  };
+
+  var _expiryTickerInterval = null;
+
+  function formatRemainingExpiry(expiresAt, durationLabel) {
+    if (!expiresAt || Number(expiresAt) <= 0) {
+      return '♾️ Lưu trữ: Vĩnh viễn';
+    }
+    var remMs = Number(expiresAt) - Date.now();
+    if (remMs <= 0) {
+      return '⌛ Đã hết hạn lưu trữ';
+    }
+    var remSec = Math.ceil(remMs / 1000);
+    var timeStr = '';
+    if (remSec >= 86400) {
+      var days = Math.floor(remSec / 86400);
+      var hrs = Math.floor((remSec % 86400) / 3600);
+      timeStr = days + ' ngày ' + hrs + 'h';
+    } else if (remSec >= 3600) {
+      var h = Math.floor(remSec / 3600);
+      var m = Math.floor((remSec % 3600) / 60);
+      timeStr = h + 'h ' + m + 'p';
+    } else {
+      var min = Math.floor(remSec / 60);
+      var sec = remSec % 60;
+      timeStr = min + 'p ' + (sec < 10 ? '0' + sec : sec) + 's';
+    }
+    return '⏳ Lưu trữ: ' + (durationLabel || '30 phút') + ' (Còn ' + timeStr + ')';
+  }
+
+  function syncBrowserUrl(pin, role) {
+    try {
+      if (!window.history || typeof window.history.replaceState !== 'function') return;
+      var cleanP = normalizePin(pin);
+      if (!cleanP) {
+        window.history.replaceState(null, '', window.location.pathname);
+        return;
+      }
+      var params = new URLSearchParams();
+      params.set('pin', cleanP);
+      if (role === 'host') {
+        params.set('role', 'host');
+      }
+      window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+    } catch (e) { }
+  }
+
   // ==================== GAME STATE ====================
   var gameState = {
     role: 'player', // Mặc định mở trang là 'player' (Người chơi). Chọn tab Admin mới đăng nhập 'host'.
@@ -271,6 +327,10 @@
     questionType: 'hanzi_to_mean',
     totalQuestions: 10,
     timePerQuestion: 15,
+    roomDurationKey: '30m',
+    roomDurationLabel: '30 phút',
+    roomCreatedAt: 0,
+    roomExpiresAt: null,
     currentQuestionIndex: 0,
     questions: [],
     players: [], // [{ id, name, avatar, score, prevRank, streak, lives, lastAnswerIndex, answeredAt, lastPointsEarned, isBot }]
@@ -287,6 +347,8 @@
     playerLastChoice: -1,
     playerLocalScore: 0,
     playerLocalStreak: 0,
+    playerLastPhaseAction: '',
+    playerLastPhasePayload: null,
     playerProfile: {
       name: '',
       avatar: '🐼'
@@ -546,24 +608,507 @@
     }
   }
 
+  // ==================== LƯU TRỮ PHÒNG THEO THỜI HẠN & KHÔI PHỤC KHI TẢI LẠI TRANG ====================
+  function updateExpiryBadges() {
+    var expiryText = formatRemainingExpiry(gameState.roomExpiresAt, gameState.roomDurationLabel);
+    var hostBadge = document.getElementById('lobbyExpiryBadge');
+    if (hostBadge) {
+      hostBadge.textContent = expiryText;
+    }
+    var playerBadge = document.getElementById('playerRoomExpiryBadge');
+    if (playerBadge) {
+      playerBadge.style.display = 'inline-flex';
+      playerBadge.textContent = expiryText;
+    }
+
+    // Kiểm tra nếu phòng đã hết thời hạn lưu trữ
+    if (gameState.pin && gameState.roomExpiresAt && Number(gameState.roomExpiresAt) > 0 && Date.now() >= Number(gameState.roomExpiresAt)) {
+      var expiredPin = gameState.pin;
+      if (gameState.role === 'host') {
+        deleteSavedRoom(expiredPin, true);
+        if (typeof showToast === 'function') {
+          showToast('⏳ Phòng #' + formatPinCode(expiredPin) + ' đã hết thời hạn lưu trữ!', 'warning');
+        }
+      } else {
+        playerLeaveRoom(true);
+        if (typeof showToast === 'function') {
+          showToast('⏳ Phòng #' + formatPinCode(expiredPin) + ' đã hết thời hạn lưu trữ!', 'warning');
+        }
+      }
+    }
+  }
+
+  function startExpiryCountdownTicker() {
+    if (_expiryTickerInterval) {
+      clearInterval(_expiryTickerInterval);
+    }
+    updateExpiryBadges();
+    _expiryTickerInterval = setInterval(function () {
+      updateExpiryBadges();
+      if (gameState.role === 'host' && gameState.status === 'config') {
+        renderSavedRoomsList();
+      }
+    }, 1000);
+  }
+
+  function getSavedRoomPins() {
+    try {
+      var arr = JSON.parse(localStorage.getItem('wq_arena_saved_room_pins') || '[]');
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function pruneExpiredRooms() {
+    var pins = getSavedRoomPins();
+    var validPins = [];
+    pins.forEach(function (p) {
+      var cleanP = normalizePin(p);
+      if (!cleanP) return;
+      try {
+        var raw = localStorage.getItem('wq_arena_host_room_' + cleanP);
+        if (!raw) return;
+        var room = JSON.parse(raw);
+        if (room && room.expiresAt && Number(room.expiresAt) > 0 && Date.now() >= Number(room.expiresAt)) {
+          localStorage.removeItem('wq_arena_host_room_' + cleanP);
+          localStorage.removeItem('wq_arena_roster_' + cleanP);
+          localStorage.removeItem('wq_arena_player_session_' + cleanP);
+          return;
+        }
+        validPins.push(cleanP);
+      } catch (e) { }
+    });
+    try {
+      localStorage.setItem('wq_arena_saved_room_pins', JSON.stringify(validPins));
+    } catch (e) { }
+    return validPins;
+  }
+
+  function saveHostRoomState() {
+    if (gameState.role !== 'host' || !gameState.pin) return;
+    var cleanP = normalizePin(gameState.pin);
+    var snapshot = {
+      pin: cleanP,
+      createdAt: gameState.roomCreatedAt || Date.now(),
+      expiresAt: gameState.roomExpiresAt,
+      durationKey: gameState.roomDurationKey || '30m',
+      durationLabel: gameState.roomDurationLabel || '30 phút',
+      status: gameState.status,
+      phase: gameState.phase,
+      gameMode: gameState.gameMode,
+      deckValue: gameState.deckValue,
+      deckName: gameState.deckName,
+      questionType: gameState.questionType,
+      totalQuestions: gameState.totalQuestions,
+      timePerQuestion: gameState.timePerQuestion,
+      currentQuestionIndex: gameState.currentQuestionIndex,
+      questions: gameState.questions,
+      players: gameState.players,
+      questionStartTime: gameState.questionStartTime,
+      questionEndTime: gameState.questionEndTime,
+      wasEarlyCutoff: gameState.wasEarlyCutoff,
+      updatedAt: Date.now()
+    };
+    try {
+      localStorage.setItem('wq_arena_host_room_' + cleanP, JSON.stringify(snapshot));
+      localStorage.setItem('wq_arena_active_host_pin', cleanP);
+      var pins = getSavedRoomPins();
+      if (pins.indexOf(cleanP) === -1) {
+        pins.unshift(cleanP);
+        localStorage.setItem('wq_arena_saved_room_pins', JSON.stringify(pins));
+      }
+    } catch (e) { }
+  }
+
+  function deleteSavedRoom(pin, silent) {
+    var cleanP = normalizePin(pin);
+    if (!cleanP) return;
+    try {
+      localStorage.removeItem('wq_arena_host_room_' + cleanP);
+      localStorage.removeItem('wq_arena_roster_' + cleanP);
+      localStorage.removeItem('wq_arena_player_session_' + cleanP);
+      var pins = getSavedRoomPins().filter(function (x) { return normalizePin(x) !== cleanP; });
+      localStorage.setItem('wq_arena_saved_room_pins', JSON.stringify(pins));
+      if (normalizePin(localStorage.getItem('wq_arena_active_host_pin')) === cleanP) {
+        localStorage.setItem('wq_arena_active_host_pin', pins[0] || '');
+      }
+    } catch (e) { }
+
+    if (normalizePin(gameState.pin) === cleanP) {
+      clearAllRoundTimers();
+      stopCloudPolling();
+      cleanupCloudRoomMessages();
+      gameState.pin = '';
+      gameState.players = [];
+      gameState.status = 'config';
+      syncBrowserUrl('', '');
+      var tabCountEl = document.getElementById('adminTabPlayerCount');
+      if (tabCountEl) tabCountEl.textContent = '0';
+      if (isAdminLoggedIn()) {
+        switchRoleTab('host');
+      }
+    }
+    renderSavedRoomsList();
+    if (!silent && typeof showToast === 'function') {
+      showToast('🗑️ Đã xóa phòng #' + formatPinCode(cleanP), 'info');
+    }
+  }
+
+  function renderSavedRoomsList() {
+    var panel = document.getElementById('hostSavedRoomsPanel');
+    var listEl = document.getElementById('hostSavedRoomsList');
+    if (!panel || !listEl) return;
+
+    var validPins = pruneExpiredRooms();
+    if (validPins.length === 0) {
+      panel.style.display = 'none';
+      listEl.innerHTML = '';
+      return;
+    }
+
+    panel.style.display = 'block';
+    listEl.innerHTML = '';
+
+    validPins.forEach(function (pin) {
+      try {
+        var raw = localStorage.getItem('wq_arena_host_room_' + pin);
+        if (!raw) return;
+        var r = JSON.parse(raw);
+        var pCount = Array.isArray(r.players) ? r.players.length : 0;
+        var statusLabel = 'Phòng chờ';
+        if (r.status === 'phase1' || r.status === 'phase2' || r.status === 'phase4' || r.status === 'phase5') {
+          statusLabel = 'Đang thi Câu ' + ((r.currentQuestionIndex || 0) + 1) + '/' + (r.totalQuestions || 10);
+        } else if (r.status === 'podium') {
+          statusLabel = 'Đã hoàn thành';
+        }
+        var expLabel = formatRemainingExpiry(r.expiresAt, r.durationLabel);
+        var isCurrent = normalizePin(gameState.pin) === normalizePin(pin);
+
+        var row = document.createElement('div');
+        row.className = 'saved-room-item' + (isCurrent ? ' is-active-room' : '');
+        row.innerHTML =
+          '<div class="saved-room-info">' +
+          '<div class="saved-room-top">' +
+          '<span class="saved-room-pin">#' + formatPinCode(pin) + '</span>' +
+          '<span class="saved-room-status">' + statusLabel + '</span>' +
+          '<span class="saved-room-players">👥 ' + pCount + ' người</span>' +
+          '</div>' +
+          '<div class="saved-room-meta">' +
+          '<span>' + (r.deckName || 'HSK 1') + ' • ' + (r.totalQuestions || 10) + ' câu</span>' +
+          '<span> • ' + expLabel + '</span>' +
+          '</div>' +
+          '</div>' +
+          '<div class="saved-room-actions">' +
+          '<button type="button" class="btn-resume-room" data-pin="' + pin + '">Vào lại phòng ➔</button>' +
+          '<button type="button" class="btn-delete-room" data-pin="' + pin + '" title="Đóng & Xóa phòng này">🗑️</button>' +
+          '</div>';
+        listEl.appendChild(row);
+      } catch (e) { }
+    });
+
+    listEl.querySelectorAll('.btn-resume-room').forEach(function (btn) {
+      btn.onclick = function () {
+        restoreHostRoomByPin(btn.dataset.pin);
+      };
+    });
+
+    listEl.querySelectorAll('.btn-delete-room').forEach(function (btn) {
+      btn.onclick = function () {
+        deleteSavedRoom(btn.dataset.pin, false);
+      };
+    });
+  }
+
+  function restoreHostRoomByPin(pin) {
+    var cleanP = normalizePin(pin);
+    if (!cleanP) return false;
+    pruneExpiredRooms();
+    try {
+      var raw = localStorage.getItem('wq_arena_host_room_' + cleanP);
+      if (!raw) return false;
+      var saved = JSON.parse(raw);
+      if (!saved || (saved.expiresAt && Number(saved.expiresAt) > 0 && Date.now() >= Number(saved.expiresAt))) {
+        return false;
+      }
+
+      clearAllRoundTimers();
+      gameState.role = 'host';
+      gameState.pin = cleanP;
+      gameState.roomCreatedAt = saved.createdAt || Date.now();
+      gameState.roomExpiresAt = saved.expiresAt || null;
+      gameState.roomDurationKey = saved.durationKey || '30m';
+      gameState.roomDurationLabel = saved.durationLabel || '30 phút';
+      gameState.status = saved.status || 'lobby';
+      gameState.phase = saved.phase || 0;
+      gameState.gameMode = saved.gameMode || 'speed';
+      gameState.deckValue = saved.deckValue || 'HSK 1';
+      gameState.deckName = saved.deckName || 'HSK 1';
+      gameState.questionType = saved.questionType || 'hanzi_to_mean';
+      gameState.totalQuestions = saved.totalQuestions || 10;
+      gameState.timePerQuestion = saved.timePerQuestion || 15;
+      gameState.currentQuestionIndex = saved.currentQuestionIndex || 0;
+      gameState.questions = Array.isArray(saved.questions) ? saved.questions : [];
+      gameState.players = Array.isArray(saved.players) ? saved.players : [];
+      gameState.questionStartTime = saved.questionStartTime || Date.now();
+      gameState.questionEndTime = saved.questionEndTime || (Date.now() + gameState.timePerQuestion * 1000);
+      gameState.wasEarlyCutoff = !!saved.wasEarlyCutoff;
+
+      localStorage.setItem('wq_arena_active_host_pin', cleanP);
+      syncBrowserUrl(cleanP, 'host');
+      startCloudPolling(cleanP);
+      startExpiryCountdownTicker();
+      renderLobby();
+
+      var tabHostBtn = document.getElementById('tabHostBtn');
+      var tabPlayerBtn = document.getElementById('tabPlayerBtn');
+      if (tabPlayerBtn) tabPlayerBtn.classList.add('active');
+      if (tabHostBtn) tabHostBtn.classList.remove('active');
+
+      if (gameState.status === 'phase1') {
+        startPhase1GetReady();
+      } else if (gameState.status === 'phase2') {
+        var remSec = Math.ceil((gameState.questionEndTime - Date.now()) / 1000);
+        if (remSec > 1) {
+          startPhase2ActiveAnswering(remSec);
+        } else {
+          startPhase4AnswerReveal();
+        }
+      } else if (gameState.status === 'phase4') {
+        gameState.status = 'phase2'; // để startPhase4AnswerReveal vẽ lại đầy đủ biểu đồ cột Pha 4
+        startPhase4AnswerReveal();
+      } else if (gameState.status === 'phase5') {
+        startPhase5Leaderboard();
+      } else if (gameState.status === 'podium') {
+        showPodium();
+      } else {
+        gameState.status = 'lobby';
+        showView('hostLobbyView');
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function savePlayerSessionState() {
+    if (gameState.role !== 'player' || !gameState.pin || !gameState.myPlayerId) return;
+    var cleanP = normalizePin(gameState.pin);
+    var sessionObj = {
+      pin: cleanP,
+      myPlayerId: gameState.myPlayerId,
+      name: gameState.playerProfile.name || 'Người chơi',
+      avatar: gameState.playerProfile.avatar || '🐼',
+      status: gameState.status,
+      playerLastChoice: gameState.playerLastChoice,
+      playerLocalScore: gameState.playerLocalScore,
+      playerLocalStreak: gameState.playerLocalStreak,
+      lastPhaseAction: gameState.playerLastPhaseAction || '',
+      lastPhasePayload: gameState.playerLastPhasePayload || null,
+      roomExpiresAt: gameState.roomExpiresAt || null,
+      roomDurationLabel: gameState.roomDurationLabel || '',
+      updatedAt: Date.now()
+    };
+    try {
+      localStorage.setItem('wq_arena_player_session_' + cleanP, JSON.stringify(sessionObj));
+      localStorage.setItem('wq_arena_last_player_pin', cleanP);
+    } catch (e) { }
+  }
+
+  function restorePlayerSessionByPin(pin) {
+    var cleanP = normalizePin(pin);
+    if (!cleanP) return false;
+    try {
+      var raw = localStorage.getItem('wq_arena_player_session_' + cleanP);
+      if (!raw) return false;
+      var sess = JSON.parse(raw);
+      if (!sess || !sess.myPlayerId) return false;
+
+      // Kiểm tra hạn lưu trữ của phòng
+      if (sess.roomExpiresAt && Number(sess.roomExpiresAt) > 0 && Date.now() >= Number(sess.roomExpiresAt)) {
+        localStorage.removeItem('wq_arena_player_session_' + cleanP);
+        return false;
+      }
+      var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + cleanP);
+      if (hostRoomRaw) {
+        try {
+          var hostRoom = JSON.parse(hostRoomRaw);
+          if (hostRoom && hostRoom.expiresAt && Number(hostRoom.expiresAt) > 0 && Date.now() >= Number(hostRoom.expiresAt)) {
+            localStorage.removeItem('wq_arena_player_session_' + cleanP);
+            return false;
+          }
+          if (hostRoom) {
+            sess.roomExpiresAt = hostRoom.expiresAt;
+            sess.roomDurationLabel = hostRoom.durationLabel;
+          }
+        } catch (e2) { }
+      }
+
+      gameState.role = 'player';
+      gameState.pin = cleanP;
+      gameState.myPlayerId = sess.myPlayerId;
+      gameState.playerProfile.name = sess.name || gameState.playerProfile.name || 'Bạn';
+      gameState.playerProfile.avatar = sess.avatar || gameState.playerProfile.avatar || '🐼';
+      gameState.status = sess.status || 'player_lobby';
+      gameState.playerLastChoice = (typeof sess.playerLastChoice === 'number') ? sess.playerLastChoice : -1;
+      gameState.playerLocalScore = Number(sess.playerLocalScore) || 0;
+      gameState.playerLocalStreak = Number(sess.playerLocalStreak) || 0;
+      gameState.playerLastPhaseAction = sess.lastPhaseAction || '';
+      gameState.playerLastPhasePayload = sess.lastPhasePayload || null;
+      gameState.roomExpiresAt = sess.roomExpiresAt || null;
+      gameState.roomDurationLabel = sess.roomDurationLabel || '30 phút';
+
+      syncBrowserUrl(cleanP, 'player');
+      startCloudPolling(cleanP);
+      startExpiryCountdownTicker();
+
+      var avatarEl = document.getElementById('playerWaitingAvatar');
+      var nameEl = document.getElementById('playerWaitingName');
+      var pinEl = document.getElementById('playerConnectedPin');
+      var headerAvatar = document.getElementById('playerHeaderAvatar');
+      var headerName = document.getElementById('playerHeaderName');
+      var curScoreEl = document.getElementById('playerCurrentScore');
+
+      if (avatarEl) avatarEl.textContent = gameState.playerProfile.avatar;
+      if (nameEl) nameEl.textContent = gameState.playerProfile.name;
+      if (pinEl) pinEl.textContent = formatPinCode(cleanP);
+      if (headerAvatar) headerAvatar.textContent = gameState.playerProfile.avatar;
+      if (headerName) headerName.textContent = gameState.playerProfile.name;
+      if (curScoreEl) curScoreEl.textContent = gameState.playerLocalScore.toLocaleString();
+
+      // Nạp danh sách phòng chờ từ cache
+      var cachedRoster = [];
+      try {
+        var savedRosterStr = localStorage.getItem('wq_arena_roster_' + cleanP);
+        if (savedRosterStr) {
+          var parsedRoster = JSON.parse(savedRosterStr);
+          if (parsedRoster && Array.isArray(parsedRoster.players)) {
+            cachedRoster = parsedRoster.players;
+          }
+        }
+      } catch (e3) { }
+      renderPlayerWaitingRoster(cachedRoster);
+
+      // Gửi tín hiệu kết nối lại với cùng myPlayerId để Host đồng bộ trạng thái
+      broadcastMsg('player_join', {
+        id: gameState.myPlayerId,
+        name: gameState.playerProfile.name,
+        avatar: gameState.playerProfile.avatar,
+        pin: cleanP,
+        isReconnect: true
+      });
+
+      // Khôi phục đúng màn hình Pha hiện tại của người chơi
+      if (gameState.status === 'player_game' && gameState.playerLastPhaseAction && gameState.playerLastPhasePayload) {
+        var act = gameState.playerLastPhaseAction;
+        var pay = gameState.playerLastPhasePayload;
+        if (act === 'phase_1_getready') {
+          onPlayerReceivePhase1(pay, true);
+        } else if (act === 'phase_2_active') {
+          if (gameState.playerLastChoice !== -1) {
+            showView('playerGameView');
+            hideAllPlayerSubCards();
+            var submittedState = document.getElementById('playerSubmittedState');
+            var submittedDesc = document.getElementById('playerSubmittedDesc');
+            var chosenLetter = OPTION_LETTERS[gameState.playerLastChoice] || 'A';
+            if (submittedDesc) {
+              submittedDesc.textContent = 'Bạn đã chọn phương án ' + chosenLetter + '. Đang chờ kết quả câu hỏi...';
+            }
+            if (submittedState) submittedState.style.display = 'block';
+          } else {
+            onPlayerReceivePhase2(pay, true);
+          }
+        } else if (act === 'phase_4_reveal') {
+          onPlayerReceivePhase4(pay, true);
+        } else if (act === 'phase_5_leaderboard' || act === 'game_over') {
+          onPlayerReceivePhase5(pay, true);
+        } else {
+          showView('playerLobbyView');
+        }
+      } else {
+        gameState.status = 'player_lobby';
+        showView('playerLobbyView');
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function playerLeaveRoom(silent) {
+    stopPlayerJoinHeartbeat();
+    stopCloudPolling();
+    if (gameState.playerTimerInterval) {
+      clearInterval(gameState.playerTimerInterval);
+      gameState.playerTimerInterval = null;
+    }
+    var oldPin = normalizePin(gameState.pin);
+    if (oldPin) {
+      try {
+        localStorage.removeItem('wq_arena_player_session_' + oldPin);
+      } catch (e) { }
+    }
+    try {
+      localStorage.removeItem('wq_arena_last_player_pin');
+    } catch (e) { }
+
+    gameState.pin = '';
+    gameState.myPlayerId = '';
+    gameState.status = 'config';
+    gameState.playerLastChoice = -1;
+    gameState.playerLastPhaseAction = '';
+    gameState.playerLastPhasePayload = null;
+    syncBrowserUrl('', '');
+    showView('playerJoinView');
+
+    if (!silent && typeof showToast === 'function') {
+      showToast('Đã rời phòng thi đấu. Bạn có thể nhập mã PIN mới!', 'info');
+    }
+  }
+
   function checkUrlParams() {
+    pruneExpiredRooms();
     var urlParams = new URLSearchParams(window.location.search);
-    var pinParam = urlParams.get('pin');
-    if (pinParam) {
-      var cleanP = normalizePin(pinParam);
+    var pinParam = normalizePin(urlParams.get('pin'));
+    var roleParam = urlParams.get('role');
+
+    // 1. Nếu URL có role=host và đã đăng nhập Admin -> Khôi phục thẳng phòng Admin
+    if (isAdminLoggedIn() && roleParam === 'host' && pinParam) {
+      if (restoreHostRoomByPin(pinParam)) return;
+    }
+
+    // 2. Nếu URL có ?pin=XXXXXX (Người chơi quét QR hoặc tải lại trang khi đang chơi)
+    if (pinParam && roleParam !== 'host') {
+      // Thử khôi phục phiên đang chơi của người chơi ở phòng này (nếu lỡ tải lại trang / thoát ra vào lại)
+      if (restorePlayerSessionByPin(pinParam)) {
+        return;
+      }
+      // Nếu là người chơi mới vào link ?pin=XXXXXX
       switchRoleTab('player');
       var pinInput = document.getElementById('playerInputPin');
-      if (pinInput) pinInput.value = cleanP;
+      if (pinInput) pinInput.value = pinParam;
 
       var badge = document.getElementById('playerJoinRoomBadge');
       var sub = document.getElementById('playerJoinRoomSub');
-      if (badge) badge.textContent = 'Phòng thi đấu #' + cleanP;
+      if (badge) badge.textContent = 'Phòng thi đấu #' + pinParam;
       if (sub) sub.textContent = 'Mã PIN đã được điền sẵn! Hãy nhập Tên hiển thị của bạn để vào phòng.';
-    } else if (isAdminLoggedIn()) {
-      // Nếu đã đăng nhập Admin ở ô Hồ sơ, mở thẳng Bảng Điều Khiển Tạo Phòng
+      return;
+    }
+
+    // 3. Nếu mở trang Đấu trường không có param trên URL:
+    if (isAdminLoggedIn()) {
+      // Kiểm tra xem Admin có phòng đang mở chưa hết hạn không
+      var activeHostPin = normalizePin(localStorage.getItem('wq_arena_active_host_pin'));
+      if (activeHostPin && restoreHostRoomByPin(activeHostPin)) {
+        return;
+      }
       switchRoleTab('host');
     } else {
-      // Người chơi thông thường: chỉ hiện giao diện Nhập PIN
+      // Kiểm tra xem Người chơi có đang ở trong phòng nào chưa hết hạn mà lỡ thoát ra không
+      var lastPlayerPin = normalizePin(localStorage.getItem('wq_arena_last_player_pin'));
+      if (lastPlayerPin && restorePlayerSessionByPin(lastPlayerPin)) {
+        return;
+      }
       switchRoleTab('player');
     }
   }
@@ -583,10 +1128,13 @@
         if (tabHostBtn) tabHostBtn.classList.remove('active');
 
         if (!gameState.pin) {
-          // Nếu Admin bấm sang Tab 2 (Phòng Chờ & Người Chơi) mà chưa tạo phòng thì tự động tạo phòng luôn
+          var activeHostPin = normalizePin(localStorage.getItem('wq_arena_active_host_pin'));
+          if (activeHostPin && restoreHostRoomByPin(activeHostPin)) {
+            return;
+          }
           createRoom();
         } else {
-          gameState.status = 'lobby';
+          syncBrowserUrl(gameState.pin, 'host');
           renderLobby();
           showView('hostLobbyView');
         }
@@ -594,6 +1142,7 @@
         // Tab 1: Thiết Lập & Tạo Game
         if (tabHostBtn) tabHostBtn.classList.add('active');
         if (tabPlayerBtn) tabPlayerBtn.classList.remove('active');
+        renderSavedRoomsList();
         showView('hostConfigView');
       }
     } else {
@@ -680,6 +1229,7 @@
     var qTypeSelect = document.getElementById('hostQuestionType');
     var qCountSelect = document.getElementById('hostQuestionCount');
     var timeSelect = document.getElementById('hostTimePerQuestion');
+    var durationSelect = document.getElementById('hostRoomDuration');
 
     var deckVal = deckSelect ? deckSelect.value : 'HSK 1';
     var words = getWordsFromDeckVal(deckVal);
@@ -700,7 +1250,9 @@
       return;
     }
 
-    cleanupCloudRoomMessages();
+    var durKey = (durationSelect && durationSelect.value) ? durationSelect.value : '30m';
+    var durConfig = ROOM_DURATION_MAP[durKey] || ROOM_DURATION_MAP['30m'];
+    var nowMs = Date.now();
 
     gameState.role = 'host';
     gameState.deckValue = deckVal;
@@ -711,6 +1263,10 @@
     gameState.questionType = qTypeSelect ? qTypeSelect.value : 'hanzi_to_mean';
     gameState.totalQuestions = Math.min(parseInt(qCountSelect ? qCountSelect.value : '10', 10) || 10, words.length);
     gameState.timePerQuestion = parseInt(timeSelect ? timeSelect.value : '15', 10) || 15;
+    gameState.roomDurationKey = durKey;
+    gameState.roomDurationLabel = durConfig.label;
+    gameState.roomCreatedAt = nowMs;
+    gameState.roomExpiresAt = durConfig.ms > 0 ? (nowMs + durConfig.ms) : null;
 
     gameState.pin = String(Math.floor(100000 + Math.random() * 900000));
     gameState.players = [];
@@ -723,6 +1279,9 @@
     if (tabHostBtn) tabHostBtn.classList.remove('active');
 
     generateQuestions(gameState.pin);
+    saveHostRoomState();
+    syncBrowserUrl(gameState.pin, 'host');
+    startExpiryCountdownTicker();
     renderLobby();
     showView('hostLobbyView');
     SFX.pop();
@@ -734,7 +1293,9 @@
       gameMode: gameState.gameMode,
       deckName: gameState.deckName,
       totalQuestions: gameState.totalQuestions,
-      timePerQuestion: gameState.timePerQuestion
+      timePerQuestion: gameState.timePerQuestion,
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel
     });
   }
 
@@ -906,6 +1467,8 @@
     if (!gameState.pin) return;
     var rosterPayload = {
       pin: gameState.pin,
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel,
       players: gameState.players.map(function (p) {
         return {
           id: p.id,
@@ -938,6 +1501,7 @@
       startBtn.innerHTML = '<span>BẮT ĐẦU TRẬN ĐẤU (' + count + ' NGƯỜI) ➔</span>';
     }
 
+    saveHostRoomState();
     broadcastLobbyRoster();
 
     if (!listEl) return;
@@ -1107,6 +1671,7 @@
     SFX.tick();
 
     // Gửi tín hiệu Pha 1 (Pre-load đề bài, KHÔNG gửi đáp án đúng) xuống tất cả điện thoại
+    saveHostRoomState();
     broadcastMsg('phase_1_getready', {
       pin: gameState.pin,
       questionIndex: qIdx,
@@ -1114,7 +1679,9 @@
       prompt: q.prompt,
       subPrompt: q.subPrompt,
       typeDesc: q.typeDesc,
-      prepSeconds: 3
+      prepSeconds: 3,
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel
     });
 
     gameState.phase1Timer = setInterval(function () {
@@ -1135,19 +1702,26 @@
   // ==================== PHA 2: BUNG ĐÁP ÁN & ĐẾM NGƯỢC (ACTIVE ANSWERING) ====================
   // Đúng giây thứ 0 của nhịp chuẩn bị, 4 ô đáp án đồng loạt bật lên trên Admin & Điện thoại.
   // Tuyệt đối KHÔNG gửi kèm thông tin đáp án nào đúng (correctIndex) xuống điện thoại để chống nhìn trộm mã nguồn!
-  function startPhase2ActiveAnswering() {
+  function startPhase2ActiveAnswering(overrideSec) {
     clearAllRoundTimers();
 
     var qIdx = gameState.currentQuestionIndex;
     var q = gameState.questions[qIdx];
     if (!q) return;
 
+    showView('hostGameView');
+
     gameState.status = 'phase2';
     gameState.phase = 2;
-    gameState.timerRemaining = gameState.timePerQuestion;
-    gameState.questionStartTime = Date.now();
-    gameState.questionEndTime = gameState.questionStartTime + (gameState.timePerQuestion * 1000);
+    gameState.timerRemaining = (overrideSec && overrideSec > 0) ? overrideSec : gameState.timePerQuestion;
+    if (!overrideSec) {
+      gameState.questionStartTime = Date.now();
+      gameState.questionEndTime = gameState.questionStartTime + (gameState.timePerQuestion * 1000);
+    }
 
+    var qCounterEl = document.getElementById('hostQCounter');
+    var qTextEl = document.getElementById('hostQuestionText');
+    var qSubEl = document.getElementById('hostQuestionSub');
     var phaseBadge = document.getElementById('hostPhaseBadge');
     var timerSecEl = document.getElementById('hostTimerSec');
     var timerBadge = document.getElementById('hostTimerBadge');
@@ -1161,6 +1735,9 @@
     var answersGrid = document.getElementById('hostAnswersGrid');
     var hostFooter = document.getElementById('gameHostFooter');
 
+    if (qCounterEl) qCounterEl.textContent = 'Câu số ' + (qIdx + 1) + '/' + gameState.totalQuestions;
+    if (qTextEl) qTextEl.textContent = q.prompt;
+    if (qSubEl) qSubEl.textContent = q.subPrompt || '';
     if (phaseBadge) {
       phaseBadge.className = 'game-phase-pill phase-2';
       phaseBadge.textContent = 'PHA 2/5: ĐANG NHẬN ĐÁP ÁN';
@@ -1168,9 +1745,11 @@
     if (qTypeBadge) qTypeBadge.textContent = q.typeDesc;
     if (timerSecEl) timerSecEl.textContent = gameState.timerRemaining;
     if (timerBadge) timerBadge.classList.remove('urgent');
-    if (answeredCountEl) answeredCountEl.textContent = '0';
+
+    var curAnswered = getActivePlayers().filter(function (x) { return x.lastAnswerIndex !== -1; }).length;
+    if (answeredCountEl) answeredCountEl.textContent = String(curAnswered);
     if (totalPlayingEl) totalPlayingEl.textContent = getActivePlayers().length;
-    if (progressBar) progressBar.style.width = '100%';
+    if (progressBar) progressBar.style.width = Math.max(0, (gameState.timerRemaining / gameState.timePerQuestion) * 100) + '%';
 
     if (phase1Box) phase1Box.style.display = 'none';
     if (phase4Chart) phase4Chart.style.display = 'none';
@@ -1189,6 +1768,7 @@
     }
     if (answersGrid) answersGrid.style.display = 'grid';
 
+    saveHostRoomState();
     SFX.revealPop();
 
     // Chạy đồng hồ đếm ngược Pha 2
@@ -1226,7 +1806,9 @@
       prompt: q.prompt,
       options: q.options,
       durationSec: gameState.timePerQuestion,
-      endTime: gameState.questionEndTime
+      endTime: gameState.questionEndTime,
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel
     });
   }
 
@@ -1295,6 +1877,7 @@
       phaseBadge.textContent = 'PHA 3/5: ' + answeredCount + '/' + activeList.length + ' ĐÃ KHÓA ĐÁP ÁN';
     }
 
+    saveHostRoomState();
     SFX.pop();
 
     // Nếu tất cả người chơi thật đã bấm xong mà chỉ còn Bot chưa bấm -> Cho Bot chốt nhanh sau 0.35s để kích hoạt Early Cut-off!
@@ -1327,6 +1910,7 @@
     if (gameState.status === 'phase4') return;
     clearAllRoundTimers();
 
+    showView('hostGameView');
     gameState.status = 'phase4';
     gameState.phase = 4;
 
@@ -1334,6 +1918,20 @@
     if (!q) return;
     var correctIdx = Number(q.correctIndex);
     var correctLetter = OPTION_LETTERS[correctIdx] || 'A';
+
+    var qCounterEl = document.getElementById('hostQCounter');
+    var qTypeBadge = document.getElementById('hostQTypeBadge');
+    var qTextEl = document.getElementById('hostQuestionText');
+    var qSubEl = document.getElementById('hostQuestionSub');
+    var phase1Box = document.getElementById('hostPhase1Box');
+    var answersGrid = document.getElementById('hostAnswersGrid');
+
+    if (qCounterEl) qCounterEl.textContent = 'Câu số ' + (gameState.currentQuestionIndex + 1) + '/' + gameState.totalQuestions;
+    if (qTypeBadge) qTypeBadge.textContent = q.typeDesc;
+    if (qTextEl) qTextEl.textContent = q.prompt;
+    if (qSubEl) qSubEl.textContent = q.subPrompt || '';
+    if (phase1Box) phase1Box.style.display = 'none';
+    if (answersGrid) answersGrid.style.display = 'grid';
 
     // Lưu lại thứ hạng cũ trước khi cập nhật bảng xếp hạng vòng này
     var prevSorted = gameState.players.slice().sort(function (a, b) {
@@ -1365,8 +1963,10 @@
     // Cập nhật giao diện Admin ở Pha 4:
     // 1. Làm mờ 3 ô đáp án sai, làm sáng nhấp nháy ô đáp án đúng
     for (var i = 0; i < 4; i++) {
+      var ansTextEl = document.getElementById('hostAns' + i);
       var cardEl = document.querySelector('.k-ans-card[data-index="' + i + '"]');
       var statPill = document.getElementById('hostAnsStat' + i);
+      if (ansTextEl) ansTextEl.textContent = q.options[i] || '';
       if (statPill) {
         statPill.style.display = 'inline-flex';
         statPill.textContent = counts[i] + ' người';
@@ -1434,6 +2034,8 @@
     var sorted = gameState.players.slice().sort(function (a, b) { return b.score - a.score; });
     var leaderScore = sorted[0] ? sorted[0].score : 0;
 
+    saveHostRoomState();
+
     broadcastMsg('phase_4_reveal', {
       pin: gameState.pin,
       questionIndex: gameState.currentQuestionIndex,
@@ -1442,6 +2044,8 @@
       correctText: q.options[correctIdx],
       counts: counts,
       leaderScore: leaderScore,
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel,
       scores: sorted.map(function (p, idx) {
         return {
           id: p.id,
@@ -1534,6 +2138,7 @@
       });
     }
 
+    saveHostRoomState();
     SFX.pop();
 
     // Phát tín hiệu Pha 5 xuống điện thoại để từng máy cập nhật thứ hạng & khoảng cách điểm
@@ -1541,6 +2146,8 @@
       pin: gameState.pin,
       questionIndex: gameState.currentQuestionIndex,
       leaderScore: leaderScore,
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel,
       rankings: sorted.map(function (p, idx) {
         return {
           id: p.id,
@@ -1608,6 +2215,7 @@
       subText.textContent = 'Quán quân: ' + sorted[0].avatar + ' ' + sorted[0].name + ' xuất sắc dẫn đầu với ' + sorted[0].score.toLocaleString() + ' điểm!';
     }
 
+    saveHostRoomState();
     SFX.fanfare();
 
     if (typeof confetti === 'function') {
@@ -1690,15 +2298,48 @@
       return;
     }
 
+    // Kiểm tra xem phòng này trên máy có bị hết hạn lưu trữ chưa
+    try {
+      var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + pin);
+      if (hostRoomRaw) {
+        var hostRoom = JSON.parse(hostRoomRaw);
+        if (hostRoom && hostRoom.expiresAt && Number(hostRoom.expiresAt) > 0 && Date.now() >= Number(hostRoom.expiresAt)) {
+          if (typeof showToast === 'function') {
+            showToast('⏳ Phòng #' + formatPinCode(pin) + ' đã hết thời hạn lưu trữ!', 'error');
+          }
+          return;
+        }
+        if (hostRoom) {
+          gameState.roomExpiresAt = hostRoom.expiresAt || null;
+          gameState.roomDurationLabel = hostRoom.durationLabel || '30 phút';
+        }
+      }
+    } catch (e) { }
+
     savePlayerProfile(name, gameState.playerProfile.avatar);
+
+    // Nếu trước đó đã có phiên trong phòng này với cùng tên thì tái sử dụng ID để giữ nguyên điểm số
+    var existingSessionId = '';
+    try {
+      var prevSessRaw = localStorage.getItem('wq_arena_player_session_' + pin);
+      if (prevSessRaw) {
+        var prevSess = JSON.parse(prevSessRaw);
+        if (prevSess && prevSess.myPlayerId && prevSess.name === name) {
+          existingSessionId = prevSess.myPlayerId;
+        }
+      }
+    } catch (e) { }
+
     gameState.role = 'player';
     gameState.status = 'player_lobby';
     gameState.pin = pin;
-    gameState.myPlayerId = 'player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    gameState.myPlayerId = existingSessionId || ('player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
     gameState.playerJoinAcked = false;
     gameState.playerLastChoice = -1;
     gameState.playerLocalScore = 0;
     gameState.playerLocalStreak = 0;
+    gameState.playerLastPhaseAction = '';
+    gameState.playerLastPhasePayload = null;
 
     var avatarEl = document.getElementById('playerWaitingAvatar');
     var nameEl = document.getElementById('playerWaitingName');
@@ -1718,12 +2359,20 @@
       var savedRosterStr = localStorage.getItem('wq_arena_roster_' + pin);
       if (savedRosterStr) {
         var parsedRoster = JSON.parse(savedRosterStr);
-        if (parsedRoster && Array.isArray(parsedRoster.players)) {
-          cachedRoster = parsedRoster.players;
+        if (parsedRoster) {
+          if (parsedRoster.expiresAt !== undefined) gameState.roomExpiresAt = parsedRoster.expiresAt;
+          if (parsedRoster.durationLabel) gameState.roomDurationLabel = parsedRoster.durationLabel;
+          if (Array.isArray(parsedRoster.players)) {
+            cachedRoster = parsedRoster.players;
+          }
         }
       }
     } catch (e) { }
     renderPlayerWaitingRoster(cachedRoster);
+
+    syncBrowserUrl(pin, 'player');
+    savePlayerSessionState();
+    startExpiryCountdownTicker();
 
     showView('playerLobbyView');
     SFX.pop();
@@ -1764,8 +2413,17 @@
   }
 
   // Pha 1 trên điện thoại: Hiện đề bài trước 3 giây, chưa hiện 4 ô đáp án
-  function onPlayerReceivePhase1(p) {
-    gameState.playerLastChoice = -1;
+  function onPlayerReceivePhase1(p, isRestore) {
+    if (!isRestore) {
+      gameState.playerLastChoice = -1;
+    }
+    gameState.status = 'player_game';
+    gameState.playerLastPhaseAction = 'phase_1_getready';
+    gameState.playerLastPhasePayload = p;
+    if (p.expiresAt !== undefined) gameState.roomExpiresAt = p.expiresAt;
+    if (p.durationLabel) gameState.roomDurationLabel = p.durationLabel;
+    savePlayerSessionState();
+
     showView('playerGameView');
     hideAllPlayerSubCards();
 
@@ -1797,8 +2455,17 @@
   }
 
   // Pha 2 trên điện thoại: Bung 4 nút A, B, C, D cùng lúc và đếm ngược theo endTime
-  function onPlayerReceivePhase2(p) {
-    gameState.playerLastChoice = -1;
+  function onPlayerReceivePhase2(p, isRestore) {
+    if (!isRestore) {
+      gameState.playerLastChoice = -1;
+    }
+    gameState.status = 'player_game';
+    gameState.playerLastPhaseAction = 'phase_2_active';
+    gameState.playerLastPhasePayload = p;
+    if (p.expiresAt !== undefined) gameState.roomExpiresAt = p.expiresAt;
+    if (p.durationLabel) gameState.roomDurationLabel = p.durationLabel;
+    savePlayerSessionState();
+
     showView('playerGameView');
     hideAllPlayerSubCards();
 
@@ -1818,7 +2485,7 @@
 
     if (barFill) barFill.style.width = '100%';
     if (p2Wrap) p2Wrap.style.display = 'block';
-    SFX.revealPop();
+    if (!isRestore) SFX.revealPop();
 
     var durationMs = (p.durationSec || 15) * 1000;
     var endTime = p.endTime || (Date.now() + durationMs);
@@ -1839,6 +2506,7 @@
     if (isNaN(numericChoice) || gameState.playerLastChoice !== -1) return;
 
     gameState.playerLastChoice = numericChoice;
+    savePlayerSessionState();
     hideAllPlayerSubCards();
 
     var submittedState = document.getElementById('playerSubmittedState');
@@ -1860,7 +2528,13 @@
   }
 
   // Pha 4 trên điện thoại: Lật bài -> Đổi toàn bộ nền sang Xanh Lá (Chính xác!) hoặc Đỏ (Sai mất rồi!)
-  function onPlayerReceivePhase4(p) {
+  function onPlayerReceivePhase4(p, isRestore) {
+    gameState.status = 'player_game';
+    gameState.playerLastPhaseAction = 'phase_4_reveal';
+    gameState.playerLastPhasePayload = p;
+    if (p.expiresAt !== undefined) gameState.roomExpiresAt = p.expiresAt;
+    if (p.durationLabel) gameState.roomDurationLabel = p.durationLabel;
+
     showView('playerGameView');
     hideAllPlayerSubCards();
 
@@ -1880,12 +2554,15 @@
     if (myScoreObj) {
       gameState.playerLocalScore = myScoreObj.score;
       gameState.playerLocalStreak = myScoreObj.streak || 0;
-    } else if (isCorrect) {
-      gameState.playerLocalScore += earned;
-      gameState.playerLocalStreak += 1;
-    } else {
-      gameState.playerLocalStreak = 0;
+    } else if (!isRestore) {
+      if (isCorrect) {
+        gameState.playerLocalScore += earned;
+        gameState.playerLocalStreak += 1;
+      } else {
+        gameState.playerLocalStreak = 0;
+      }
     }
+    savePlayerSessionState();
 
     if (curScoreEl) curScoreEl.textContent = gameState.playerLocalScore.toLocaleString();
     if (headerStreak) {
@@ -1918,7 +2595,7 @@
       if (rankStatus) {
         rankStatus.textContent = 'Tuyệt vời! Hãy nhìn lên màn hình lớn để xem biểu đồ thống kê.';
       }
-      SFX.correct();
+      if (!isRestore) SFX.correct();
     } else {
       var correctLetter = p.correctLetter || OPTION_LETTERS[p.correctIndex] || 'A';
       if (resultIcon) resultIcon.textContent = gameState.playerLastChoice === -1 ? '⏰' : '😢';
@@ -1932,12 +2609,19 @@
       if (rankStatus) {
         rankStatus.textContent = 'Đừng nản chí, chuẩn bị gỡ điểm ở câu tiếp theo nhé!';
       }
-      SFX.wrong();
+      if (!isRestore) SFX.wrong();
     }
   }
 
   // Pha 5 trên điện thoại: Cập nhật thứ hạng hiện tại ("Bạn đang đứng Hạng 2 – Chỉ kém người dẫn đầu 110 điểm")
-  function onPlayerReceivePhase5(p) {
+  function onPlayerReceivePhase5(p, isRestore) {
+    gameState.status = 'player_game';
+    gameState.playerLastPhaseAction = 'phase_5_leaderboard';
+    gameState.playerLastPhasePayload = p;
+    if (p.expiresAt !== undefined) gameState.roomExpiresAt = p.expiresAt;
+    if (p.durationLabel) gameState.roomDurationLabel = p.durationLabel;
+    savePlayerSessionState();
+
     showView('playerGameView');
     hideAllPlayerSubCards();
 
@@ -1969,7 +2653,7 @@
     }
 
     if (p5Card) p5Card.style.display = 'block';
-    SFX.pop();
+    if (!isRestore) SFX.pop();
   }
 
   // ==================== BỘ XỬ LÝ TIN NHẮN ĐỒNG BỘ TRUNG TÂM ====================
@@ -1988,8 +2672,8 @@
       if (normalizePin(p.pin) !== normalizePin(gameState.pin)) return;
 
       if (action === 'player_join') {
-        var exists = gameState.players.some(function (x) { return x.id === p.id; });
-        if (!exists) {
+        var existingById = gameState.players.find(function (x) { return x.id === p.id; });
+        if (!existingById) {
           gameState.players.push({
             id: p.id,
             name: p.name,
@@ -2009,8 +2693,25 @@
             showToast((p.avatar || '🐼') + ' ' + p.name + ' đã vào phòng!', 'success');
           }
         } else {
-          // Vẫn gửi lại danh sách phòng để máy người chơi xác nhận đồng bộ
-          broadcastLobbyRoster();
+          existingById.name = p.name || existingById.name;
+          existingById.avatar = p.avatar || existingById.avatar;
+          renderPlayerList();
+        }
+
+        // Nếu trận đấu đang diễn ra ở Pha 2 mà người chơi vừa tải lại trang / vào lại, gửi lại câu hỏi hiện tại cho họ
+        var curQ = gameState.questions[gameState.currentQuestionIndex];
+        if (curQ && gameState.status === 'phase2') {
+          broadcastMsg('phase_2_active', {
+            pin: gameState.pin,
+            questionIndex: gameState.currentQuestionIndex,
+            totalQuestions: gameState.totalQuestions,
+            prompt: curQ.prompt,
+            options: curQ.options,
+            durationSec: gameState.timePerQuestion,
+            endTime: gameState.questionEndTime,
+            expiresAt: gameState.roomExpiresAt,
+            durationLabel: gameState.roomDurationLabel
+          }, false);
         }
       } else if (action === 'player_answer') {
         var existingP = gameState.players.find(function (x) { return x.id === p.playerId; });
@@ -2038,12 +2739,17 @@
     if (gameState.role === 'player') {
       if (normalizePin(p.pin) !== normalizePin(gameState.pin)) return;
 
+      if (p.expiresAt !== undefined) gameState.roomExpiresAt = p.expiresAt;
+      if (p.durationLabel) gameState.roomDurationLabel = p.durationLabel;
+      updateExpiryBadges();
+
       if (action === 'lobby_roster_sync') {
         var incomingPlayers = Array.isArray(p.players) ? p.players : [];
         if (incomingPlayers.some(function (x) { return x.id === gameState.myPlayerId; })) {
           gameState.playerJoinAcked = true;
           stopPlayerJoinHeartbeat();
         }
+        savePlayerSessionState();
         if (gameState.status === 'player_lobby') {
           renderPlayerWaitingRoster(incomingPlayers);
         }
@@ -2191,9 +2897,7 @@
     var btnCancelRoom = document.getElementById('btnCancelRoom');
     if (btnCancelRoom) {
       btnCancelRoom.onclick = function () {
-        stopCloudPolling();
-        cleanupCloudRoomMessages();
-        gameState.status = 'config';
+        saveHostRoomState();
         switchRoleTab('host');
       };
     }
@@ -2248,9 +2952,7 @@
     var btnPlayAgain = document.getElementById('btnPlayAgain');
     if (btnPlayAgain) {
       btnPlayAgain.onclick = function () {
-        stopCloudPolling();
-        cleanupCloudRoomMessages();
-        gameState.status = 'config';
+        saveHostRoomState();
         switchRoleTab('host');
         populateDeckOptions();
       };
@@ -2259,15 +2961,28 @@
     var btnExitArena = document.getElementById('btnExitArena');
     if (btnExitArena) {
       btnExitArena.onclick = function () {
-        stopCloudPolling();
-        cleanupCloudRoomMessages();
+        saveHostRoomState();
         window.location.href = '../index.html';
       };
     }
 
-    // Player Join
+    // Player Join & Leave
     var btnPlayerJoin = document.getElementById('btnPlayerJoin');
     if (btnPlayerJoin) btnPlayerJoin.onclick = playerJoin;
+
+    var btnPlayerLeaveLobby = document.getElementById('btnPlayerLeaveLobby');
+    if (btnPlayerLeaveLobby) {
+      btnPlayerLeaveLobby.onclick = function () {
+        playerLeaveRoom(false);
+      };
+    }
+
+    var btnPlayerLeaveGame = document.getElementById('btnPlayerLeaveGame');
+    if (btnPlayerLeaveGame) {
+      btnPlayerLeaveGame.onclick = function () {
+        playerLeaveRoom(false);
+      };
+    }
 
     document.querySelectorAll('#avatarPickGrid .avatar-btn').forEach(function (btn) {
       btn.onclick = function () {
