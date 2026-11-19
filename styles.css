@@ -5348,14 +5348,57 @@ details[open] summary {
   box-shadow: none;
 }
 
-/* Preserve white text on gradient / colored primary buttons */
+/* Preserve white text on colored primary buttons and elements */
 :root.light-theme .start-learn-btn,
 :root.light-theme .s-check-btn,
-:root.light-theme .quiz-mode-btn.active {
+:root.light-theme .quiz-mode-btn.active,
+:root.light-theme .btn-hero-primary,
+:root.light-theme .btn.btn-hero-primary,
+:root.light-theme .btn-start-game,
+:root.light-theme .btn-pub-join,
+:root.light-theme .btn-start-public-solo,
+:root.light-theme .btn-player-ready:not(.is-ready-active),
+:root.light-theme .btn-solo-next-q,
+:root.light-theme .btn-admin-switch-act,
+:root.light-theme .btn-resume-room,
+:root.light-theme .btn-writer.accent,
+:root.light-theme .custom-deck-btn.study,
+:root.light-theme .arena-role-tab.active {
   background: var(--accent-red) !important;
   color: #ffffff !important;
-  border-color: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 4px 12px rgba(192, 57, 43, 0.22) !important;
+}
+
+:root.light-theme .start-learn-btn:hover:not(:disabled),
+:root.light-theme .s-check-btn:hover:not(:disabled),
+:root.light-theme .btn-hero-primary:hover:not(:disabled),
+:root.light-theme .btn.btn-hero-primary:hover:not(:disabled),
+:root.light-theme .btn-start-game:hover:not(:disabled),
+:root.light-theme .btn-pub-join:hover:not(:disabled),
+:root.light-theme .btn-start-public-solo:hover:not(:disabled),
+:root.light-theme .btn-player-ready:not(.is-ready-active):hover:not(:disabled),
+:root.light-theme .btn-solo-next-q:hover:not(:disabled),
+:root.light-theme .btn-admin-switch-act:hover:not(:disabled),
+:root.light-theme .btn-resume-room:hover:not(:disabled),
+:root.light-theme .btn-writer.accent:hover:not(:disabled) {
+  background: var(--accent-red-hover) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(192, 57, 43, 0.3) !important;
+}
+
+:root.light-theme .btn-hero-primary:disabled,
+:root.light-theme .btn.btn-hero-primary:disabled,
+:root.light-theme .btn-start-game:disabled,
+:root.light-theme .btn-player-ready:disabled,
+:root.light-theme .btn-start-public-solo:disabled {
+  background: var(--bg-raised) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border-subtle) !important;
+  opacity: 0.6 !important;
   box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
 }
 
 /* Cards & Dashboard in White Tone */
@@ -5984,7 +6027,7 @@ details[open] summary {
 }
 
 .gm-icon.gm-yellow {
-  background: #ab6f24;
+  background: #945610;
 }
 
 .gm-icon.gm-green {
@@ -6066,16 +6109,17 @@ details[open] summary {
 }
 
 /* Arena Primary & Secondary Buttons */
-.btn-hero-primary {
+.btn-hero-primary,
+.btn.btn-hero-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   padding: 11px 22px;
   border-radius: 11px;
-  background: var(--accent-red);
+  background: var(--accent-red) !important;
   color: #ffffff !important;
-  border: 1px solid transparent;
+  border: 1px solid transparent !important;
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
@@ -6083,15 +6127,23 @@ details[open] summary {
   box-shadow: 0 4px 12px rgba(192, 57, 43, 0.22);
 }
 
-.btn-hero-primary:hover:not(:disabled) {
-  background: var(--accent-red-hover);
+.btn-hero-primary:hover:not(:disabled),
+.btn.btn-hero-primary:hover:not(:disabled) {
+  background: var(--accent-red-hover) !important;
+  color: #ffffff !important;
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(192, 57, 43, 0.3);
 }
 
-.btn-hero-primary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.btn-hero-primary:disabled,
+.btn.btn-hero-primary:disabled {
+  background: var(--bg-raised) !important;
+  color: var(--text-muted) !important;
+  border: 1px solid var(--border-subtle) !important;
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .btn-secondary {
@@ -6396,14 +6448,19 @@ details[open] summary {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  background: rgba(38, 107, 77, 0.08);
-  border: 1px solid rgba(38, 107, 77, 0.25);
+  background: rgba(52, 211, 153, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
   border-radius: 12px;
   padding: 12px 16px;
   margin-top: 18px;
   font-size: 0.88rem;
   color: var(--text-primary);
   line-height: 1.45;
+}
+
+:root.light-theme .host-public-lobby-notice {
+  background: rgba(22, 101, 52, 0.06);
+  border-color: rgba(22, 101, 52, 0.22);
 }
 
 .host-pub-notice-icon {
@@ -6418,8 +6475,12 @@ details[open] summary {
 
 .host-pub-notice-title {
   font-weight: 700;
-  color: #266b4d;
+  color: #34d399;
   margin-bottom: 2px;
+}
+
+:root.light-theme .host-pub-notice-title {
+  color: #166534;
 }
 
 .host-pub-notice-desc {
@@ -6655,7 +6716,7 @@ details[open] summary {
 }
 
 .k-ans-card.k-yellow {
-  background: #ab6f24;
+  background: #945610;
 }
 
 .k-ans-card.k-green {
@@ -7082,14 +7143,20 @@ details[open] summary {
 
 .player-waiting-badge {
   display: inline-block;
-  background: rgba(38, 107, 77, 0.12);
-  border: 1px solid rgba(38, 107, 77, 0.3);
-  color: #266b4d;
+  background: rgba(52, 211, 153, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #34d399;
   font-size: 0.82rem;
   font-weight: 700;
   padding: 4px 14px;
   border-radius: 999px;
   margin-bottom: 14px;
+}
+
+:root.light-theme .player-waiting-badge {
+  background: rgba(22, 101, 52, 0.1);
+  border-color: rgba(22, 101, 52, 0.25);
+  color: #166534;
 }
 
 .player-ready-action-box {
@@ -7116,9 +7183,15 @@ details[open] summary {
 }
 
 .btn-player-ready.is-ready-active {
-  background: rgba(38, 107, 77, 0.14);
-  border: 1px solid rgba(38, 107, 77, 0.45);
-  color: #266b4d;
+  background: rgba(52, 211, 153, 0.15);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  color: #34d399;
+}
+
+:root.light-theme .btn-player-ready.is-ready-active {
+  background: rgba(22, 101, 52, 0.12);
+  border-color: rgba(22, 101, 52, 0.35);
+  color: #166534;
 }
 
 .player-ready-status-text {
@@ -7145,9 +7218,15 @@ details[open] summary {
 }
 
 .player-ready-indicator-tag.is-ready {
-  background: rgba(38, 107, 77, 0.12);
-  border: 1px solid rgba(38, 107, 77, 0.35);
-  color: #266b4d;
+  background: rgba(52, 211, 153, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #34d399;
+}
+
+:root.light-theme .player-ready-indicator-tag.is-ready {
+  background: rgba(22, 101, 52, 0.1);
+  border-color: rgba(22, 101, 52, 0.28);
+  color: #166534;
 }
 
 .chip-ready-tag {
@@ -7161,9 +7240,15 @@ details[open] summary {
 }
 
 .chip-ready-tag.is-ready {
-  background: rgba(38, 107, 77, 0.12);
-  border: 1px solid rgba(38, 107, 77, 0.35);
-  color: #266b4d;
+  background: rgba(52, 211, 153, 0.14);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  color: #34d399;
+}
+
+:root.light-theme .chip-ready-tag.is-ready {
+  background: rgba(22, 101, 52, 0.1);
+  border-color: rgba(22, 101, 52, 0.28);
+  color: #166534;
 }
 
 .chip-ready-tag.not-ready {
@@ -7317,13 +7402,23 @@ details[open] summary {
   font-weight: 700;
   padding: 3px 8px;
   border-radius: 999px;
-  background: rgba(16, 185, 129, 0.14);
-  color: #10b981;
+  background: rgba(52, 211, 153, 0.14);
+  color: #34d399;
+}
+
+:root.light-theme .player-room-access-tag {
+  background: rgba(22, 101, 52, 0.1);
+  color: #166534;
 }
 
 .player-room-access-tag.is-private {
-  background: rgba(245, 158, 11, 0.14);
-  color: #d97706;
+  background: rgba(245, 158, 11, 0.16);
+  color: #fbbf24;
+}
+
+:root.light-theme .player-room-access-tag.is-private {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
 }
 
 /* ==================== PLAYER JOIN TABS & PUBLIC ROOMS LIST ==================== */
@@ -7747,7 +7842,11 @@ details[open] summary {
 
 .player-streak-tag {
   font-size: 0.95rem;
-  color: #d97706;
+  color: #fbbf24;
+}
+
+:root.light-theme .player-streak-tag {
+  color: #b45309;
 }
 
 .player-timer-badge {
@@ -7820,7 +7919,7 @@ details[open] summary {
 }
 
 .player-pad-btn.p-yellow {
-  background: #ab6f24;
+  background: #945610;
 }
 
 .player-pad-btn.p-green {
@@ -8198,7 +8297,7 @@ details[open] summary {
 }
 
 .k-bar-fill.k-yellow {
-  background: #ab6f24;
+  background: #945610;
 }
 
 .k-bar-fill.k-green {
@@ -8234,7 +8333,7 @@ details[open] summary {
 }
 
 .k-bar-label.k-yellow {
-  background: #ab6f24;
+  background: #945610;
 }
 
 .k-bar-label.k-green {
@@ -8398,15 +8497,27 @@ details[open] summary {
 }
 
 .player-result-overlay.is-correct-bg .result-main-text {
-  color: #266b4d !important;
+  color: #34d399 !important;
+}
+
+:root.light-theme .player-result-overlay.is-correct-bg .result-main-text {
+  color: #166534 !important;
 }
 
 .player-result-overlay.is-wrong-bg .result-main-text {
+  color: #f87171 !important;
+}
+
+:root.light-theme .player-result-overlay.is-wrong-bg .result-main-text {
   color: #b83a2d !important;
 }
 
 .player-result-overlay.is-correct-bg .result-score-plus {
-  color: #266b4d !important;
+  color: #34d399 !important;
+}
+
+:root.light-theme .player-result-overlay.is-correct-bg .result-score-plus {
+  color: #166534 !important;
 }
 
 .player-result-overlay.is-wrong-bg .result-score-plus {
@@ -8425,11 +8536,17 @@ details[open] summary {
   margin: 4px 0 12px;
   padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(171, 111, 36, 0.12);
-  border: 1px solid rgba(171, 111, 36, 0.3);
-  color: #ab6f24;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
   font-size: 0.82rem;
   font-weight: 700;
+}
+
+:root.light-theme .result-streak-pill {
+  background: rgba(180, 83, 9, 0.12);
+  border-color: rgba(180, 83, 9, 0.28);
+  color: #92400e;
 }
 
 /* PHASE 5 RANK CARD ON PLAYER PHONE */
@@ -8769,11 +8886,17 @@ details[open] summary {
   align-items: center;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #d97706;
-  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.16);
   border: 1px solid rgba(245, 158, 11, 0.35);
   padding: 4px 12px;
   border-radius: 999px;
+}
+
+:root.light-theme .player-room-expiry-badge {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.25);
 }
 
 .btn-player-leave-room {
