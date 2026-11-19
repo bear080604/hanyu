@@ -299,7 +299,7 @@
       var sec = remSec % 60;
       timeStr = min + 'p ' + (sec < 10 ? '0' + sec : sec) + 's';
     }
-    return '⏳ Lưu trữ: ' + (durationLabel || '30 phút') + ' (Còn ' + timeStr + ')';
+    return 'Thời hạn: ' + (durationLabel || '30 phút') + ' (Còn ' + timeStr + ')';
   }
 
   function syncBrowserUrl(pin, role) {
@@ -378,10 +378,10 @@
   ];
 
   var GAMEMODE_NAMES = {
-    speed: '⚡ Phản Xạ Tốc Độ',
-    listening: '🎧 Thính Âm Đoán Chữ',
-    sentence: '🧩 Đấu Trường Điền Câu',
-    survival: '❤️ Sinh Tồn 3 Mạng'
+    speed: 'Phản xạ tốc độ',
+    listening: 'Thính âm đoán chữ',
+    sentence: 'Điền câu ngữ cảnh',
+    survival: 'Sinh tồn 3 lượt'
   };
 
   // ==================== VIEW MANAGEMENT ====================
@@ -575,7 +575,7 @@
           pendingDeckName = String(pending.name || '').trim();
           var optPending = document.createElement('option');
           optPending.value = 'pending_custom';
-          optPending.textContent = '📦 ' + (pendingDeckName || 'Bộ từ đang chọn') + ' (' + pending.words.length + ' từ)';
+          optPending.textContent = (pendingDeckName || 'Bộ từ đang chọn') + ' (' + pending.words.length + ' từ)';
           select.appendChild(optPending);
           hasPendingCustom = true;
         }
@@ -587,7 +587,7 @@
       var customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
       if (Array.isArray(customDecks) && customDecks.length > 0) {
         var optGroup = document.createElement('optgroup');
-        optGroup.label = '📚 Bộ từ Tự tạo đã lưu';
+        optGroup.label = 'Bộ từ tự tạo';
         customDecks.forEach(function (cd) {
           var count = (Array.isArray(cd.words) && cd.words.length > 0)
             ? cd.words.length
@@ -595,7 +595,7 @@
           if (count >= 1) {
             var opt = document.createElement('option');
             opt.value = 'custom:' + (cd.cloudId || cd.id || cd.name);
-            opt.textContent = '📘 ' + cd.name + ' (' + count + ' từ)';
+            opt.textContent = cd.name + ' (' + count + ' từ)';
             optGroup.appendChild(opt);
           }
         });
@@ -611,7 +611,7 @@
       if (Array.isArray(favs) && favs.length >= 1) {
         var optFav = document.createElement('option');
         optFav.value = 'favorites';
-        optFav.textContent = '⭐ Từ yêu thích (' + favs.length + ' từ)';
+        optFav.textContent = 'Từ yêu thích (' + favs.length + ' từ)';
         select.appendChild(optFav);
       }
     } catch (e) { }
@@ -619,7 +619,7 @@
     // 3. Các cấp độ HSK 1 - 6 mặc định
     if (typeof DATA !== 'undefined') {
       var hskGroup = document.createElement('optgroup');
-      hskGroup.label = '📖 Giáo trình HSK tiêu chuẩn';
+      hskGroup.label = 'Giáo trình HSK tiêu chuẩn';
       Object.keys(DATA).forEach(function (lvl) {
         if (lvl === 'custom') return;
         var count = DATA[lvl] ? DATA[lvl].length : 0;
@@ -665,12 +665,12 @@
       if (gameState.role === 'host') {
         deleteSavedRoom(expiredPin, true);
         if (typeof showToast === 'function') {
-          showToast('⏳ Phòng #' + formatPinCode(expiredPin) + ' đã hết thời hạn lưu trữ!', 'warning');
+          showToast('Phòng #' + formatPinCode(expiredPin) + ' đã hết thời hạn lưu trữ.', 'warning');
         }
       } else {
         playerLeaveRoom(true);
         if (typeof showToast === 'function') {
-          showToast('⏳ Phòng #' + formatPinCode(expiredPin) + ' đã hết thời hạn lưu trữ!', 'warning');
+          showToast('Phòng #' + formatPinCode(expiredPin) + ' đã hết thời hạn lưu trữ.', 'warning');
         }
       }
     }
@@ -792,7 +792,7 @@
     }
     renderSavedRoomsList();
     if (!silent && typeof showToast === 'function') {
-      showToast('🗑️ Đã xóa phòng #' + formatPinCode(cleanP), 'info');
+      showToast('Đã xóa phòng #' + formatPinCode(cleanP), 'info');
     }
   }
 
@@ -833,7 +833,7 @@
           '<div class="saved-room-top">' +
           '<span class="saved-room-pin">#' + formatPinCode(pin) + '</span>' +
           '<span class="saved-room-status">' + statusLabel + '</span>' +
-          '<span class="saved-room-players">👥 ' + pCount + ' người</span>' +
+          '<span class="saved-room-players">' + pCount + ' người chơi</span>' +
           '</div>' +
           '<div class="saved-room-meta">' +
           '<span>' + (r.deckName || 'HSK 1') + ' • ' + (r.totalQuestions || 10) + ' câu</span>' +
@@ -841,8 +841,8 @@
           '</div>' +
           '</div>' +
           '<div class="saved-room-actions">' +
-          '<button type="button" class="btn-resume-room" data-pin="' + pin + '">Vào lại phòng ➔</button>' +
-          '<button type="button" class="btn-delete-room" data-pin="' + pin + '" title="Đóng & Xóa phòng này">🗑️</button>' +
+          '<button type="button" class="btn-resume-room" data-pin="' + pin + '">Vào lại</button>' +
+          '<button type="button" class="btn-delete-room" data-pin="' + pin + '" title="Đóng & Xóa phòng này">Xóa</button>' +
           '</div>';
         listEl.appendChild(row);
       } catch (e) { }
@@ -1327,7 +1327,7 @@
     if ((!words || words.length === 0) && deckVal && deckVal.indexOf('custom:') === 0) {
       var customId = deckVal.replace('custom:', '');
       if (typeof showToast === 'function') {
-        showToast('⏳ Đang tải danh sách từ vựng của bộ tự tạo...', 'info');
+        showToast('Đang tải danh sách từ vựng của bộ tự tạo...', 'info');
       }
       words = await fetchCustomDeckWordsFromCloud(customId);
     }
@@ -1457,9 +1457,9 @@
         promptTypeDesc = 'Nhìn Hán tự ➔ Chọn Pinyin đúng';
         correctAnswerText = w.p || '';
       } else if (qType === 'listening') {
-        promptText = '🔊 Nghe phát âm';
+        promptText = 'Nghe phát âm';
         promptSub = 'Lắng nghe giọng đọc tiếng Trung để chọn từ đúng';
-        promptTypeDesc = 'Thính Âm Đoán Chữ ➔ Chọn từ và nghĩa đúng';
+        promptTypeDesc = 'Thính âm đoán chữ: Chọn từ và nghĩa đúng';
         correctAnswerText = cleanH + ' — ' + (w.m || '');
       } else if (qType === 'sentence_fill') {
         var exSentence = w.ex || w.e || '';
@@ -1467,7 +1467,7 @@
         if (exSentence && exSentence.indexOf(cleanH) !== -1) {
           promptText = exSentence.replace(cleanH, ' [ ___ ] ');
           promptSub = exMeaning ? ('Nghĩa: ' + exMeaning) : (w.p || '');
-          promptTypeDesc = 'Đấu Trường Điền Câu ➔ Chọn từ điền vào [ ___ ]';
+          promptTypeDesc = 'Điền câu: Chọn từ điền vào [ ___ ]';
           correctAnswerText = cleanH + (w.p ? ' (' + w.p + ')' : '');
         } else {
           promptText = '「 ___ 」 — ' + (w.m || '');
@@ -1652,7 +1652,7 @@
     if (rooms.length === 0) {
       listEl.innerHTML =
         '<div class="empty-public-rooms">' +
-        '<div class="empty-pub-icon">🌐</div>' +
+        '<div class="empty-pub-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>' +
         '<div class="empty-pub-title">Hiện chưa có phòng thi đấu công khai nào đang mở</div>' +
         '<div class="empty-pub-desc">Bạn có thể chọn tab <b>"Nhập Mã PIN"</b> để vào phòng riêng tư, hoặc nhờ Admin tạo phòng công khai nhé!</div>' +
         '</div>';
@@ -1664,13 +1664,13 @@
       var pin = normalizePin(r.pin);
       var expText = formatRemainingExpiry(r.expiresAt, r.durationLabel);
       var pCount = Array.isArray(r.players) ? r.players.length : (Number(r.playerCount) || 0);
-      var modeName = GAMEMODE_NAMES[r.gameMode] || '⚡ Phản Xạ Tốc Độ';
+      var modeName = GAMEMODE_NAMES[r.gameMode] || 'Phản xạ tốc độ';
 
       var topLeaderText = 'Chưa có điểm';
       if (Array.isArray(r.players) && r.players.length > 0) {
         var sorted = r.players.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
         if (sorted[0]) {
-          topLeaderText = 'Top 1: ' + (sorted[0].avatar || '🥇') + ' ' + sorted[0].name + ' (' + (sorted[0].score || 0).toLocaleString() + ' đ)';
+          topLeaderText = 'Top 1: ' + (sorted[0].avatar || '') + ' ' + sorted[0].name + ' (' + (sorted[0].score || 0).toLocaleString() + ' đ)';
         }
       }
 
@@ -1679,7 +1679,7 @@
       card.innerHTML =
         '<div class="pub-card-top">' +
         '<div class="pub-card-tags">' +
-        '<span class="pub-tag-badge">🌐 Công khai</span>' +
+        '<span class="pub-tag-badge">Công khai</span>' +
         '<span class="pub-tag-mode">' + modeName + '</span>' +
         '</div>' +
         '<span class="pub-card-exp">' + expText + '</span>' +
@@ -1688,13 +1688,13 @@
         '<h4 class="pub-card-title">' + (r.deckName || 'HSK 1') + '</h4>' +
         '<div class="pub-card-sub">#' + formatPinCode(pin) + ' • ' + (r.totalQuestions || 10) + ' câu • ' + (r.timePerQuestion || 15) + 's/câu</div>' +
         '<div class="pub-card-leader-row">' +
-        '<span class="pub-card-players-count">👥 ' + pCount + ' đấu thủ</span>' +
-        '<span class="pub-card-top-player">🏆 ' + topLeaderText + '</span>' +
+        '<span class="pub-card-players-count">' + pCount + ' đấu thủ</span>' +
+        '<span class="pub-card-top-player">' + topLeaderText + '</span>' +
         '</div>' +
         '</div>' +
         '<div class="pub-card-actions">' +
-        '<button type="button" class="btn-pub-view-lb" data-pin="' + pin + '">Xem BXH 🏆</button>' +
-        '<button type="button" class="btn-pub-join" data-pin="' + pin + '">Vào thi đấu ➔</button>' +
+        '<button type="button" class="btn-pub-view-lb" data-pin="' + pin + '">Bảng xếp hạng</button>' +
+        '<button type="button" class="btn-pub-join" data-pin="' + pin + '">Vào thi đấu</button>' +
         '</div>';
       listEl.appendChild(card);
     });
@@ -1724,8 +1724,8 @@
     if (!modal) return;
 
     var pin = normalizePin(r.pin);
-    if (badge) badge.textContent = '🌐 Phòng Công Khai #' + formatPinCode(pin);
-    if (title) title.textContent = '🏆 Bảng Xếp Hạng Đấu Thủ (' + (r.deckName || 'HSK 1') + ')';
+    if (badge) badge.textContent = 'Phòng công khai #' + formatPinCode(pin);
+    if (title) title.textContent = 'Bảng xếp hạng đấu thủ (' + (r.deckName || 'HSK 1') + ')';
     if (meta) {
       meta.textContent = (GAMEMODE_NAMES[r.gameMode] || 'Tranh tài') + ' • ' + (r.totalQuestions || 10) + ' câu • ' + formatRemainingExpiry(r.expiresAt, r.durationLabel);
     }
@@ -1742,12 +1742,12 @@
           var rank = idx + 1;
           var row = document.createElement('div');
           row.className = 'leaderboard-row' + (rank <= 3 ? (' top-' + rank) : '');
-          var rankBadge = (rank === 1 ? '🥇 #1' : (rank === 2 ? '🥈 #2' : (rank === 3 ? '🥉 #3' : '#' + rank)));
-          var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">🔥' + p.streak + '</span>') : '<span class="lb-ready-badge">🟢 Sẵn sàng</span>');
+          var rankBadge = '#' + rank;
+          var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Sẵn sàng</span>');
           row.innerHTML =
             '<div class="lb-rank">' + rankBadge + '</div>' +
             '<div class="lb-avatar">' + (p.avatar || '🐼') + '</div>' +
-            '<div class="lb-name">' + (p.name || 'Người chơi') + (p.isBot ? ' <span class="bot-badge">🤖</span>' : '') + streakBadge + '</div>' +
+            '<div class="lb-name">' + (p.name || 'Người chơi') + (p.isBot ? ' <span class="bot-badge">Bot</span>' : '') + streakBadge + '</div>' +
             '<div class="lb-score">' + (p.score || 0).toLocaleString() + ' đ</div>';
           listEl.appendChild(row);
         });
@@ -1823,14 +1823,14 @@
 
     var isPublic = (gameState.accessMode === 'public');
     if (accessBadge) {
-      accessBadge.textContent = isPublic ? '🌐 Phòng Công Khai' : '🔒 Phòng Riêng Tư';
+      accessBadge.textContent = isPublic ? 'Phòng công khai' : 'Phòng riêng tư';
       accessBadge.className = 'lobby-access-pill ' + (isPublic ? 'is-public' : 'is-private');
     }
     if (pinLabel) {
-      pinLabel.textContent = isPublic ? 'MÃ PHÒNG (🌐 CÔNG KHAI - AI CŨNG CÓ THỂ VÀO)' : 'MÃ PIN PHÒNG THI ĐẤU (CLOUDFLARE SYNC)';
+      pinLabel.textContent = isPublic ? 'Mã phòng (Công khai)' : 'Mã phòng thi đấu';
     }
     if (qrHint) {
-      qrHint.textContent = isPublic ? 'Phòng công khai: người chơi thấy trên sảnh và có thể bấm vào trực tiếp!' : 'Người chơi quét mã QR hoặc nhập PIN để vào phòng';
+      qrHint.textContent = isPublic ? 'Phòng công khai: Người chơi có thể thấy trên sảnh và tham gia trực tiếp' : 'Người chơi quét mã QR hoặc nhập PIN để vào phòng';
     }
 
     generateQrCode();
@@ -1945,7 +1945,7 @@
 
       if (!publicLbList) return;
       if (count === 0) {
-        publicLbList.innerHTML = '<div class="empty-lobby-text">Đang chờ người chơi tham gia phòng công khai... (Hoặc bấm "+ Thêm bạn học ảo 🤖" để test ngay)</div>';
+        publicLbList.innerHTML = '<div class="empty-lobby-text">Đang chờ người chơi tham gia phòng công khai... (Hoặc bấm "Thêm đối thủ ảo" để thử ngay)</div>';
         return;
       }
 
@@ -1958,12 +1958,12 @@
         var rank = idx + 1;
         var row = document.createElement('div');
         row.className = 'leaderboard-row' + (rank <= 3 ? (' top-' + rank) : '');
-        var rankBadge = (rank === 1 ? '🥇 #1' : (rank === 2 ? '🥈 #2' : (rank === 3 ? '🥉 #3' : '#' + rank)));
-        var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">🔥' + p.streak + '</span>') : '<span class="lb-ready-badge">🟢 Sẵn sàng</span>');
+        var rankBadge = '#' + rank;
+        var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Sẵn sàng</span>');
         row.innerHTML =
           '<div class="lb-rank">' + rankBadge + '</div>' +
           '<div class="lb-avatar">' + (p.avatar || '🐼') + '</div>' +
-          '<div class="lb-name">' + (p.name || 'Người chơi') + (p.isBot ? ' <span class="bot-badge">🤖 Bot</span>' : '') + streakBadge + '</div>' +
+          '<div class="lb-name">' + (p.name || 'Người chơi') + (p.isBot ? ' <span class="bot-badge">Bot</span>' : '') + streakBadge + '</div>' +
           '<div class="lb-score">' + (p.score || 0).toLocaleString() + ' đ</div>' +
           '<button type="button" class="chip-remove-btn" data-id="' + p.id + '" title="Xóa khỏi phòng">×</button>';
         publicLbList.appendChild(row);
@@ -2562,7 +2562,7 @@
     var p4SecondsLeft = 3;
     function updateP4ButtonLabel() {
       if (goP5Btn) {
-        goP5Btn.innerHTML = '<span>⏳ Tự động xem Bảng xếp hạng sau ' + p4SecondsLeft + 's...</span>';
+        goP5Btn.innerHTML = '<span>Tự động chuyển bảng xếp hạng sau ' + p4SecondsLeft + 's...</span>';
       }
     }
     updateP4ButtonLabel();
@@ -2619,10 +2619,10 @@
     if (calloutEl) {
       if (streakPlayer && streakPlayer.streak >= 2) {
         calloutEl.style.display = 'inline-flex';
-        calloutEl.textContent = '🔥 ' + streakPlayer.avatar + ' ' + streakPlayer.name + ' vừa lập chuỗi ' + streakPlayer.streak + ' câu đúng liên tiếp!';
+        calloutEl.textContent = streakPlayer.avatar + ' ' + streakPlayer.name + ' lập chuỗi ' + streakPlayer.streak + ' câu đúng liên tiếp';
       } else if (sorted[0] && sorted[0].lastPointsEarned > 0) {
         calloutEl.style.display = 'inline-flex';
-        calloutEl.textContent = '⚡ ' + sorted[0].avatar + ' ' + sorted[0].name + ' đang dẫn đầu đường đua với ' + sorted[0].score.toLocaleString() + ' điểm!';
+        calloutEl.textContent = sorted[0].avatar + ' ' + sorted[0].name + ' đang dẫn đầu với ' + sorted[0].score.toLocaleString() + ' điểm';
       } else {
         calloutEl.style.display = 'none';
       }
@@ -2656,7 +2656,7 @@
           '<div class="lb-rank">#' + rank + ' ' + deltaHtml + '</div>' +
           '<div class="lb-avatar">' + p.avatar + '</div>' +
           '<div class="lb-name">' + p.name +
-          (p.streak >= 2 ? ' <span class="lb-streak">🔥' + p.streak + '</span>' : '') +
+          (p.streak >= 2 ? ' <span class="lb-streak">Chuỗi ' + p.streak + '</span>' : '') +
           '</div>' +
           plusBadge +
           '<div class="lb-score">' + p.score.toLocaleString() + ' đ</div>';
@@ -2695,9 +2695,9 @@
     function updateP5ButtonLabel() {
       if (continueBtn) {
         if (isLast) {
-          continueBtn.innerHTML = '<span>🏆 Tự động vinh danh sau ' + p5SecondsLeft + 's...</span>';
+          continueBtn.innerHTML = '<span>Tự động chuyển vinh danh sau ' + p5SecondsLeft + 's...</span>';
         } else {
-          continueBtn.innerHTML = '<span>⏳ Tự động qua Câu ' + (gameState.currentQuestionIndex + 2) + ' sau ' + p5SecondsLeft + 's...</span>';
+          continueBtn.innerHTML = '<span>Tự động chuyển câu ' + (gameState.currentQuestionIndex + 2) + ' sau ' + p5SecondsLeft + 's...</span>';
         }
       }
     }
@@ -2747,9 +2747,9 @@
       return b.score - a.score;
     });
 
-    var p1 = sorted[0] || { name: '--', score: 0, avatar: '🥇' };
-    var p2 = sorted[1] || { name: '--', score: 0, avatar: '🥈' };
-    var p3 = sorted[2] || { name: '--', score: 0, avatar: '🥉' };
+    var p1 = sorted[0] || { name: '--', score: 0, avatar: '🐼' };
+    var p2 = sorted[1] || { name: '--', score: 0, avatar: '🦊' };
+    var p3 = sorted[2] || { name: '--', score: 0, avatar: '🐰' };
 
     var a1 = document.getElementById('podiumAvatar1');
     var n1 = document.getElementById('podiumName1');
@@ -2763,15 +2763,15 @@
     var n3 = document.getElementById('podiumName3');
     var s3 = document.getElementById('podiumScore3');
 
-    if (a1) a1.textContent = p1.avatar || '🥇';
+    if (a1) a1.textContent = p1.avatar || '🐼';
     if (n1) n1.textContent = p1.name;
     if (s1) s1.textContent = p1.score.toLocaleString() + ' đ';
 
-    if (a2) a2.textContent = p2.avatar || '🥈';
+    if (a2) a2.textContent = p2.avatar || '🦊';
     if (n2) n2.textContent = p2.name;
     if (s2) s2.textContent = p2.score.toLocaleString() + ' đ';
 
-    if (a3) a3.textContent = p3.avatar || '🥉';
+    if (a3) a3.textContent = p3.avatar || '🐰';
     if (n3) n3.textContent = p3.name;
     if (s3) s3.textContent = p3.score.toLocaleString() + ' đ';
 
@@ -2825,7 +2825,7 @@
     var isPublic = (gameState.accessMode === 'public');
 
     if (accessTag) {
-      accessTag.textContent = isPublic ? '🌐 Công khai' : '🔒 Riêng tư';
+      accessTag.textContent = isPublic ? 'Công khai' : 'Riêng tư';
       accessTag.className = 'player-room-access-tag ' + (isPublic ? 'is-public' : 'is-private');
     }
 
@@ -2877,8 +2877,8 @@
           var row = document.createElement('div');
           row.className = 'leaderboard-row' + (rank <= 3 ? (' top-' + rank) : '') + (isMe ? ' is-self' : '');
 
-          var rankBadge = (rank === 1 ? '🥇 #1' : (rank === 2 ? '🥈 #2' : (rank === 3 ? '🥉 #3' : '#' + rank)));
-          var streakOrStatus = (p.streak >= 2 ? ('<span class="lb-streak">🔥' + p.streak + '</span>') : '<span class="lb-ready-badge">🟢 Sẵn sàng</span>');
+          var rankBadge = '#' + rank;
+          var streakOrStatus = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Sẵn sàng</span>');
 
           row.innerHTML =
             '<div class="lb-rank">' + rankBadge + '</div>' +
@@ -2959,7 +2959,7 @@
         var hostRoom = JSON.parse(hostRoomRaw);
         if (hostRoom && hostRoom.expiresAt && Number(hostRoom.expiresAt) > 0 && Date.now() >= Number(hostRoom.expiresAt)) {
           if (typeof showToast === 'function') {
-            showToast('⏳ Phòng #' + formatPinCode(cleanPin) + ' đã hết thời hạn lưu trữ!', 'error');
+            showToast('Phòng #' + formatPinCode(cleanPin) + ' đã hết thời hạn lưu trữ.', 'error');
           }
           return;
         }
@@ -3262,7 +3262,7 @@
     if (headerStreak) {
       if (gameState.playerLocalStreak >= 2) {
         headerStreak.style.display = 'inline-flex';
-        headerStreak.innerHTML = '🔥 <span>' + gameState.playerLocalStreak + '</span>';
+        headerStreak.innerHTML = 'Chuỗi <span>' + gameState.playerLocalStreak + '</span>';
       } else {
         headerStreak.style.display = 'none';
       }
@@ -3275,13 +3275,15 @@
     }
 
     if (isCorrect) {
-      if (resultIcon) resultIcon.textContent = '🎉';
-      if (resultText) resultText.textContent = 'Chính xác!';
+      if (resultIcon) {
+        resultIcon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#266b4d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>';
+      }
+      if (resultText) resultText.textContent = 'Chính xác';
       if (scorePlus) scorePlus.textContent = '+' + earned + ' điểm';
       if (streakPill) {
         if (gameState.playerLocalStreak >= 2) {
           streakPill.style.display = 'inline-block';
-          streakPill.textContent = '🔥 Chuỗi ' + gameState.playerLocalStreak + ' câu đúng liên tiếp!';
+          streakPill.textContent = 'Chuỗi ' + gameState.playerLocalStreak + ' câu đúng liên tiếp';
         } else {
           streakPill.style.display = 'none';
         }
@@ -3290,16 +3292,22 @@
 
       if (rankStatus) {
         rankStatus.textContent = gameState.isSoloRunner
-          ? (isLast ? 'Xuất sắc! Đang tổng kết Bảng xếp hạng...' : 'Tuyệt vời! Tự động qua câu mới sau 2.5s...')
-          : 'Tuyệt vời! Hãy nhìn lên màn hình lớn để xem biểu đồ thống kê.';
+          ? (isLast ? 'Hoàn thành lượt thi. Đang tổng kết bảng xếp hạng...' : 'Tự động chuyển câu mới sau 2.5s...')
+          : 'Hãy nhìn lên màn hình lớn để xem biểu đồ thống kê.';
       }
       if (!isRestore) SFX.correct();
     } else {
       var isLast = (gameState.currentQuestionIndex >= gameState.totalQuestions - 1);
       var correctLetter = p.correctLetter || OPTION_LETTERS[p.correctIndex] || 'A';
-      if (resultIcon) resultIcon.textContent = gameState.playerLastChoice === -1 ? '⏰' : '😢';
+      if (resultIcon) {
+        if (gameState.playerLastChoice === -1) {
+          resultIcon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ab6f24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+        } else {
+          resultIcon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b83a2d" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        }
+      }
       if (resultText) {
-        resultText.textContent = gameState.playerLastChoice === -1 ? 'Hết giờ mất rồi!' : 'Sai mất rồi!';
+        resultText.textContent = gameState.playerLastChoice === -1 ? 'Hết giờ' : 'Chưa chính xác';
       }
       if (scorePlus) {
         scorePlus.textContent = 'Đáp án đúng là ' + correctLetter + ': ' + (p.correctText || '');
@@ -3307,8 +3315,8 @@
       if (streakPill) streakPill.style.display = 'none';
       if (rankStatus) {
         rankStatus.textContent = gameState.isSoloRunner
-          ? (isLast ? 'Hết trận rồi! Đang tổng kết Bảng xếp hạng...' : 'Đừng nản chí! Tự động qua câu mới sau 2.5s...')
-          : 'Đừng nản chí, chuẩn bị gỡ điểm ở câu tiếp theo nhé!';
+          ? (isLast ? 'Hết trận. Đang tổng kết bảng xếp hạng...' : 'Tự động chuyển câu mới sau 2.5s...')
+          : 'Chuẩn bị cho câu tiếp theo.';
       }
       if (!isRestore) SFX.wrong();
     }
@@ -3324,7 +3332,7 @@
     if (gameState.isSoloRunner) {
       if (progressWrap) progressWrap.style.display = 'flex';
       if (progressText) {
-        progressText.textContent = isLast ? '⏳ Tự động tổng kết sau 2.5s...' : '⏳ Tự động qua câu mới sau 2.5s...';
+        progressText.textContent = isLast ? 'Tự động tổng kết sau 2.5s...' : 'Tự động chuyển câu sau 2.5s...';
       }
       if (progressFill) {
         progressFill.style.transition = 'none';
@@ -3375,7 +3383,7 @@
     }
   }
 
-  // Pha 5 trên điện thoại: Cập nhật thứ hạng hiện tại ("Bạn đang đứng Hạng 2 – Chỉ kém người dẫn đầu 110 điểm")
+  // Pha 5 trên điện thoại: Cập nhật thứ hạng hiện tại
   function onPlayerReceivePhase5(p, isRestore) {
     gameState.status = 'player_game';
     gameState.playerLastPhaseAction = 'phase_5_leaderboard';
@@ -3397,14 +3405,14 @@
     if (myRankObj) {
       var r = myRankObj.rank;
       if (p5Medal) {
-        p5Medal.textContent = r === 1 ? '👑' : (r === 2 ? '🥈' : (r === 3 ? '🥉' : '🏅'));
+        p5Medal.textContent = '#' + r;
       }
       if (p5Title) {
         p5Title.textContent = 'Bạn đang đứng Hạng ' + r;
       }
       if (p5Gap) {
         if (r === 1) {
-          p5Gap.textContent = 'Xuất sắc! Bạn đang dẫn đầu cả phòng!';
+          p5Gap.textContent = 'Bạn đang dẫn đầu cả phòng';
         } else {
           p5Gap.textContent = 'Chỉ kém người dẫn đầu ' + (myRankObj.gapToLeader || 0).toLocaleString() + ' điểm';
         }
@@ -3615,15 +3623,15 @@
     var p5Total = document.getElementById('playerPhase5Total');
 
     if (p5Medal) {
-      p5Medal.textContent = myRank === 1 ? '👑' : (myRank === 2 ? '🥈' : (myRank === 3 ? '🥉' : '🏅'));
+      p5Medal.textContent = '#' + myRank;
     }
     if (p5Title) {
       p5Title.textContent = 'Hoàn thành bài thi! Hạng #' + myRank + (totalPlayers > 1 ? (' / ' + totalPlayers + ' người') : '');
     }
     if (p5Gap) {
       p5Gap.textContent = (myRank === 1)
-        ? '🎉 Tuyệt đỉnh! Bạn đang giữ vị trí Top 1 Quán Quân của phòng!'
-        : ('Chúc mừng bạn đã ghi danh lên Bảng Xếp Hạng Công Khai phòng #' + formatPinCode(gameState.pin));
+        ? 'Bạn đang giữ vị trí Top 1 của phòng'
+        : ('Đã ghi danh vào bảng xếp hạng phòng #' + formatPinCode(gameState.pin));
     }
     if (p5Total) {
       p5Total.textContent = 'Tổng điểm đạt được: ' + (gameState.playerLocalScore || 0).toLocaleString() + ' đ';
@@ -3633,8 +3641,8 @@
     if (p5Wait) {
       p5Wait.innerHTML =
         '<div class="solo-finish-actions">' +
-        '<button type="button" class="btn btn-hero-primary" id="btnSoloBackToLobby">🏆 Xem Bảng Xếp Hạng Phòng</button>' +
-        '<button type="button" class="btn btn-secondary" id="btnSoloPlayAgain">🔄 Thi đấu lại</button>' +
+        '<button type="button" class="btn btn-hero-primary" id="btnSoloBackToLobby">Xem bảng xếp hạng phòng</button>' +
+        '<button type="button" class="btn btn-secondary" id="btnSoloPlayAgain">Thi đấu lại</button>' +
         '</div>';
 
       var backBtn = document.getElementById('btnSoloBackToLobby');
@@ -3878,7 +3886,7 @@
           rankings: p.rankings || []
         });
         var p5Wait = document.querySelector('#playerPhase5Card .phase5-wait-hint');
-        if (p5Wait) p5Wait.textContent = '🏆 Trận đấu đã kết thúc! Xem Bục Vinh Quang trên màn hình lớn.';
+        if (p5Wait) p5Wait.textContent = 'Trận đấu đã kết thúc. Hãy xem Bục Vinh Quang trên màn hình lớn.';
         if (typeof confetti === 'function') {
           try { confetti(); } catch (e) { }
         }
@@ -3943,11 +3951,11 @@
 
         if (loginAdmin(u, p)) {
           SFX.correct();
-          if (typeof showToast === 'function') showToast('👑 Đăng nhập Admin thành công!', 'success');
+          if (typeof showToast === 'function') showToast('Đăng nhập Quản trị viên thành công.', 'success');
           switchRoleTab('host');
         } else {
           SFX.wrong();
-          if (typeof showToast === 'function') showToast('Sai tài khoản hoặc mật khẩu Admin! (Mặc định: admin / 123456)', 'error');
+          if (typeof showToast === 'function') showToast('Sai tài khoản hoặc mật khẩu Quản trị viên. (Mặc định: admin / 123456)', 'error');
         }
         return false;
       };
@@ -3981,7 +3989,7 @@
         syncBrowserUrl('', '');
         switchRoleTab('host');
         if (typeof showToast === 'function') {
-          showToast('👑 Chào mừng Quản trị viên! Đã mở Bảng Tạo Game.', 'success');
+          showToast('Đã mở bảng Tạo phòng thi đấu.', 'success');
         }
       } else {
         stopCloudPolling();

@@ -5976,19 +5976,19 @@ details[open] summary {
 }
 
 .gm-icon.gm-red {
-  background: #e21b3c;
+  background: #b83a2d;
 }
 
 .gm-icon.gm-blue {
-  background: #1368ce;
+  background: #275685;
 }
 
 .gm-icon.gm-yellow {
-  background: #d89e00;
+  background: #ab6f24;
 }
 
 .gm-icon.gm-green {
-  background: #26890c;
+  background: #266b4d;
 }
 
 .gm-info {
@@ -6495,9 +6495,8 @@ details[open] summary {
 }
 
 .game-timer-badge.urgent {
-  color: #e21b3c;
-  border-color: #e21b3c;
-  animation: pulseUrgent 0.45s infinite alternate;
+  color: var(--accent-red);
+  border-color: var(--accent-red);
 }
 
 .game-answers-count {
@@ -6517,7 +6516,7 @@ details[open] summary {
 
 .game-time-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #f59e0b, #e21b3c);
+  background: var(--accent-red);
   border-radius: 4px;
   transition: width 0.25s linear;
   width: 100%;
@@ -6613,19 +6612,19 @@ details[open] summary {
 }
 
 .k-ans-card.k-red {
-  background: #e21b3c;
+  background: #b83a2d;
 }
 
 .k-ans-card.k-blue {
-  background: #1368ce;
+  background: #275685;
 }
 
 .k-ans-card.k-yellow {
-  background: #d89e00;
+  background: #ab6f24;
 }
 
 .k-ans-card.k-green {
-  background: #26890c;
+  background: #266b4d;
 }
 
 .k-shape {
@@ -6778,37 +6777,38 @@ details[open] summary {
 }
 
 .leaderboard-row.top-1 {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.14), var(--bg-raised));
-  border-color: rgba(245, 158, 11, 0.5);
+  background: var(--bg-card);
+  border-color: var(--accent-red-border);
 }
 
 .leaderboard-row.top-2 {
-  background: linear-gradient(90deg, rgba(156, 163, 175, 0.14), var(--bg-raised));
-  border-color: rgba(156, 163, 175, 0.45);
+  background: var(--bg-card);
+  border-color: var(--border-medium);
 }
 
 .leaderboard-row.top-3 {
-  background: linear-gradient(90deg, rgba(217, 119, 6, 0.12), var(--bg-raised));
-  border-color: rgba(217, 119, 6, 0.45);
+  background: var(--bg-card);
+  border-color: var(--border-subtle);
 }
 
 .lb-rank {
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 0.95rem;
+  font-weight: 700;
   min-width: 30px;
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .top-1 .lb-rank {
-  color: #d97706;
+  color: var(--accent-red);
 }
 
 .top-2 .lb-rank {
-  color: #6b7280;
+  color: var(--text-primary);
 }
 
 .top-3 .lb-rank {
-  color: #b45309;
+  color: var(--text-secondary);
 }
 
 .lb-avatar {
@@ -6858,9 +6858,8 @@ details[open] summary {
 }
 
 .podium-trophy {
-  font-size: 3.8rem;
+  font-size: 3.2rem;
   line-height: 1;
-  animation: bounceTrophy 1.8s infinite alternate ease-in-out;
 }
 
 .podium-title {
@@ -6894,9 +6893,8 @@ details[open] summary {
 }
 
 .podium-crown {
-  font-size: 2rem;
+  font-size: 1.8rem;
   margin-bottom: -4px;
-  animation: floatCrown 2s ease-in-out infinite;
 }
 
 .podium-avatar {
@@ -6928,25 +6926,34 @@ details[open] summary {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
   font-weight: 800;
   font-size: 1.8rem;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
 .pillar-1 {
   height: 155px;
-  background: linear-gradient(180deg, #f59e0b, #d97706);
+  background: var(--bg-raised);
+  border: 1px solid var(--accent-red-border);
+  border-bottom: none;
+  color: var(--accent-red);
 }
 
 .pillar-2 {
   height: 112px;
-  background: linear-gradient(180deg, #9ca3af, #6b7280);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-medium);
+  border-bottom: none;
+  color: var(--text-primary);
 }
 
 .pillar-3 {
   height: 78px;
-  background: linear-gradient(180deg, #d97706, #92400e);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-bottom: none;
+  color: var(--text-secondary);
 }
 
 .podium-footer {
@@ -7026,10 +7033,9 @@ details[open] summary {
 }
 
 .player-big-avatar {
-  font-size: 4rem;
+  font-size: 3.5rem;
   line-height: 1;
   margin-bottom: 12px;
-  animation: bounceAvatar 2s infinite ease-in-out;
 }
 
 .player-waiting-name {
@@ -7041,8 +7047,9 @@ details[open] summary {
 
 .player-waiting-badge {
   display: inline-block;
-  background: #10b981;
-  color: #ffffff;
+  background: rgba(38, 107, 77, 0.12);
+  border: 1px solid rgba(38, 107, 77, 0.3);
+  color: #266b4d;
   font-size: 0.82rem;
   font-weight: 700;
   padding: 4px 14px;
@@ -7670,19 +7677,19 @@ details[open] summary {
 }
 
 .player-pad-btn.p-red {
-  background: #e21b3c;
+  background: #b83a2d;
 }
 
 .player-pad-btn.p-blue {
-  background: #1368ce;
+  background: #275685;
 }
 
 .player-pad-btn.p-yellow {
-  background: #d89e00;
+  background: #ab6f24;
 }
 
 .player-pad-btn.p-green {
-  background: #26890c;
+  background: #266b4d;
 }
 
 .player-submitted-state {
@@ -7724,9 +7731,11 @@ details[open] summary {
 }
 
 .result-big-icon {
-  font-size: 4.2rem;
-  line-height: 1;
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-bottom: 12px;
 }
 
 .result-main-text {
@@ -7769,57 +7778,13 @@ details[open] summary {
   }
 
   50% {
-    transform: scale(1.12);
+    transform: scale(1.04);
     opacity: 1;
   }
 
   100% {
     transform: scale(1);
-    opacity: 0.85;
-  }
-}
-
-@keyframes floatCrown {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes bounceTrophy {
-  0% {
-    transform: scale(1) translateY(0);
-  }
-
-  100% {
-    transform: scale(1.06) translateY(-6px);
-  }
-}
-
-@keyframes bounceAvatar {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes pulseUrgent {
-  0% {
-    transform: scale(1);
-  }
-
-  100% {
-    transform: scale(1.08);
+    opacity: 0.95;
   }
 }
 
@@ -7984,8 +7949,7 @@ details[open] summary {
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
-  box-shadow: 0 6px 20px rgba(192, 57, 43, 0.3);
-  animation: pulseUrgent 0.6s infinite alternate;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.16);
 }
 
 .getready-spinner-ring.small {
@@ -8091,19 +8055,19 @@ details[open] summary {
 }
 
 .k-bar-fill.k-red {
-  background: #e21b3c;
+  background: #b83a2d;
 }
 
 .k-bar-fill.k-blue {
-  background: #1368ce;
+  background: #275685;
 }
 
 .k-bar-fill.k-yellow {
-  background: #d89e00;
+  background: #ab6f24;
 }
 
 .k-bar-fill.k-green {
-  background: #26890c;
+  background: #266b4d;
 }
 
 .k-bar-fill.is-wrong-bar {
@@ -8112,7 +8076,7 @@ details[open] summary {
 
 .k-bar-fill.is-correct-bar {
   opacity: 1;
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 10px rgba(38, 107, 77, 0.4);
 }
 
 .k-bar-label {
@@ -8127,19 +8091,19 @@ details[open] summary {
 }
 
 .k-bar-label.k-red {
-  background: #e21b3c;
+  background: #b83a2d;
 }
 
 .k-bar-label.k-blue {
-  background: #1368ce;
+  background: #275685;
 }
 
 .k-bar-label.k-yellow {
-  background: #d89e00;
+  background: #ab6f24;
 }
 
 .k-bar-label.k-green {
-  background: #26890c;
+  background: #266b4d;
 }
 
 .k-opt-prefix {
@@ -8270,7 +8234,7 @@ details[open] summary {
 .player-timer-bar-fill {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #10b981, #f59e0b, #e21b3c);
+  background: var(--accent-red);
   transition: width 0.1s linear;
 }
 
@@ -8285,39 +8249,52 @@ details[open] summary {
   font-weight: 900;
 }
 
-/* PHASE 4 FULL GREEN / RED OVERLAY ON PLAYER PHONE */
+/* PHASE 4 CALM OVERLAY ON PLAYER PHONE */
 .player-result-overlay.is-correct-bg {
-  background: linear-gradient(145deg, #16a34a, #15803d) !important;
-  border-color: #22c55e !important;
-  color: #ffffff !important;
-  box-shadow: 0 12px 32px rgba(22, 163, 74, 0.35);
+  background: var(--bg-card) !important;
+  border-color: rgba(38, 107, 77, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .player-result-overlay.is-wrong-bg {
-  background: linear-gradient(145deg, #dc2626, #b91c1c) !important;
-  border-color: #ef4444 !important;
-  color: #ffffff !important;
-  box-shadow: 0 12px 32px rgba(220, 38, 38, 0.35);
+  background: var(--bg-card) !important;
+  border-color: rgba(184, 58, 45, 0.45) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
-.player-result-overlay.is-correct-bg .result-main-text,
-.player-result-overlay.is-wrong-bg .result-main-text,
-.player-result-overlay.is-correct-bg .result-score-plus,
-.player-result-overlay.is-wrong-bg .result-score-plus,
+.player-result-overlay.is-correct-bg .result-main-text {
+  color: #266b4d !important;
+}
+
+.player-result-overlay.is-wrong-bg .result-main-text {
+  color: #b83a2d !important;
+}
+
+.player-result-overlay.is-correct-bg .result-score-plus {
+  color: #266b4d !important;
+}
+
+.player-result-overlay.is-wrong-bg .result-score-plus {
+  color: var(--text-secondary) !important;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 .player-result-overlay.is-correct-bg .result-rank-status,
 .player-result-overlay.is-wrong-bg .result-rank-status {
-  color: #ffffff !important;
+  color: var(--text-secondary) !important;
 }
 
 .result-streak-pill {
   display: inline-block;
   margin: 4px 0 12px;
-  padding: 5px 14px;
+  padding: 4px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  font-size: 0.88rem;
-  font-weight: 800;
+  background: rgba(171, 111, 36, 0.12);
+  border: 1px solid rgba(171, 111, 36, 0.3);
+  color: #ab6f24;
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 /* PHASE 5 RANK CARD ON PLAYER PHONE */
@@ -8334,9 +8311,20 @@ details[open] summary {
 }
 
 .phase5-rank-medal {
-  font-size: 3.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  border: 1px solid var(--accent-red-border);
+  color: var(--accent-red);
+  font-family: 'Cinzel', serif, sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 auto 12px;
   line-height: 1;
-  margin-bottom: 10px;
 }
 
 .phase5-rank-title {
@@ -8791,25 +8779,16 @@ details[open] summary {
   font-weight: 800;
   border-radius: 12px;
   margin-top: 14px;
-  animation: pulseButton 2s infinite ease-in-out;
   cursor: pointer;
   border: none;
   background: var(--accent-red);
   color: #ffffff;
+  transition: transform 0.12s ease, opacity 0.15s ease;
 }
 
-@keyframes pulseButton {
-
-  0%,
-  100% {
-    transform: scale(1);
-    box-shadow: 0 4px 14px rgba(192, 57, 43, 0.35);
-  }
-
-  50% {
-    transform: scale(1.025);
-    box-shadow: 0 6px 22px rgba(192, 57, 43, 0.55);
-  }
+.btn-start-public-solo:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
 }
 
 .public-solo-hint {
@@ -8825,15 +8804,16 @@ details[open] summary {
   font-size: 0.95rem;
   font-weight: 700;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
   border: none;
-  background: #ffffff;
-  color: #1b1916;
+  background: var(--accent-red);
+  color: #ffffff;
+  transition: transform 0.12s ease, opacity 0.15s ease;
 }
 
 .btn-solo-next-q:hover {
-  background: #f3f4f6;
+  opacity: 0.92;
   transform: translateY(-1px);
 }
 
@@ -8852,7 +8832,8 @@ details[open] summary {
 .solo-auto-progress-bar {
   width: 100%;
   height: 6px;
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
   border-radius: 999px;
   overflow: hidden;
   position: relative;
@@ -8861,16 +8842,15 @@ details[open] summary {
 .solo-auto-progress-fill {
   height: 100%;
   width: 100%;
-  background: #ffffff;
+  background: var(--accent-red);
   border-radius: 999px;
   transform-origin: left center;
 }
 
 .solo-auto-progress-text {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.95);
-  letter-spacing: 0.2px;
+  color: var(--text-secondary);
 }
 
 .solo-finish-actions {
