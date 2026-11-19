@@ -319,6 +319,42 @@
     } catch (e) { }
   }
 
+  function normalizePlayerName(name) {
+    return (name || '').trim().toLowerCase();
+  }
+
+  function deduplicatePlayers(players) {
+    if (!Array.isArray(players)) return [];
+    var map = new Map();
+    players.forEach(function (p) {
+      if (!p) return;
+      var rawName = (p.name || '').trim();
+      if (!rawName) return;
+      var key = rawName.toLowerCase();
+      var existing = map.get(key);
+      if (!existing) {
+        map.set(key, Object.assign({}, p, { name: rawName }));
+      } else {
+        var bestScore = Math.max(Number(existing.score) || 0, Number(p.score) || 0);
+        var bestStreak = Math.max(Number(existing.streak) || 0, Number(p.streak) || 0);
+        var latestAvatar = p.avatar || existing.avatar || '🐼';
+        var isReady = existing.isReady || p.isReady;
+        var chosenId = (gameState.myPlayerId && (p.id === gameState.myPlayerId || existing.id === gameState.myPlayerId))
+          ? gameState.myPlayerId
+          : (p.id || existing.id);
+
+        existing.id = chosenId;
+        existing.name = rawName;
+        existing.avatar = latestAvatar;
+        existing.score = bestScore;
+        existing.streak = bestStreak;
+        existing.isReady = !!isReady;
+        if (p.isBot !== undefined) existing.isBot = !!p.isBot;
+      }
+    });
+    return Array.from(map.values());
+  }
+
   // ==================== GAME STATE ====================
   var gameState = {
     role: 'player', // Mặc định mở trang là 'player' (Người chơi). Chọn tab Admin mới đăng nhập 'host'.
@@ -736,6 +772,7 @@
   function saveHostRoomState() {
     if (gameState.role !== 'host' || !gameState.pin) return;
     var cleanP = normalizePin(gameState.pin);
+    gameState.players = deduplicatePlayers(gameState.players);
     var snapshot = {
       pin: cleanP,
       accessMode: gameState.accessMode || 'public',
@@ -1107,6 +1144,20 @@
       gameState.playerTimerInterval = null;
     }
     var oldPin = normalizePin(gameState.pin);
+    var pName = (gameState.playerProfile.name || '').trim();
+    if (oldPin && pName) {
+      try {
+        var recKey = 'wq_arena_player_rec_' + oldPin + '_' + normalizePlayerName(pName);
+        localStorage.setItem(recKey, JSON.stringify({
+          myPlayerId: gameState.myPlayerId,
+          name: pName,
+          avatar: gameState.playerProfile.avatar || '🐼',
+          score: gameState.playerLocalScore || 0,
+          streak: gameState.playerLocalStreak || 0,
+          updatedAt: Date.now()
+        }));
+      } catch (eRec) { }
+    }
     if (oldPin) {
       try {
         localStorage.removeItem('wq_arena_player_session_' + oldPin);
@@ -1711,6 +1762,14 @@
 
   function saveSavedPublicRooms(rooms) {
     try {
+      if (Array.isArray(rooms)) {
+        rooms.forEach(function (r) {
+          if (r && Array.isArray(r.players)) {
+            r.players = deduplicatePlayers(r.players);
+            r.playerCount = r.players.length;
+          }
+        });
+      }
       localStorage.setItem('wq_arena_public_rooms', JSON.stringify(rooms || []));
     } catch (e) { }
   }
@@ -1720,6 +1779,10 @@
     var pin = normalizePin(roomSummary.pin);
     var list = getSavedPublicRooms().filter(function (r) { return normalizePin(r.pin) !== pin; });
     var cleanSummary = Object.assign({}, roomSummary, { pin: pin, accessMode: 'public', updatedAt: Date.now() });
+    if (Array.isArray(cleanSummary.players)) {
+      cleanSummary.players = deduplicatePlayers(cleanSummary.players);
+      cleanSummary.playerCount = cleanSummary.players.length;
+    }
     list.unshift(cleanSummary);
     saveSavedPublicRooms(list);
 
@@ -2052,6 +2115,7 @@
 
   function broadcastLobbyRoster() {
     if (!gameState.pin) return;
+    gameState.players = deduplicatePlayers(gameState.players);
     var rosterPayload = {
       pin: gameState.pin,
       accessMode: gameState.accessMode || 'public',
@@ -2093,6 +2157,7 @@
   }
 
   function renderPlayerList() {
+    gameState.players = deduplicatePlayers(gameState.players);
     var simplePanel = document.getElementById('hostPlayersPanelSimple');
     var publicLbPanel = document.getElementById('hostPublicLeaderboardPanel');
     var listEl = document.getElementById('lobbyPlayersList');
@@ -3166,12 +3231,26 @@
       indTag.style.display = isPublic ? 'none' : 'inline-block';
     }
 
-    var list = Array.isArray(playersList) ? playersList.slice() : [];
-    // Đảm bảo luôn có mặt bản thân người chơi trong danh sách hiển thị trên màn hình chờ của mình
-    if (gameState.myPlayerId && !list.some(function (x) { return x.id === gameState.myPlayerId; })) {
+    var list = Array.isArray(playersList) ? deduplicatePlayers(playersList) : [];
+    var myName = (gameState.playerProfile.name || 'Bạn').trim();
+    var myNormName = normalizePlayerName(myName);
+
+    // Đảm bảo bản thân luôn có mặt trong danh sách và không bao giờ bị nhân bản 2 dòng cùng tên
+    var myEntry = list.find(function (x) {
+      return (gameState.myPlayerId && x.id === gameState.myPlayerId) ||
+        (x.name && normalizePlayerName(x.name) === myNormName);
+    });
+
+    if (myEntry) {
+      if (gameState.myPlayerId) myEntry.id = gameState.myPlayerId;
+      myEntry.score = Math.max(myEntry.score || 0, gameState.playerLocalScore || 0);
+      myEntry.streak = Math.max(myEntry.streak || 0, gameState.playerLocalStreak || 0);
+      myEntry.avatar = gameState.playerProfile.avatar || myEntry.avatar || '🐼';
+      myEntry.isReady = !!gameState.isReady;
+    } else {
       list.push({
-        id: gameState.myPlayerId,
-        name: gameState.playerProfile.name || 'Bạn',
+        id: gameState.myPlayerId || ('player_' + Date.now()),
+        name: myName,
         avatar: gameState.playerProfile.avatar || '🐼',
         score: gameState.playerLocalScore || 0,
         streak: gameState.playerLocalStreak || 0,
@@ -3179,6 +3258,8 @@
         isReady: !!gameState.isReady
       });
     }
+
+    list = deduplicatePlayers(list);
 
     var pulsingLoader = document.querySelector('#playerLobbyView .pulsing-loader');
     var btnSoloStart = document.getElementById('btnPlayerStartPublicSolo');
@@ -3203,7 +3284,10 @@
         return (b.score || 0) - (a.score || 0);
       });
 
-      var myRank = sorted.findIndex(function (p) { return p.id === gameState.myPlayerId; }) + 1;
+      var myRank = sorted.findIndex(function (p) {
+        return (p.id === gameState.myPlayerId) ||
+          (p.name && normalizePlayerName(p.name) === myNormName);
+      }) + 1;
       if (myRankBadge) {
         myRankBadge.textContent = 'Hạng ' + (myRank || 1) + ' / ' + sorted.length;
       }
@@ -3212,7 +3296,8 @@
         lbListEl.innerHTML = '';
         sorted.forEach(function (p, idx) {
           var rank = idx + 1;
-          var isMe = (p.id === gameState.myPlayerId);
+          var isMe = (p.id === gameState.myPlayerId) ||
+            (p.name && normalizePlayerName(p.name) === myNormName);
           var row = document.createElement('div');
           row.className = 'leaderboard-row' + (rank <= 3 ? (' top-' + rank) : '') + (isMe ? ' is-self' : '');
 
@@ -3246,7 +3331,8 @@
       if (listEl) {
         listEl.innerHTML = '';
         list.forEach(function (p) {
-          var isMe = (p.id === gameState.myPlayerId);
+          var isMe = (p.id === gameState.myPlayerId) ||
+            (p.name && normalizePlayerName(p.name) === myNormName);
           var isReady = isMe ? !!gameState.isReady : !!p.isReady;
           var chip = document.createElement('div');
           chip.className = 'player-chip' + (p.isBot ? ' bot' : '') + (isMe ? ' is-me-chip' : '');
@@ -3406,26 +3492,73 @@
     }
     savePlayerProfile(cleanName, cleanAvatar);
 
-    // Nếu trước đó đã có phiên trong phòng này với cùng tên thì tái sử dụng ID để giữ nguyên điểm số
-    var existingSessionId = '';
+    // 1 phòng chỉ 1 tên xuất hiện: Tìm bản ghi cũ theo Tên (case-insensitive) để khôi phục mốc điểm & ID, không nhân bản
+    var existingRecord = null;
+    var normName = normalizePlayerName(cleanName);
+
+    // A. Kiểm tra session gần nhất
     try {
       var prevSessRaw = localStorage.getItem('wq_arena_player_session_' + cleanPin);
       if (prevSessRaw) {
         var prevSess = JSON.parse(prevSessRaw);
-        if (prevSess && prevSess.myPlayerId && prevSess.name === cleanName) {
-          existingSessionId = prevSess.myPlayerId;
+        if (prevSess && normalizePlayerName(prevSess.name) === normName) {
+          existingRecord = prevSess;
         }
       }
     } catch (e) { }
 
+    // B. Kiểm tra bản ghi đã lưu khi rời phòng
+    if (!existingRecord) {
+      try {
+        var recRaw = localStorage.getItem('wq_arena_player_rec_' + cleanPin + '_' + normName);
+        if (recRaw) {
+          existingRecord = JSON.parse(recRaw);
+        }
+      } catch (e) { }
+    }
+
+    // C. Kiểm tra trong danh sách players của targetRoom
+    if (!existingRecord && targetRoom && Array.isArray(targetRoom.players)) {
+      existingRecord = targetRoom.players.find(function (p) {
+        return p && normalizePlayerName(p.name) === normName;
+      });
+    }
+
+    // D. Kiểm tra trong danh sách phòng công khai
+    if (!existingRecord) {
+      var pubRoomsAll = getSavedPublicRooms();
+      var matchPubAll = pubRoomsAll.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
+      if (matchPubAll && Array.isArray(matchPubAll.players)) {
+        existingRecord = matchPubAll.players.find(function (p) {
+          return p && normalizePlayerName(p.name) === normName;
+        });
+      }
+    }
+
+    // E. Kiểm tra trong wq_arena_roster_
+    if (!existingRecord) {
+      try {
+        var rStr = localStorage.getItem('wq_arena_roster_' + cleanPin);
+        if (rStr) {
+          var rParsed = JSON.parse(rStr);
+          if (rParsed && Array.isArray(rParsed.players)) {
+            existingRecord = rParsed.players.find(function (p) {
+              return p && normalizePlayerName(p.name) === normName;
+            });
+          }
+        }
+      } catch (e) { }
+    }
+
     gameState.role = 'player';
     gameState.status = 'player_lobby';
     gameState.pin = cleanPin;
-    gameState.myPlayerId = existingSessionId || ('player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
+    gameState.myPlayerId = (existingRecord && (existingRecord.myPlayerId || existingRecord.id)) ||
+      ('player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
     gameState.playerJoinAcked = false;
     gameState.playerLastChoice = -1;
-    gameState.playerLocalScore = 0;
-    gameState.playerLocalStreak = 0;
+    gameState.playerLocalScore = (existingRecord && Number(existingRecord.score || existingRecord.playerLocalScore)) || 0;
+    gameState.playerLocalStreak = (existingRecord && Number(existingRecord.streak || existingRecord.playerLocalStreak)) || 0;
     gameState.playerLastPhaseAction = '';
     gameState.playerLastPhasePayload = null;
 
@@ -3473,6 +3606,8 @@
       name: cleanName,
       avatar: cleanAvatar,
       pin: cleanPin,
+      score: gameState.playerLocalScore,
+      streak: gameState.playerLocalStreak,
       isReady: !!gameState.isReady
     };
     broadcastMsg('player_join', joinPayload);
@@ -4169,16 +4304,44 @@
     var cleanPin = normalizePin(pin);
     if (!cleanPin) return;
 
-    var playerName = gameState.playerProfile.name || 'Người chơi';
+    var playerName = (gameState.playerProfile.name || 'Người chơi').trim();
     var playerAvatar = gameState.playerProfile.avatar || '🐼';
+    var pNameNorm = normalizePlayerName(playerName);
+
+    // Lưu bản ghi cá nhân vào localStorage để không bao giờ bị mất mốc điểm khi thoát phòng
+    try {
+      var recKey = 'wq_arena_player_rec_' + cleanPin + '_' + pNameNorm;
+      var prevRec = null;
+      try {
+        var prevRaw = localStorage.getItem(recKey);
+        if (prevRaw) prevRec = JSON.parse(prevRaw);
+      } catch (eR) { }
+
+      var bestScore = Math.max(score, (prevRec && Number(prevRec.score)) || 0);
+      var bestStreak = Math.max(streak, (prevRec && Number(prevRec.streak)) || 0);
+
+      localStorage.setItem(recKey, JSON.stringify({
+        myPlayerId: playerId,
+        name: playerName,
+        avatar: playerAvatar,
+        score: bestScore,
+        streak: bestStreak,
+        updatedAt: Date.now()
+      }));
+    } catch (eKey) { }
 
     var pubRooms = getSavedPublicRooms();
     var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
 
     if (matchPub) {
       if (!Array.isArray(matchPub.players)) matchPub.players = [];
-      var existing = matchPub.players.find(function (p) { return p.id === playerId; });
+      var existing = matchPub.players.find(function (p) {
+        return p.id === playerId || (p.name && normalizePlayerName(p.name) === pNameNorm);
+      });
       if (existing) {
+        existing.id = playerId;
+        existing.name = playerName;
+        existing.avatar = playerAvatar;
         existing.score = Math.max(existing.score || 0, score);
         existing.streak = Math.max(existing.streak || 0, streak);
       } else {
@@ -4191,13 +4354,14 @@
           isBot: false
         });
       }
+      matchPub.players = deduplicatePlayers(matchPub.players);
       matchPub.playerCount = matchPub.players.length;
       matchPub.updatedAt = Date.now();
       saveSavedPublicRooms(pubRooms);
     }
 
     try {
-      var rList = (matchPub && matchPub.players) || [];
+      var rList = deduplicatePlayers((matchPub && matchPub.players) || []);
       localStorage.setItem('wq_arena_roster_' + cleanPin, JSON.stringify({
         pin: cleanPin,
         accessMode: 'public',
@@ -4211,8 +4375,13 @@
       if (hostRoomRaw) {
         var hostRoom = JSON.parse(hostRoomRaw);
         if (hostRoom && Array.isArray(hostRoom.players)) {
-          var hExisting = hostRoom.players.find(function (p) { return p.id === playerId; });
+          var hExisting = hostRoom.players.find(function (p) {
+            return p.id === playerId || (p.name && normalizePlayerName(p.name) === pNameNorm);
+          });
           if (hExisting) {
+            hExisting.id = playerId;
+            hExisting.name = playerName;
+            hExisting.avatar = playerAvatar;
             hExisting.score = Math.max(hExisting.score || 0, score);
             hExisting.streak = Math.max(hExisting.streak || 0, streak);
           } else {
@@ -4225,6 +4394,7 @@
               isBot: false
             });
           }
+          hostRoom.players = deduplicatePlayers(hostRoom.players);
           localStorage.setItem('wq_arena_host_room_' + cleanPin, JSON.stringify(hostRoom));
           if (gameState.role === 'host' && normalizePin(gameState.pin) === cleanPin) {
             gameState.players = hostRoom.players;
@@ -4271,15 +4441,19 @@
           saveHostRoomState();
         }
       } else if (action === 'player_join') {
-        var existingById = gameState.players.find(function (x) { return x.id === p.id; });
-        if (!existingById) {
+        var pNameNorm = normalizePlayerName(p.name);
+        var existingPlayer = gameState.players.find(function (x) {
+          return x.id === p.id || (pNameNorm && normalizePlayerName(x.name) === pNameNorm);
+        });
+
+        if (!existingPlayer) {
           gameState.players.push({
             id: p.id,
             name: p.name,
             avatar: p.avatar || '🐼',
-            score: 0,
+            score: Number(p.score) || 0,
             prevRank: gameState.players.length + 1,
-            streak: 0,
+            streak: Number(p.streak) || 0,
             lives: 3,
             lastAnswerIndex: -1,
             answeredAt: 0,
@@ -4288,17 +4462,27 @@
             isReady: !!p.isReady
           });
           SFX.pop();
+          gameState.players = deduplicatePlayers(gameState.players);
           renderPlayerList();
           broadcastLobbyRoster();
           if (typeof showToast === 'function') {
             showToast((p.avatar || '🐼') + ' ' + p.name + ' đã vào phòng!', 'success');
           }
         } else {
-          existingById.name = p.name || existingById.name;
-          existingById.avatar = p.avatar || existingById.avatar;
-          if (typeof p.isReady === 'boolean') {
-            existingById.isReady = p.isReady;
+          // Người chơi đã từng có trong phòng (thoát ra vào lại) -> Cập nhật thông tin, GIỮ NGUYÊN ĐIỂM SỐ & THỨ HẠNG!
+          existingPlayer.id = p.id;
+          existingPlayer.name = p.name || existingPlayer.name;
+          existingPlayer.avatar = p.avatar || existingPlayer.avatar;
+          if (typeof p.score === 'number' && p.score > (existingPlayer.score || 0)) {
+            existingPlayer.score = p.score;
           }
+          if (typeof p.streak === 'number' && p.streak > (existingPlayer.streak || 0)) {
+            existingPlayer.streak = p.streak;
+          }
+          if (typeof p.isReady === 'boolean') {
+            existingPlayer.isReady = p.isReady;
+          }
+          gameState.players = deduplicatePlayers(gameState.players);
           renderPlayerList();
           broadcastLobbyRoster();
         }
@@ -4337,7 +4521,10 @@
         }
         recordPlayerAnswerOnHost(p.playerId, p.answerIndex);
       } else if (action === 'player_score_update') {
-        var existingPS = gameState.players.find(function (x) { return x.id === p.playerId; });
+        var pScoreName = normalizePlayerName(p.name);
+        var existingPS = gameState.players.find(function (x) {
+          return x.id === p.playerId || (pScoreName && normalizePlayerName(x.name) === pScoreName);
+        });
         if (!existingPS && p.playerId) {
           gameState.players.push({
             id: p.playerId,
@@ -4353,17 +4540,23 @@
             isBot: false
           });
         } else if (existingPS) {
+          existingPS.id = p.playerId || existingPS.id;
           existingPS.score = Math.max(existingPS.score || 0, p.score || 0);
           existingPS.streak = Math.max(existingPS.streak || 0, p.streak || 0);
           existingPS.lastPointsEarned = p.earned || 0;
         }
+        gameState.players = deduplicatePlayers(gameState.players);
         renderPlayerList();
       } else if (action === 'lobby_roster_sync') {
         if (gameState.accessMode === 'public' && Array.isArray(p.players)) {
           var updatedRoster = false;
           p.players.forEach(function (rp) {
-            var ex = gameState.players.find(function (x) { return x.id === rp.id; });
+            var rpNorm = normalizePlayerName(rp.name);
+            var ex = gameState.players.find(function (x) {
+              return x.id === rp.id || (rpNorm && normalizePlayerName(x.name) === rpNorm);
+            });
             if (ex) {
+              ex.id = rp.id || ex.id;
               if ((rp.score || 0) > (ex.score || 0) || (rp.streak || 0) > (ex.streak || 0)) {
                 ex.score = Math.max(ex.score || 0, rp.score || 0);
                 ex.streak = Math.max(ex.streak || 0, rp.streak || 0);
@@ -4387,6 +4580,7 @@
               updatedRoster = true;
             }
           });
+          gameState.players = deduplicatePlayers(gameState.players);
           if (updatedRoster && gameState.status === 'lobby') {
             renderPlayerList();
           }
