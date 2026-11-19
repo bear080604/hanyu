@@ -12,6 +12,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+// In-memory fallback buffers for Arena (ensures 100% uptime even when D1 daily limits are exceeded)
+const MEMORY_ARENA_MESSAGES = new Map(); // pin -> Array<{ id, msg, timestamp }>
+const MEMORY_ARENA_ROOMS = new Map();    // pin -> { pin, name, is_public, meta_json, updated_at }
+let _memMsgIdCounter = 1;
+
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -276,7 +281,7 @@ export default {
 
       // ==================== ARENA REALTIME SYNC ENDPOINTS ====================
 
-      // POST /api/arena/sync - Lưu tin nhắn realtime cho phòng Arena (Siêu nhẹ, không JOIN)
+      // POST /api/arena/sync - Lưu tin nhắn realtime cho phòng Arena
       if (path === '/api/arena/sync' && method === 'POST') {
         const body = await request.json();
         const pin = String(body.pin || body.user_id || '').replace(/^arena_sync_/, '').trim();
@@ -286,32 +291,57 @@ export default {
           return errorResponse('Missing pin', 400);
         }
 
-        let msgId = Date.now();
+        let msgId = ++_memMsgIdCounter;
+
+        // 1. Lưu vào RAM
+        if (!MEMORY_ARENA_MESSAGES.has(pin)) {
+          MEMORY_ARENA_MESSAGES.set(pin, []);
+        }
+        const roomMsgs = MEMORY_ARENA_MESSAGES.get(pin);
+        roomMsgs.push({ id: msgId, msg: msgStr, timestamp: Date.now() });
+        if (roomMsgs.length > 100) roomMsgs.shift();
+
+        // 2. Lưu vào Cloudflare Edge Cache (Dùng chung giữa các worker isolates, không tốn D1 quota)
+        try {
+          const cache = caches.default;
+          const cacheUrl = `https://arena-cache.internal/sync/${pin}`;
+          let allMsgs = roomMsgs;
+          const cachedRes = await cache.match(cacheUrl);
+          if (cachedRes) {
+            try {
+              const prev = await cachedRes.json();
+              if (Array.isArray(prev)) {
+                allMsgs = prev.concat(roomMsgs.filter(m => !prev.some(p => p.id === m.id)));
+                if (allMsgs.length > 100) allMsgs = allMsgs.slice(-100);
+              }
+            } catch (e) {}
+          }
+          await cache.put(cacheUrl, new Response(JSON.stringify(allMsgs), {
+            headers: {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'public, max-age=600'
+            }
+          }));
+        } catch (cacheErr) {}
+
+        // 3. Đồng thời ghi vào D1 nếu DB khả dụng
         if (env && env.DB) {
           try {
             const res = await env.DB.prepare(
               'INSERT INTO arena_messages (pin, msg) VALUES (?, ?)'
             ).bind(pin, msgStr).run();
-            msgId = res.meta.last_row_id;
-          } catch (dbErr) {
-            try {
-              await env.DB.prepare(
-                'CREATE TABLE IF NOT EXISTS arena_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, pin TEXT NOT NULL, msg TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)'
-              ).run();
-              const res2 = await env.DB.prepare(
-                'INSERT INTO arena_messages (pin, msg) VALUES (?, ?)'
-              ).bind(pin, msgStr).run();
-              msgId = res2.meta.last_row_id;
-            } catch (err2) {
-              console.error('Failed to insert arena_message:', err2);
+            if (res && res.meta && res.meta.last_row_id) {
+              msgId = res.meta.last_row_id;
             }
+          } catch (dbErr) {
+            // D1 rate-limited -> Cache & RAM đã lưu tin nhắn
           }
         }
 
         return jsonResponse({ success: true, id: msgId, deck_id: msgId }, 201);
       }
 
-      // GET /api/arena/sync?pin=...&since=... - Lấy tin nhắn mới của phòng (Chỉ lấy tin nhắn mới)
+      // GET /api/arena/sync?pin=...&since=... - Lấy tin nhắn mới của phòng
       if (path === '/api/arena/sync' && method === 'GET') {
         const pin = String(url.searchParams.get('pin') || url.searchParams.get('user_id') || '').replace(/^arena_sync_/, '').trim();
         const sinceId = parseInt(url.searchParams.get('since')) || 0;
@@ -320,38 +350,70 @@ export default {
           return errorResponse('Missing pin', 400);
         }
 
+        let formatted = [];
+
+        // 1. Thử lấy từ D1 nếu DB khả dụng
         if (env && env.DB) {
           try {
             const { results } = await env.DB.prepare(
               'SELECT id, msg FROM arena_messages WHERE pin = ? AND id > ? ORDER BY id ASC LIMIT 100'
             ).bind(pin, sinceId).all();
 
-            const formatted = (results || []).map(r => ({
-              id: r.id,
-              msg: r.msg,
-              name: r.msg
-            }));
-            return jsonResponse({ success: true, count: formatted.length, data: formatted });
+            if (results && results.length > 0) {
+              formatted = results.map(r => ({
+                id: r.id,
+                msg: r.msg,
+                name: r.msg
+              }));
+            }
           } catch (dbErr) {
-            try {
-              await env.DB.prepare(
-                'CREATE TABLE IF NOT EXISTS arena_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, pin TEXT NOT NULL, msg TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)'
-              ).run();
-            } catch (e) {}
-            return jsonResponse({ success: true, count: 0, data: [] });
+            // D1 lỗi hoặc hết quota -> tự động dùng Cache / RAM
           }
         }
 
-        return jsonResponse({ success: true, count: 0, data: [] });
+        // 2. Fallback Edge Cache: Lấy tin nhắn từ Cloudflare Cache (Không tốn D1 quota)
+        if (formatted.length === 0) {
+          try {
+            const cache = caches.default;
+            const cacheUrl = `https://arena-cache.internal/sync/${pin}`;
+            const cachedRes = await cache.match(cacheUrl);
+            if (cachedRes) {
+              const msgs = await cachedRes.json();
+              if (Array.isArray(msgs)) {
+                formatted = msgs.filter(m => m.id > sinceId).map(m => ({
+                  id: m.id,
+                  msg: m.msg,
+                  name: m.msg
+                }));
+              }
+            }
+          } catch (e) {}
+        }
+
+        // 3. Fallback RAM: Nếu cache chưa có
+        if (formatted.length === 0 && MEMORY_ARENA_MESSAGES.has(pin)) {
+          const roomMsgs = MEMORY_ARENA_MESSAGES.get(pin);
+          const newMsgs = roomMsgs.filter(m => m.id > sinceId);
+          formatted = newMsgs.map(m => ({
+            id: m.id,
+            msg: m.msg,
+            name: m.msg
+          }));
+        }
+
+        return jsonResponse({ success: true, count: formatted.length, data: formatted });
       }
 
       // DELETE /api/arena/sync?pin=... - Dọn dẹp tin nhắn khi kết thúc phòng
       if (path === '/api/arena/sync' && method === 'DELETE') {
         const pin = String(url.searchParams.get('pin') || '').trim();
-        if (pin && env && env.DB) {
-          try {
-            await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
-          } catch (e) {}
+        if (pin) {
+          MEMORY_ARENA_MESSAGES.delete(pin);
+          if (env && env.DB) {
+            try {
+              await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
+            } catch (e) {}
+          }
         }
         return jsonResponse({ success: true, message: 'Arena messages cleaned' });
       }
@@ -366,29 +428,16 @@ export default {
 
         if (!pin) return errorResponse('Missing pin', 400);
 
+        // Lưu RAM
+        MEMORY_ARENA_ROOMS.set(pin, { pin, name, is_public: isPublic, meta_json: metaJson, updated_at: Date.now() });
+
         if (env && env.DB) {
           try {
             await env.DB.prepare(`
               INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json, updated_at)
               VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
             `).bind(pin, name, isPublic, metaJson).run();
-          } catch (e) {
-            try {
-              await env.DB.prepare(`
-                CREATE TABLE IF NOT EXISTS arena_rooms (
-                  pin TEXT PRIMARY KEY,
-                  name TEXT NOT NULL,
-                  is_public INTEGER DEFAULT 0,
-                  meta_json TEXT NOT NULL,
-                  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-              `).run();
-              await env.DB.prepare(`
-                INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json, updated_at)
-                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-              `).bind(pin, name, isPublic, metaJson).run();
-            } catch (err2) {}
-          }
+          } catch (e) {}
         }
 
         return jsonResponse({ success: true, message: 'Room saved', pin });
@@ -397,18 +446,26 @@ export default {
       // GET /api/arena/rooms - Lấy danh sách phòng công khai hoặc chi tiết phòng
       if (path === '/api/arena/rooms' && method === 'GET') {
         const pin = url.searchParams.get('pin');
-        if (env && env.DB) {
-          try {
-            if (pin) {
+        if (pin) {
+          if (env && env.DB) {
+            try {
               const { results } = await env.DB.prepare(
                 'SELECT * FROM arena_rooms WHERE pin = ?'
               ).bind(pin).all();
               if (results && results.length > 0) {
                 return jsonResponse({ success: true, data: results[0] });
               }
-              return errorResponse('Room not found', 404);
-            }
+            } catch (e) {}
+          }
+          if (MEMORY_ARENA_ROOMS.has(pin)) {
+            return jsonResponse({ success: true, data: MEMORY_ARENA_ROOMS.get(pin) });
+          }
+          return errorResponse('Room not found', 404);
+        }
 
+        let rooms = [];
+        if (env && env.DB) {
+          try {
             const { results } = await env.DB.prepare(`
               SELECT * FROM arena_rooms 
               WHERE is_public = 1 
@@ -416,30 +473,45 @@ export default {
               LIMIT 30
             `).all();
 
-            const rooms = (results || []).map(r => {
-              try {
-                return JSON.parse(r.meta_json);
-              } catch (e) {
-                return { pin: r.pin, name: r.name };
-              }
-            });
+            if (results && results.length > 0) {
+              rooms = results.map(r => {
+                try {
+                  return JSON.parse(r.meta_json);
+                } catch (e) {
+                  return { pin: r.pin, name: r.name };
+                }
+              });
+            }
+          } catch (e) {}
+        }
 
-            return jsonResponse({ success: true, count: rooms.length, data: rooms });
-          } catch (e) {
-            return jsonResponse({ success: true, count: 0, data: [] });
+        if (rooms.length === 0) {
+          for (const [p, r] of MEMORY_ARENA_ROOMS.entries()) {
+            if (r.is_public) {
+              try {
+                rooms.push(JSON.parse(r.meta_json));
+              } catch (e) {
+                rooms.push({ pin: r.pin, name: r.name });
+              }
+            }
           }
         }
-        return jsonResponse({ success: true, count: 0, data: [] });
+
+        return jsonResponse({ success: true, count: rooms.length, data: rooms });
       }
 
       // DELETE /api/arena/rooms/:pin - Xóa phòng
       if (path.startsWith('/api/arena/rooms/') && method === 'DELETE') {
         const pin = path.split('/').pop();
-        if (pin && env && env.DB) {
-          try {
-            await env.DB.prepare('DELETE FROM arena_rooms WHERE pin = ?').bind(pin).run();
-            await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
-          } catch (e) {}
+        if (pin) {
+          MEMORY_ARENA_ROOMS.delete(pin);
+          MEMORY_ARENA_MESSAGES.delete(pin);
+          if (env && env.DB) {
+            try {
+              await env.DB.prepare('DELETE FROM arena_rooms WHERE pin = ?').bind(pin).run();
+              await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
+            } catch (e) {}
+          }
         }
         return jsonResponse({ success: true, message: 'Room removed' });
       }

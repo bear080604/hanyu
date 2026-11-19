@@ -12,7 +12,7 @@
 (function () {
   'use strict';
 
-  var CLOUD_API_BASE = 'https://hanyu.nhannguyen2005111.workers.dev';
+  var CLOUD_API_BASE = 'https://hanyu.phuonganhkhanh683.workers.dev';
   var DEFAULT_PARTYKIT_HOST = '';
   function getPartyKitHost() {
     try {

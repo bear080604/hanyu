@@ -96,7 +96,7 @@ npx wrangler@3 deploy
 
 ### Base URL (sau khi deploy)
 ```
-https://hanyu.nhannguyen2005111.workers.dev
+https://hanyu.phuonganhkhanh683.workers.dev
 ```
 
 ### Vocabulary
