@@ -24,15 +24,17 @@
             stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           </svg>
-          <span>Bảng Điều Khiển Admin (Tạo Game)</span>
+          <span>Thiết Lập &amp; Tạo Game</span>
         </button>
-        <button class="arena-role-tab" id="tabPlayerBtn" data-tab="player" type="button">
+        <button class="arena-role-tab" id="tabPlayerBtn" data-tab="lobby_view" type="button">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
-            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
-          <span>Chế độ Người chơi (Nhập PIN)</span>
+          <span>Phòng Chờ &amp; Người Chơi (<b id="adminTabPlayerCount">0</b>)</span>
         </button>
       </div>
 
@@ -149,7 +151,7 @@
         </div>
       </div>
 
-      <!-- ==================== 2. ADMIN: PHÒNG CHỜ QUÉT MÃ QR (LOBBY VIEW) ==================== -->
+      <!-- ==================== 2. ADMIN: PHÒNG CHỜ QUÉT MÃ QR & DANH SÁCH NGƯỜI CHƠI (LOBBY VIEW) ==================== -->
       <div class="arena-view" id="hostLobbyView" style="display: none;">
         <div class="glass-card arena-card lobby-card">
           <div class="lobby-header">
@@ -158,11 +160,27 @@
               <div class="lobby-pin-code" id="displayRoomPin">------</div>
             </div>
             <div class="lobby-header-right">
+              <div class="lobby-live-count-pill">
+                <span>👥 Đã vào phòng: <b id="lobbyTopPlayerCount">0</b> người</span>
+              </div>
               <div class="lobby-meta-info" id="lobbyDeckInfo">HSK 1 • 10 câu</div>
             </div>
           </div>
 
           <div class="lobby-body">
+            <!-- Đưa danh sách người chơi lên ưu tiên hiển thị để Admin thấy ngay ai vừa xuất hiện -->
+            <div class="lobby-players-panel">
+              <div class="lobby-players-header">
+                <h3>👥 Người chơi đã xuất hiện (<span id="playerCount">0</span>)</h3>
+                <button type="button" class="btn-add-bot" id="btnAddBot">
+                  + Thêm bạn học ảo 🤖
+                </button>
+              </div>
+              <div class="lobby-players-list" id="lobbyPlayersList">
+                <div class="empty-lobby-text">Đang chờ người chơi quét mã QR hoặc nhập PIN vào phòng...</div>
+              </div>
+            </div>
+
             <div class="lobby-qr-container">
               <div id="lobbyQrBox" class="lobby-qr-box"></div>
               <div class="lobby-qr-hint">
@@ -187,22 +205,10 @@
                 </div>
               </div>
             </div>
-
-            <div class="lobby-players-panel">
-              <div class="lobby-players-header">
-                <h3>Người chơi trong phòng (<span id="playerCount">0</span>)</h3>
-                <button type="button" class="btn-add-bot" id="btnAddBot">
-                  + Thêm bạn học ảo 🤖
-                </button>
-              </div>
-              <div class="lobby-players-list" id="lobbyPlayersList">
-                <div class="empty-lobby-text">Đang chờ người chơi quét mã QR hoặc nhập PIN vào phòng...</div>
-              </div>
-            </div>
           </div>
 
           <div class="lobby-footer">
-            <button type="button" class="btn btn-secondary" id="btnCancelRoom">Hủy phòng</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelRoom">Thiết lập lại</button>
             <button type="button" class="btn btn-hero-primary btn-start-game" id="btnStartGame" disabled>
               <span>BẮT ĐẦU TRẬN ĐẤU (0 NGƯỜI) ➔</span>
             </button>
@@ -461,8 +467,17 @@
           <div class="player-big-avatar" id="playerWaitingAvatar">🐼</div>
           <h2 class="player-waiting-name" id="playerWaitingName">Bạn</h2>
           <div class="player-waiting-badge">Đã kết nối phòng #<span id="playerConnectedPin">------</span></div>
-          <p class="player-waiting-hint">Bạn đã có mặt trên màn hình lớn!<br>Hãy nhìn lên màn hình Admin — trận đấu sẽ
-            bắt đầu ngay khi Admin bấm <b>Bắt đầu</b>.</p>
+
+          <!-- Hiển thị trực tiếp số lượng & danh sách người chơi đã xuất hiện trong phòng -->
+          <div class="player-lobby-roster-box">
+            <div class="player-lobby-roster-head">
+              <span>👥 Người chơi đã xuất hiện trong phòng</span>
+              <span class="player-lobby-count-pill" id="playerLobbyCountBadge">1 người</span>
+            </div>
+            <div class="player-lobby-roster-list" id="playerLobbyRosterList"></div>
+          </div>
+
+          <p class="player-waiting-hint">Bạn đã có mặt trên màn hình lớn! Trận đấu sẽ bắt đầu ngay khi Admin bấm <b>Bắt đầu</b>.</p>
           <div class="pulsing-loader"></div>
         </div>
       </div>

@@ -143,26 +143,24 @@
           };
         }
       } else {
-        if (modalTitle) modalTitle.textContent = 'Đăng nhập Quản trị viên';
+        if (modalTitle) modalTitle.textContent = 'Đăng nhập';
 
         modalBody.innerHTML =
           '<form id="profileAdminLoginForm" class="profile-login-form" onsubmit="return false;">' +
-            '<p class="profile-login-desc">Đăng nhập dành riêng cho <b>Admin / Giáo viên</b> để mở quyền tạo phòng mã QR và điều khiển trận đấu Kahoot. Học viên thông thường không cần đăng nhập.</p>' +
-
             '<div class="arena-form-group">' +
-              '<label class="arena-label" for="profAdminUser">Tài khoản Admin:</label>' +
-              '<input type="text" id="profAdminUser" class="auth-input" placeholder="Nhập tài khoản" value="admin" autocomplete="username">' +
+              '<label class="arena-label" for="profAdminUser">Tài khoản:</label>' +
+              '<input type="text" id="profAdminUser" class="auth-input" placeholder="Nhập tài khoản" autocomplete="username">' +
             '</div>' +
 
             '<div class="arena-form-group">' +
               '<label class="arena-label" for="profAdminPass">Mật khẩu:</label>' +
-              '<input type="password" id="profAdminPass" class="auth-input" placeholder="Nhập mật khẩu Admin" autocomplete="current-password">' +
+              '<input type="password" id="profAdminPass" class="auth-input" placeholder="Nhập mật khẩu" autocomplete="current-password">' +
             '</div>' +
 
-            '<div id="profLoginError" class="profile-login-error" style="display:none;">Sai tài khoản hoặc mật khẩu Quản trị viên!</div>' +
+            '<div id="profLoginError" class="profile-login-error" style="display:none;">Sai tài khoản hoặc mật khẩu!</div>' +
 
             '<button type="submit" class="btn btn-hero-primary" style="width:100%; margin-top:4px;">' +
-              '<span>Đăng nhập Quản trị viên</span>' +
+              '<span>Đăng nhập</span>' +
             '</button>' +
           '</form>';
 
@@ -171,8 +169,8 @@
         var pInput = document.getElementById('profAdminPass');
         var errBox = document.getElementById('profLoginError');
 
-        if (pInput) {
-          setTimeout(function () { pInput.focus(); }, 60);
+        if (uInput) {
+          setTimeout(function () { uInput.focus(); }, 60);
         }
 
         if (form) {

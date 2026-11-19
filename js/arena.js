@@ -473,16 +473,28 @@
     var tabHostBtn = document.getElementById('tabHostBtn');
     var tabPlayerBtn = document.getElementById('tabPlayerBtn');
 
-    if (role === 'host' && isAdminLoggedIn()) {
+    if (isAdminLoggedIn() && role !== 'player') {
+      // Admin luôn giữ vai trò 'host' để nhận tín hiệu người chơi vào phòng ở cả 2 Tab
       gameState.role = 'host';
-      if (tabHostBtn) tabHostBtn.classList.add('active');
-      if (tabPlayerBtn) tabPlayerBtn.classList.remove('active');
-
       var adminNameEl = document.getElementById('adminCurrentName');
       if (adminNameEl) adminNameEl.textContent = getAdminName();
-      if (gameState.status === 'lobby') {
-        showView('hostLobbyView');
+
+      if (role === 'lobby_view') {
+        if (tabPlayerBtn) tabPlayerBtn.classList.add('active');
+        if (tabHostBtn) tabHostBtn.classList.remove('active');
+
+        if (!gameState.pin) {
+          // Nếu Admin bấm sang Tab 2 (Phòng Chờ & Người Chơi) mà chưa tạo phòng thì tự động tạo phòng luôn
+          createRoom();
+        } else {
+          gameState.status = 'lobby';
+          renderLobby();
+          showView('hostLobbyView');
+        }
       } else {
+        // Tab 1: Thiết Lập & Tạo Game
+        if (tabHostBtn) tabHostBtn.classList.add('active');
+        if (tabPlayerBtn) tabPlayerBtn.classList.remove('active');
         showView('hostConfigView');
       }
     } else {
@@ -568,6 +580,11 @@
     gameState.players = [];
     gameState.status = 'lobby';
     gameState.phase = 0;
+
+    var tabHostBtn = document.getElementById('tabHostBtn');
+    var tabPlayerBtn = document.getElementById('tabPlayerBtn');
+    if (tabPlayerBtn) tabPlayerBtn.classList.add('active');
+    if (tabHostBtn) tabHostBtn.classList.remove('active');
 
     generateQuestions(gameState.pin);
     renderLobby();
@@ -740,19 +757,45 @@
     qrBox.appendChild(img);
   }
 
+  function broadcastLobbyRoster() {
+    if (!gameState.pin) return;
+    var rosterPayload = {
+      pin: gameState.pin,
+      players: gameState.players.map(function (p) {
+        return {
+          id: p.id,
+          name: p.name,
+          avatar: p.avatar || '🐼',
+          isBot: !!p.isBot
+        };
+      })
+    };
+    try {
+      localStorage.setItem('wq_arena_roster_' + normalizePin(gameState.pin), JSON.stringify(rosterPayload));
+    } catch (e) { }
+    broadcastMsg('lobby_roster_sync', rosterPayload);
+  }
+
   function renderPlayerList() {
     var listEl = document.getElementById('lobbyPlayersList');
     var countEl = document.getElementById('playerCount');
+    var topCountEl = document.getElementById('lobbyTopPlayerCount');
+    var tabCountEl = document.getElementById('adminTabPlayerCount');
     var startBtn = document.getElementById('btnStartGame');
-    if (!listEl) return;
 
     var count = gameState.players.length;
     if (countEl) countEl.textContent = count;
+    if (topCountEl) topCountEl.textContent = count;
+    if (tabCountEl) tabCountEl.textContent = count;
 
     if (startBtn) {
       startBtn.disabled = count === 0;
       startBtn.innerHTML = '<span>BẮT ĐẦU TRẬN ĐẤU (' + count + ' NGƯỜI) ➔</span>';
     }
+
+    broadcastLobbyRoster();
+
+    if (!listEl) return;
 
     if (count === 0) {
       listEl.innerHTML = '<div class="empty-lobby-text">Đang chờ người chơi quét mã QR hoặc nhập PIN vào phòng... (Hoặc bấm "+ Thêm bạn học ảo 🤖" để test ngay)</div>';
@@ -1446,6 +1489,47 @@
   }
 
   // ==================== PLAYER: THAM GIA PHÒNG & XỬ LÝ 5 PHA TRÊN ĐIỆN THOẠI ====================
+  var _playerJoinHeartbeat = null;
+
+  function stopPlayerJoinHeartbeat() {
+    if (_playerJoinHeartbeat) {
+      clearInterval(_playerJoinHeartbeat);
+      _playerJoinHeartbeat = null;
+    }
+  }
+
+  function renderPlayerWaitingRoster(playersList) {
+    var listEl = document.getElementById('playerLobbyRosterList');
+    var badgeEl = document.getElementById('playerLobbyCountBadge');
+    if (!listEl) return;
+
+    var list = Array.isArray(playersList) ? playersList.slice() : [];
+    // Đảm bảo luôn có mặt bản thân người chơi trong danh sách hiển thị trên màn hình chờ của mình
+    if (gameState.myPlayerId && !list.some(function (x) { return x.id === gameState.myPlayerId; })) {
+      list.push({
+        id: gameState.myPlayerId,
+        name: gameState.playerProfile.name || 'Bạn',
+        avatar: gameState.playerProfile.avatar || '🐼',
+        isBot: false
+      });
+    }
+
+    if (badgeEl) {
+      badgeEl.textContent = list.length + ' người';
+    }
+
+    listEl.innerHTML = '';
+    list.forEach(function (p) {
+      var isMe = (p.id === gameState.myPlayerId);
+      var chip = document.createElement('div');
+      chip.className = 'player-chip' + (p.isBot ? ' bot' : '') + (isMe ? ' is-me-chip' : '');
+      chip.innerHTML =
+        '<span class="player-chip-avatar">' + (p.avatar || '🐼') + '</span>' +
+        '<span class="player-chip-name">' + (p.name || 'Người chơi') + (isMe ? ' (Bạn)' : '') + '</span>';
+      listEl.appendChild(chip);
+    });
+  }
+
   function playerJoin() {
     var pinInput = document.getElementById('playerInputPin');
     var nameInput = document.getElementById('playerInputName');
@@ -1466,6 +1550,7 @@
     gameState.status = 'player_lobby';
     gameState.pin = pin;
     gameState.myPlayerId = 'player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    gameState.playerJoinAcked = false;
     gameState.playerLastChoice = -1;
     gameState.playerLocalScore = 0;
     gameState.playerLocalStreak = 0;
@@ -1482,21 +1567,46 @@
     if (headerAvatar) headerAvatar.textContent = gameState.playerProfile.avatar;
     if (headerName) headerName.textContent = name;
 
+    // Hiển thị danh sách người chơi hiện có trong phòng ngay khi vào
+    var cachedRoster = [];
+    try {
+      var savedRosterStr = localStorage.getItem('wq_arena_roster_' + pin);
+      if (savedRosterStr) {
+        var parsedRoster = JSON.parse(savedRosterStr);
+        if (parsedRoster && Array.isArray(parsedRoster.players)) {
+          cachedRoster = parsedRoster.players;
+        }
+      }
+    } catch (e) { }
+    renderPlayerWaitingRoster(cachedRoster);
+
     showView('playerLobbyView');
     SFX.pop();
 
     // Bắt đầu đồng bộ với Cloudflare cho phòng này
     startCloudPolling(pin);
 
-    broadcastMsg('player_join', {
+    var joinPayload = {
       id: gameState.myPlayerId,
       name: name,
       avatar: gameState.playerProfile.avatar,
       pin: pin
-    });
+    };
+    broadcastMsg('player_join', joinPayload);
+
+    // Heartbeat định kỳ mỗi 2.5s cho đến khi Admin xác nhận có tên trong danh sách phòng
+    stopPlayerJoinHeartbeat();
+    _playerJoinHeartbeat = setInterval(function () {
+      if (gameState.role !== 'player' || gameState.status !== 'player_lobby' || gameState.playerJoinAcked) {
+        stopPlayerJoinHeartbeat();
+        return;
+      }
+      broadcastMsg('player_join', joinPayload, false);
+    }, 2500);
   }
 
   function hideAllPlayerSubCards() {
+    stopPlayerJoinHeartbeat();
     var ids = ['playerPhase1Card', 'playerPhase2Wrap', 'playerSubmittedState', 'playerResultOverlay', 'playerPhase5Card'];
     ids.forEach(function (id) {
       var el = document.getElementById(id);
@@ -1749,12 +1859,13 @@
             isBot: false
           });
           SFX.pop();
-          if (gameState.status === 'lobby') {
-            renderPlayerList();
-          }
+          renderPlayerList();
           if (typeof showToast === 'function') {
-            showToast(p.avatar + ' ' + p.name + ' đã vào phòng!', 'success');
+            showToast((p.avatar || '🐼') + ' ' + p.name + ' đã vào phòng!', 'success');
           }
+        } else {
+          // Vẫn gửi lại danh sách phòng để máy người chơi xác nhận đồng bộ
+          broadcastLobbyRoster();
         }
       } else if (action === 'player_answer') {
         var existingP = gameState.players.find(function (x) { return x.id === p.playerId; });
@@ -1782,7 +1893,16 @@
     if (gameState.role === 'player') {
       if (normalizePin(p.pin) !== normalizePin(gameState.pin)) return;
 
-      if (action === 'phase_1_getready') {
+      if (action === 'lobby_roster_sync') {
+        var incomingPlayers = Array.isArray(p.players) ? p.players : [];
+        if (incomingPlayers.some(function (x) { return x.id === gameState.myPlayerId; })) {
+          gameState.playerJoinAcked = true;
+          stopPlayerJoinHeartbeat();
+        }
+        if (gameState.status === 'player_lobby') {
+          renderPlayerWaitingRoster(incomingPlayers);
+        }
+      } else if (action === 'phase_1_getready') {
         onPlayerReceivePhase1(p);
       } else if (action === 'phase_2_active') {
         onPlayerReceivePhase2(p);
@@ -1816,6 +1936,18 @@
           var syncData = JSON.parse(e.newValue);
           handleIncomingSyncMessage(syncData);
         } catch (err) { }
+      } else if (e.key && e.key.indexOf('wq_arena_roster_') === 0 && e.newValue) {
+        if (gameState.role === 'player' && gameState.status === 'player_lobby') {
+          var expectedKey = 'wq_arena_roster_' + normalizePin(gameState.pin);
+          if (e.key === expectedKey) {
+            try {
+              var rosterData = JSON.parse(e.newValue);
+              if (rosterData && Array.isArray(rosterData.players)) {
+                renderPlayerWaitingRoster(rosterData.players);
+              }
+            } catch (err2) { }
+          }
+        }
       }
     });
   }
@@ -1826,7 +1958,11 @@
     if (tabHostBtn) tabHostBtn.onclick = function () { switchRoleTab('host'); };
 
     var tabPlayerBtn = document.getElementById('tabPlayerBtn');
-    if (tabPlayerBtn) tabPlayerBtn.onclick = function () { switchRoleTab('player'); };
+    if (tabPlayerBtn) {
+      tabPlayerBtn.onclick = function () {
+        switchRoleTab(isAdminLoggedIn() ? 'lobby_view' : 'player');
+      };
+    }
 
     // Admin Login Form
     var adminLoginForm = document.getElementById('adminLoginForm');
@@ -1913,7 +2049,7 @@
         stopCloudPolling();
         cleanupCloudRoomMessages();
         gameState.status = 'config';
-        showView('hostConfigView');
+        switchRoleTab('host');
       };
     }
 
@@ -1970,7 +2106,7 @@
         stopCloudPolling();
         cleanupCloudRoomMessages();
         gameState.status = 'config';
-        showView('hostConfigView');
+        switchRoleTab('host');
         populateDeckOptions();
       };
     }
