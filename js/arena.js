@@ -717,6 +717,8 @@
         if (!raw) return;
         var room = JSON.parse(raw);
         if (room && room.expiresAt && Number(room.expiresAt) > 0 && Date.now() >= Number(room.expiresAt)) {
+          unpublishPublicRoom(cleanP);
+          unpublishRoomMeta(cleanP);
           localStorage.removeItem('wq_arena_host_room_' + cleanP);
           localStorage.removeItem('wq_arena_roster_' + cleanP);
           localStorage.removeItem('wq_arena_player_session_' + cleanP);
@@ -783,6 +785,7 @@
     } catch (e) { }
 
     unpublishPublicRoom(cleanP);
+    unpublishRoomMeta(cleanP);
 
     if (normalizePin(gameState.pin) === cleanP) {
       clearAllRoundTimers();
@@ -906,6 +909,7 @@
 
       localStorage.setItem('wq_arena_active_host_pin', cleanP);
       syncBrowserUrl(cleanP, 'host');
+      publishRoomMeta(saved);
       startCloudPolling(cleanP);
       startExpiryCountdownTicker();
       renderLobby();
@@ -1192,8 +1196,27 @@
 
       var badge = document.getElementById('playerJoinRoomBadge');
       var sub = document.getElementById('playerJoinRoomSub');
-      if (badge) badge.textContent = 'Phòng thi đấu #' + pinParam;
-      if (sub) sub.textContent = 'Mã PIN đã được điền sẵn! Hãy nhập Tên hiển thị của bạn để vào phòng.';
+      if (badge) badge.textContent = 'Phòng thi đấu #' + formatPinCode(pinParam);
+      if (sub) sub.textContent = 'Đang kiểm tra mã phòng thi đấu...';
+
+      verifyRoomExists(pinParam).then(function (res) {
+        if (!res.valid) {
+          if (res.error === 'expired') {
+            if (badge) badge.textContent = 'Phòng #' + formatPinCode(pinParam) + ' đã hết hạn';
+            if (sub) sub.textContent = 'Phòng này đã hết thời gian lưu trữ. Vui lòng chọn hoặc tạo phòng mới.';
+            if (typeof showToast === 'function') showToast('Phòng #' + formatPinCode(pinParam) + ' đã hết thời hạn lưu trữ!', 'error');
+          } else {
+            if (badge) badge.textContent = 'Phòng #' + formatPinCode(pinParam) + ' không tồn tại';
+            if (sub) sub.textContent = 'Mã phòng trong link không tồn tại hoặc đã đóng. Vui lòng kiểm tra lại mã PIN.';
+            if (typeof showToast === 'function') showToast('Mã phòng #' + formatPinCode(pinParam) + ' không tồn tại hoặc đã đóng!', 'error');
+          }
+          if (pinInput) { pinInput.value = ''; pinInput.focus(); }
+        } else {
+          if (sub) sub.textContent = 'Mã phòng hợp lệ! Hãy nhập Tên hiển thị (Nickname) của bạn để vào phòng.';
+          var nameInput = document.getElementById('playerInputName');
+          if (nameInput) nameInput.focus();
+        }
+      });
       return;
     }
 
@@ -1413,6 +1436,7 @@
     };
 
     broadcastMsg('room_created', roomPayload);
+    publishRoomMeta(roomPayload);
 
     if (gameState.accessMode === 'public') {
       publishPublicRoom(roomPayload);
@@ -1527,6 +1551,145 @@
         correctIndex: correctIndex
       };
     });
+  }
+
+  // ==================== QUẢN LÝ METADATA PHÒNG TRÊN CLOUD & XÁC THỰC MÃ PIN ====================
+  var _cloudRoomMetaDeckMap = {};
+
+  function publishRoomMeta(roomSummary) {
+    if (!roomSummary || !roomSummary.pin) return;
+    var pin = normalizePin(roomSummary.pin);
+    var cleanSummary = Object.assign({}, roomSummary, { pin: pin, updatedAt: Date.now() });
+
+    fetch(CLOUD_API_BASE + '/api/decks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: 'arena_meta_' + pin,
+        name: JSON.stringify(cleanSummary),
+        words: []
+      })
+    }).then(function (r) { return r.json(); }).then(function (res) {
+      if (res && res.deck_id) {
+        _cloudRoomMetaDeckMap[pin] = res.deck_id;
+      }
+    }).catch(function () { });
+  }
+
+  function unpublishRoomMeta(pin) {
+    var cleanP = normalizePin(pin);
+    if (!cleanP) return;
+    var cloudId = _cloudRoomMetaDeckMap[cleanP];
+    if (cloudId) {
+      fetch(CLOUD_API_BASE + '/api/decks/' + cloudId, { method: 'DELETE' }).catch(function () { });
+      delete _cloudRoomMetaDeckMap[cleanP];
+    }
+  }
+
+  async function verifyRoomExists(pin) {
+    var cleanPin = normalizePin(pin);
+    if (!cleanPin || cleanPin.length < 4) {
+      return { valid: false, error: 'invalid_pin' };
+    }
+
+    // 1. Kiểm tra trên bộ nhớ cục bộ máy hiện tại (0ms)
+    try {
+      var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + cleanPin);
+      if (hostRoomRaw) {
+        var hostRoom = JSON.parse(hostRoomRaw);
+        if (hostRoom) {
+          if (hostRoom.expiresAt && Number(hostRoom.expiresAt) > 0 && Date.now() >= Number(hostRoom.expiresAt)) {
+            return { valid: false, error: 'expired', room: hostRoom };
+          }
+          return { valid: true, room: hostRoom, source: 'local_host' };
+        }
+      }
+    } catch (e) { }
+
+    // 2. Kiểm tra trong danh sách phòng công khai đã cache
+    try {
+      var pubRooms = getSavedPublicRooms();
+      var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
+      if (matchPub) {
+        if (matchPub.expiresAt && Number(matchPub.expiresAt) > 0 && Date.now() >= Number(matchPub.expiresAt)) {
+          return { valid: false, error: 'expired', room: matchPub };
+        }
+        return { valid: true, room: matchPub, source: 'cached_public' };
+      }
+    } catch (e) { }
+
+    // 3. Kiểm tra trên Cloudflare D1 (Cross-device, 4G / mạng khác)
+    try {
+      var metaPromise = fetch(CLOUD_API_BASE + '/api/decks?user_id=' + encodeURIComponent('arena_meta_' + cleanPin))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+
+      var pubPromise = fetch(CLOUD_API_BASE + '/api/decks?user_id=arena_public_rooms')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+
+      var syncPromise = fetch(CLOUD_API_BASE + '/api/decks?user_id=' + encodeURIComponent('arena_sync_' + cleanPin))
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+
+      var results = await Promise.all([metaPromise, pubPromise, syncPromise]);
+      var metaJson = results[0];
+      var pubJson = results[1];
+      var syncJson = results[2];
+
+      // Xét 3A: arena_meta_PIN
+      if (metaJson && Array.isArray(metaJson.data) && metaJson.data.length > 0) {
+        for (var m = metaJson.data.length - 1; m >= 0; m--) {
+          var mDeck = metaJson.data[m];
+          if (mDeck && mDeck.name) {
+            try {
+              var cloudRoom = JSON.parse(mDeck.name);
+              if (cloudRoom && normalizePin(cloudRoom.pin) === cleanPin) {
+                if (cloudRoom.expiresAt && Number(cloudRoom.expiresAt) > 0 && Date.now() >= Number(cloudRoom.expiresAt)) {
+                  return { valid: false, error: 'expired', room: cloudRoom };
+                }
+                return { valid: true, room: cloudRoom, source: 'cloud_meta' };
+              }
+            } catch (eMeta) { }
+          }
+        }
+      }
+
+      // Xét 3B: arena_public_rooms
+      if (pubJson && Array.isArray(pubJson.data)) {
+        for (var i = 0; i < pubJson.data.length; i++) {
+          try {
+            var pData = JSON.parse(pubJson.data[i].name);
+            if (pData && normalizePin(pData.pin) === cleanPin) {
+              if (pData.expiresAt && Number(pData.expiresAt) > 0 && Date.now() >= Number(pData.expiresAt)) {
+                return { valid: false, error: 'expired', room: pData };
+              }
+              return { valid: true, room: pData, source: 'cloud_public' };
+            }
+          } catch (ePub) { }
+        }
+      }
+
+      // Xét 3C: arena_sync_PIN
+      if (syncJson && Array.isArray(syncJson.data) && syncJson.data.length > 0) {
+        for (var j = syncJson.data.length - 1; j >= 0; j--) {
+          try {
+            var syncMsg = JSON.parse(syncJson.data[j].name);
+            if (syncMsg && syncMsg.payload && normalizePin(syncMsg.payload.pin) === cleanPin) {
+              var sPayload = syncMsg.payload;
+              if (sPayload.expiresAt && Number(sPayload.expiresAt) > 0 && Date.now() >= Number(sPayload.expiresAt)) {
+                return { valid: false, error: 'expired', room: sPayload };
+              }
+              return { valid: true, room: sPayload, source: 'cloud_sync' };
+            }
+          } catch (eSync) { }
+        }
+      }
+    } catch (errNet) {
+      console.warn('Lỗi kiểm tra phòng từ Cloud:', errNet);
+    }
+
+    return { valid: false, error: 'not_found' };
   }
 
   // ==================== QUẢN LÝ PHÒNG THI ĐẤU CÔNG KHAI (PUBLIC ROOMS) ====================
@@ -1787,13 +1950,16 @@
     var cleanPin = normalizePin(pin);
     if (!cleanPin) return;
 
+    var pubRooms = getSavedPublicRooms();
+    var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
+
     var currentName = (gameState.playerProfile.name || '').trim();
     if (!currentName || currentName === 'Bạn') {
       if (typeof window.wqShowCustomPrompt === 'function') {
         window.wqShowCustomPrompt('Tham Gia Phòng Công Khai', 'Vui lòng nhập Biệt danh (Nickname) của bạn để xuất hiện trên Bảng xếp hạng:', '', function (val) {
           if (val && val.trim()) {
             savePlayerProfile(val.trim(), gameState.playerProfile.avatar);
-            joinRoomAsPlayer(cleanPin, val.trim(), gameState.playerProfile.avatar, 'public');
+            joinRoomAsPlayer(cleanPin, val.trim(), gameState.playerProfile.avatar, matchPub);
           }
         });
       } else {
@@ -1810,7 +1976,7 @@
       return;
     }
 
-    joinRoomAsPlayer(cleanPin, currentName, gameState.playerProfile.avatar, 'public');
+    joinRoomAsPlayer(cleanPin, currentName, gameState.playerProfile.avatar, matchPub);
   }
 
   // ==================== HIỂN THỊ PHÒNG CHỜ (LOBBY) ====================
@@ -3061,25 +3227,64 @@
     updatePlayerReadyUI();
   }
 
-  function playerJoin() {
+  async function playerJoin() {
     var pinInput = document.getElementById('playerInputPin');
     var nameInput = document.getElementById('playerInputName');
+    var joinBtn = document.getElementById('btnPlayerJoin');
     var pin = normalizePin(pinInput ? pinInput.value : '');
     var name = (nameInput ? nameInput.value : '').trim();
 
     if (!pin || pin.length < 4) {
       if (typeof showToast === 'function') showToast('Vui lòng nhập mã PIN phòng gồm 6 chữ số!', 'warning');
+      if (pinInput) pinInput.focus();
       return;
     }
     if (!name) {
       if (typeof showToast === 'function') showToast('Vui lòng nhập Tên hiển thị (Nickname) của bạn!', 'warning');
+      if (nameInput) nameInput.focus();
       return;
     }
 
-    joinRoomAsPlayer(pin, name, gameState.playerProfile.avatar);
+    if (joinBtn) {
+      joinBtn.disabled = true;
+      joinBtn.innerHTML = '<span>Đang kiểm tra phòng thi đấu...</span>';
+    }
+
+    try {
+      var checkResult = await verifyRoomExists(pin);
+
+      if (!checkResult.valid) {
+        SFX.wrong();
+        if (checkResult.error === 'expired') {
+          if (typeof showToast === 'function') {
+            showToast('Phòng #' + formatPinCode(pin) + ' đã hết thời hạn lưu trữ.', 'error');
+          }
+        } else {
+          if (typeof showToast === 'function') {
+            showToast('Phòng #' + formatPinCode(pin) + ' không tồn tại hoặc đã đóng! Vui lòng kiểm tra lại mã PIN.', 'error');
+          }
+        }
+        if (pinInput) {
+          pinInput.focus();
+          pinInput.select();
+        }
+        return;
+      }
+
+      joinRoomAsPlayer(pin, name, gameState.playerProfile.avatar, checkResult.room);
+    } catch (err) {
+      if (typeof showToast === 'function') {
+        showToast('Không thể kết nối đến máy chủ. Vui lòng thử lại!', 'error');
+      }
+    } finally {
+      if (joinBtn) {
+        joinBtn.disabled = false;
+        joinBtn.innerHTML = '<span>Vào phòng thi đấu ➔</span>';
+      }
+    }
   }
 
-  function joinRoomAsPlayer(pin, name, avatar, forcedAccessMode) {
+  function joinRoomAsPlayer(pin, name, avatar, verifiedRoom) {
     var cleanPin = normalizePin(pin);
     if (!cleanPin || cleanPin.length < 4) {
       if (typeof showToast === 'function') showToast('Mã phòng không hợp lệ!', 'error');
@@ -3093,53 +3298,55 @@
     var cleanName = name.trim();
     var cleanAvatar = avatar || gameState.playerProfile.avatar || '🐼';
 
-    var detectedAccessMode = forcedAccessMode || 'private';
+    // 1. Áp dụng thông tin từ phòng đã được xác thực (verifiedRoom)
+    var targetRoom = verifiedRoom || null;
 
-    // Kiểm tra xem phòng này trên máy có bị hết hạn lưu trữ chưa
-    try {
-      var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + cleanPin);
-      if (hostRoomRaw) {
-        var hostRoom = JSON.parse(hostRoomRaw);
-        if (hostRoom && hostRoom.expiresAt && Number(hostRoom.expiresAt) > 0 && Date.now() >= Number(hostRoom.expiresAt)) {
-          if (typeof showToast === 'function') {
-            showToast('Phòng #' + formatPinCode(cleanPin) + ' đã hết thời hạn lưu trữ.', 'error');
-          }
-          return;
+    if (!targetRoom) {
+      try {
+        var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + cleanPin);
+        if (hostRoomRaw) {
+          targetRoom = JSON.parse(hostRoomRaw);
         }
-        if (hostRoom) {
-          gameState.roomExpiresAt = hostRoom.expiresAt || null;
-          gameState.roomDurationLabel = hostRoom.durationLabel || '30 phút';
-          if (hostRoom.accessMode) detectedAccessMode = hostRoom.accessMode;
-          if (Array.isArray(hostRoom.questions) && hostRoom.questions.length > 0) {
-            gameState.questions = hostRoom.questions;
-            gameState.totalQuestions = hostRoom.questions.length;
-            gameState.timePerQuestion = hostRoom.timePerQuestion || 15;
-            gameState.gameMode = hostRoom.gameMode || gameState.gameMode;
-            gameState.deckName = hostRoom.deckName || gameState.deckName;
-          }
-        }
-      } else {
+      } catch (e) { }
+
+      if (!targetRoom) {
         var pubRooms = getSavedPublicRooms();
-        var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
-        if (matchPub) {
-          detectedAccessMode = 'public';
-          if (matchPub.expiresAt) gameState.roomExpiresAt = matchPub.expiresAt;
-          if (matchPub.durationLabel) gameState.roomDurationLabel = matchPub.durationLabel;
-          if (Array.isArray(matchPub.questions) && matchPub.questions.length > 0) {
-            gameState.questions = matchPub.questions;
-            gameState.totalQuestions = matchPub.questions.length;
-            gameState.timePerQuestion = matchPub.timePerQuestion || 15;
-            gameState.gameMode = matchPub.gameMode || gameState.gameMode;
-            gameState.deckName = matchPub.deckName || gameState.deckName;
-          }
-        }
+        targetRoom = pubRooms.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
       }
-    } catch (e) { }
+    }
 
-    gameState.accessMode = detectedAccessMode;
-    if (!Array.isArray(gameState.questions) || gameState.questions.length === 0) {
+    // NẾU VẪN KHÔNG CÓ targetRoom HỢP LỆ: CHẶN LẠI VÀ BÁO LỖI, TUYỆT ĐỐI KHÔNG TỰ TẠO PHÒNG DUMMY!
+    if (!targetRoom) {
+      SFX.wrong();
+      if (typeof showToast === 'function') {
+        showToast('Phòng #' + formatPinCode(cleanPin) + ' không tồn tại hoặc đã đóng! Vui lòng kiểm tra lại mã PIN.', 'error');
+      }
+      return;
+    }
+
+    // Kiểm tra thời hạn lưu trữ
+    if (targetRoom.expiresAt && Number(targetRoom.expiresAt) > 0 && Date.now() >= Number(targetRoom.expiresAt)) {
+      SFX.wrong();
+      if (typeof showToast === 'function') {
+        showToast('Phòng #' + formatPinCode(cleanPin) + ' đã hết thời hạn lưu trữ.', 'error');
+      }
+      return;
+    }
+
+    // Cập nhật cấu hình phòng thi đấu chính xác từ Host
+    gameState.accessMode = targetRoom.accessMode || 'private';
+    gameState.gameMode = targetRoom.gameMode || 'speed';
+    gameState.deckName = targetRoom.deckName || 'HSK 1';
+    gameState.timePerQuestion = targetRoom.timePerQuestion || 15;
+    gameState.roomExpiresAt = targetRoom.expiresAt || null;
+    gameState.roomDurationLabel = targetRoom.durationLabel || '30 phút';
+
+    if (Array.isArray(targetRoom.questions) && targetRoom.questions.length > 0) {
+      gameState.questions = targetRoom.questions;
+      gameState.totalQuestions = targetRoom.questions.length;
+    } else {
       if (!gameState.deckWords || gameState.deckWords.length === 0) {
-        gameState.deckWords = getWordsFromDeckVal(gameState.deckName || gameState.deckValue || 'HSK 1');
+        gameState.deckWords = getWordsFromDeckVal(gameState.deckName || 'HSK 1');
       }
       generateQuestions(cleanPin);
     }
@@ -4472,6 +4679,29 @@
     // Player Join & Leave
     var btnPlayerJoin = document.getElementById('btnPlayerJoin');
     if (btnPlayerJoin) btnPlayerJoin.onclick = playerJoin;
+
+    var playerInputPin = document.getElementById('playerInputPin');
+    if (playerInputPin) {
+      playerInputPin.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          var nameIn = document.getElementById('playerInputName');
+          if (nameIn && !nameIn.value.trim()) {
+            nameIn.focus();
+          } else {
+            playerJoin();
+          }
+        }
+      });
+    }
+
+    var playerInputName = document.getElementById('playerInputName');
+    if (playerInputName) {
+      playerInputName.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          playerJoin();
+        }
+      });
+    }
 
     var btnPlayerToggleReady = document.getElementById('btnPlayerToggleReady');
     if (btnPlayerToggleReady) {
