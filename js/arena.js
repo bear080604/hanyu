@@ -245,7 +245,7 @@
           });
         })
         .catch(function () { });
-    }, 1000);
+    }, 450);
   }
 
   function stopCloudPolling() {
@@ -346,9 +346,12 @@
     timerRemaining: 0,
     questionStartTime: 0,
     questionEndTime: 0,
+    phase1EndAt: 0,
     wasEarlyCutoff: false,
     // Player-side state
     myPlayerId: '',
+    isReady: false,
+    clockOffset: 0,
     isSoloRunner: false,
     soloPhaseTimer: null,
     soloTimeoutTimer: null,
@@ -362,9 +365,14 @@
     playerLastPhasePayload: null,
     playerProfile: {
       name: '',
-      avatar: '🐼'
+      avatar: '🐼',
+      isReady: false
     }
   };
+
+  function getHostNow() {
+    return Date.now() + (gameState.clockOffset || 0);
+  }
 
   var BOT_ROSTER = [
     { name: 'Gấu Trúc', avatar: '🐼', acc: 0.82 },
@@ -942,6 +950,8 @@
       myPlayerId: gameState.myPlayerId,
       name: gameState.playerProfile.name || 'Người chơi',
       avatar: gameState.playerProfile.avatar || '🐼',
+      isReady: !!gameState.isReady,
+      clockOffset: gameState.clockOffset || 0,
       status: gameState.status,
       playerLastChoice: gameState.playerLastChoice,
       playerLocalScore: gameState.playerLocalScore,
@@ -993,8 +1003,11 @@
       gameState.pin = cleanP;
       gameState.accessMode = detectedAccessMode;
       gameState.myPlayerId = sess.myPlayerId;
+      gameState.isReady = !!sess.isReady;
+      gameState.clockOffset = Number(sess.clockOffset) || 0;
       gameState.playerProfile.name = sess.name || gameState.playerProfile.name || 'Bạn';
       gameState.playerProfile.avatar = sess.avatar || gameState.playerProfile.avatar || '🐼';
+      gameState.playerProfile.isReady = gameState.isReady;
       gameState.status = sess.status || 'player_lobby';
       gameState.playerLastChoice = (typeof sess.playerLastChoice === 'number') ? sess.playerLastChoice : -1;
       gameState.playerLocalScore = Number(sess.playerLocalScore) || 0;
@@ -1007,6 +1020,7 @@
       syncBrowserUrl(cleanP, 'player');
       startCloudPolling(cleanP);
       startExpiryCountdownTicker();
+      updatePlayerReadyUI();
 
       var avatarEl = document.getElementById('playerWaitingAvatar');
       var nameEl = document.getElementById('playerWaitingName');
@@ -1884,7 +1898,8 @@
           avatar: p.avatar || '🐼',
           score: p.score || 0,
           streak: p.streak || 0,
-          isBot: !!p.isBot
+          isBot: !!p.isBot,
+          isReady: !!p.isReady
         };
       })
     };
@@ -1923,6 +1938,7 @@
     var startBtn = document.getElementById('btnStartGame');
 
     var count = gameState.players.length;
+    var readyCount = gameState.players.filter(function (p) { return p.isReady; }).length;
     if (countEl) countEl.textContent = count;
     if (lbCountEl) lbCountEl.textContent = count;
     if (topCountEl) topCountEl.textContent = count;
@@ -1930,7 +1946,13 @@
 
     if (startBtn) {
       startBtn.disabled = count === 0;
-      startBtn.innerHTML = '<span>BẮT ĐẦU TRẬN ĐẤU (' + count + ' NGƯỜI) ➔</span>';
+      var readyLabel = count > 0 ? (' (' + readyCount + '/' + count + ' sẵn sàng)') : '';
+      startBtn.innerHTML = '<span>Bắt đầu trận đấu' + readyLabel + ' ➔</span>';
+      if (count > 0 && readyCount === count) {
+        startBtn.classList.add('all-ready');
+      } else {
+        startBtn.classList.remove('all-ready');
+      }
     }
 
     saveHostRoomState();
@@ -1992,9 +2014,13 @@
       gameState.players.forEach(function (p) {
         var chip = document.createElement('div');
         chip.className = 'player-chip' + (p.isBot ? ' bot' : '');
+        var readyPill = p.isReady
+          ? '<span class="chip-ready-tag is-ready">Sẵn sàng</span>'
+          : '<span class="chip-ready-tag not-ready">Chờ</span>';
         chip.innerHTML =
           '<span class="player-chip-avatar">' + p.avatar + '</span>' +
           '<span class="player-chip-name">' + p.name + '</span>' +
+          readyPill +
           '<button type="button" class="chip-remove-btn" data-id="' + p.id + '" title="Xóa khỏi phòng">×</button>';
         listEl.appendChild(chip);
       });
@@ -2032,7 +2058,8 @@
       lastAnswerIndex: -1,
       answeredAt: 0,
       lastPointsEarned: 0,
-      isBot: true
+      isBot: true,
+      isReady: true
     });
 
     SFX.pop();
@@ -2152,6 +2179,15 @@
     if (hostFooter) hostFooter.style.display = 'none';
 
     var prepSec = 3;
+    var now = Date.now();
+    var phase1EndAt = now + (prepSec * 1000);
+    var phase2EndAt = phase1EndAt + (gameState.timePerQuestion * 1000);
+
+    gameState.phase1EndAt = phase1EndAt;
+    gameState.questionStartTime = phase1EndAt;
+    gameState.questionEndTime = phase2EndAt;
+    gameState.timerRemaining = gameState.timePerQuestion;
+
     if (getReadyNum) getReadyNum.textContent = prepSec;
     if (getReadyTitle) getReadyTitle.textContent = qLabel + ' – Chuẩn bị...';
 
@@ -2161,7 +2197,7 @@
     }
     SFX.tick();
 
-    // Gửi tín hiệu Pha 1 (Pre-load đề bài, KHÔNG gửi đáp án đúng) xuống tất cả điện thoại
+    // Gửi tín hiệu Pha 1 (Pre-load đề bài & options, mốc timeline đồng bộ) xuống tất cả điện thoại
     saveHostRoomState();
     broadcastMsg('phase_1_getready', {
       pin: gameState.pin,
@@ -2170,24 +2206,33 @@
       prompt: q.prompt,
       subPrompt: q.subPrompt,
       typeDesc: q.typeDesc,
-      prepSeconds: 3,
+      options: q.options,
+      prepSeconds: prepSec,
+      phase1EndAt: phase1EndAt,
+      phase2StartAt: phase1EndAt,
+      phase2EndAt: phase2EndAt,
+      durationSec: gameState.timePerQuestion,
       expiresAt: gameState.roomExpiresAt,
       durationLabel: gameState.roomDurationLabel
     });
 
+    var lastDisplayedPrepSec = prepSec;
     gameState.phase1Timer = setInterval(function () {
-      prepSec--;
-      if (prepSec > 0) {
-        if (getReadyNum) getReadyNum.textContent = prepSec;
-        if (timerSecEl) timerSecEl.textContent = prepSec;
+      var remMs = Math.max(0, phase1EndAt - Date.now());
+      var currentSec = Math.ceil(remMs / 1000);
+      if (currentSec !== lastDisplayedPrepSec && currentSec > 0) {
+        lastDisplayedPrepSec = currentSec;
+        if (getReadyNum) getReadyNum.textContent = currentSec;
+        if (timerSecEl) timerSecEl.textContent = currentSec;
         SFX.tick();
-      } else {
+      }
+      if (remMs <= 0) {
         clearInterval(gameState.phase1Timer);
         gameState.phase1Timer = null;
         // Chuyển ngay sang Pha 2: Bung 4 ô đáp án!
         startPhase2ActiveAnswering();
       }
-    }, 1000);
+    }, 100);
   }
 
   // ==================== PHA 2: BUNG ĐÁP ÁN & ĐẾM NGƯỢC (ACTIVE ANSWERING) ====================
@@ -2204,11 +2249,21 @@
 
     gameState.status = 'phase2';
     gameState.phase = 2;
-    gameState.timerRemaining = (overrideSec && overrideSec > 0) ? overrideSec : gameState.timePerQuestion;
+
+    var durationSec = gameState.timePerQuestion;
+    var durationMs = durationSec * 1000;
     if (!overrideSec) {
+      if (!gameState.questionEndTime || gameState.questionEndTime <= Date.now()) {
+        gameState.questionStartTime = Date.now();
+        gameState.questionEndTime = gameState.questionStartTime + durationMs;
+      }
+    } else {
       gameState.questionStartTime = Date.now();
-      gameState.questionEndTime = gameState.questionStartTime + (gameState.timePerQuestion * 1000);
+      gameState.questionEndTime = Date.now() + (overrideSec * 1000);
+      durationSec = overrideSec;
+      durationMs = overrideSec * 1000;
     }
+    gameState.timerRemaining = Math.max(0, Math.ceil((gameState.questionEndTime - Date.now()) / 1000));
 
     var qCounterEl = document.getElementById('hostQCounter');
     var qTextEl = document.getElementById('hostQuestionText');
@@ -2231,7 +2286,7 @@
     if (qSubEl) qSubEl.textContent = q.subPrompt || '';
     if (phaseBadge) {
       phaseBadge.className = 'game-phase-pill phase-2';
-      phaseBadge.textContent = 'PHA 2/5: ĐANG NHẬN ĐÁP ÁN';
+      phaseBadge.textContent = 'Pha 2: Đang nhận đáp án';
     }
     if (qTypeBadge) qTypeBadge.textContent = q.typeDesc;
     if (timerSecEl) timerSecEl.textContent = gameState.timerRemaining;
@@ -2262,41 +2317,50 @@
     saveHostRoomState();
     SFX.revealPop();
 
-    // Chạy đồng hồ đếm ngược Pha 2
-    gameState.timerInterval = setInterval(function () {
-      gameState.timerRemaining--;
-      if (timerSecEl) timerSecEl.textContent = Math.max(0, gameState.timerRemaining);
+    // Chạy đồng hồ đếm ngược Pha 2 đồng bộ theo mốc questionEndTime
+    var lastTickSec = gameState.timerRemaining;
+    function updateHostPhase2Tick() {
+      var remMs = Math.max(0, gameState.questionEndTime - Date.now());
+      var currentSec = Math.ceil(remMs / 1000);
+      gameState.timerRemaining = currentSec;
 
-      var pct = (gameState.timerRemaining / gameState.timePerQuestion) * 100;
-      if (progressBar) progressBar.style.width = Math.max(0, pct) + '%';
+      if (timerSecEl) timerSecEl.textContent = currentSec;
+      var pct = Math.max(0, Math.min(100, (remMs / durationMs) * 100));
+      if (progressBar) progressBar.style.width = pct + '%';
 
-      if (gameState.timerRemaining <= 5 && gameState.timerRemaining > 0) {
-        if (timerBadge) timerBadge.classList.add('urgent');
-        SFX.urgentTick();
-      } else if (gameState.timerRemaining > 5) {
-        SFX.tick();
+      if (currentSec !== lastTickSec) {
+        lastTickSec = currentSec;
+        if (currentSec <= 5 && currentSec > 0) {
+          if (timerBadge) timerBadge.classList.add('urgent');
+          SFX.urgentTick();
+        } else if (currentSec > 5) {
+          SFX.tick();
+        }
       }
 
       // ĐIỀU KIỆN 1 (HẾT GIỜ): Đồng hồ chạm mốc 0 giây -> Tự động đóng cổng nhận đáp án & chuyển sang Pha 4
-      if (gameState.timerRemaining <= 0) {
+      if (remMs <= 0) {
         clearAllRoundTimers();
         gameState.wasEarlyCutoff = false;
         startPhase4AnswerReveal();
       }
-    }, 1000);
+    }
+
+    updateHostPhase2Tick();
+    gameState.timerInterval = setInterval(updateHostPhase2Tick, 100);
 
     // Kích hoạt Bot mô phỏng trả lời (nếu trong phòng có Bot)
     runBotSimulation(q);
 
-    // Gửi tín hiệu Pha 2 xuống điện thoại: CHỈ gửi 4 phương án A, B, C, D và mốc endTime,
-    // TUYỆT ĐỐI KHÔNG gửi correctIndex để chống nhìn trộm mã nguồn!
+    // Gửi tín hiệu Pha 2 xuống điện thoại: CHỈ gửi 4 phương án A, B, C, D và mốc endTime
     broadcastMsg('phase_2_active', {
       pin: gameState.pin,
       questionIndex: qIdx,
       totalQuestions: gameState.totalQuestions,
       prompt: q.prompt,
       options: q.options,
-      durationSec: gameState.timePerQuestion,
+      durationSec: durationSec,
+      startTime: gameState.questionStartTime,
       endTime: gameState.questionEndTime,
       expiresAt: gameState.roomExpiresAt,
       durationLabel: gameState.roomDurationLabel
@@ -2816,11 +2880,80 @@
     }
   }
 
+  function updatePlayerReadyUI() {
+    var btn = document.getElementById('btnPlayerToggleReady');
+    var btnText = document.getElementById('playerReadyBtnText');
+    var statusText = document.getElementById('playerReadyStatusText');
+    var indTag = document.getElementById('playerReadyIndicatorTag');
+    var isReady = !!gameState.isReady;
+
+    if (btn) {
+      if (isReady) {
+        btn.classList.add('is-ready-active');
+        if (btnText) btnText.textContent = '✓ Đã sẵn sàng (Bấm để hủy)';
+      } else {
+        btn.classList.remove('is-ready-active');
+        if (btnText) btnText.textContent = 'Sẵn sàng thi đấu';
+      }
+    }
+
+    if (statusText) {
+      if (isReady) {
+        statusText.textContent = 'Bạn đã sẵn sàng! Đang chờ Quản trị viên bấm bắt đầu trận đấu.';
+      } else {
+        statusText.textContent = 'Chạm "Sẵn sàng thi đấu" để thông báo cho Quản trị viên bắt đầu trận.';
+      }
+    }
+
+    if (indTag) {
+      if (isReady) {
+        indTag.className = 'player-ready-indicator-tag is-ready';
+        indTag.textContent = 'Đã sẵn sàng';
+      } else {
+        indTag.className = 'player-ready-indicator-tag not-ready';
+        indTag.textContent = 'Chưa sẵn sàng';
+      }
+    }
+  }
+
+  function togglePlayerReady() {
+    gameState.isReady = !gameState.isReady;
+    gameState.playerProfile.isReady = gameState.isReady;
+    updatePlayerReadyUI();
+    savePlayerSessionState();
+
+    if (gameState.isReady) {
+      SFX.pop();
+    } else {
+      SFX.tick();
+    }
+
+    // Gửi tín hiệu sẵn sàng lên Host
+    broadcastMsg('player_ready', {
+      pin: gameState.pin,
+      playerId: gameState.myPlayerId,
+      isReady: gameState.isReady
+    });
+
+    // Cập nhật ngay tag hiển thị trên chip của chính mình nếu có trong DOM
+    var myChipTag = document.querySelector('#playerLobbyRosterList .player-chip.is-me-chip .chip-ready-tag');
+    if (myChipTag) {
+      if (gameState.isReady) {
+        myChipTag.className = 'chip-ready-tag is-ready';
+        myChipTag.textContent = 'Sẵn sàng';
+      } else {
+        myChipTag.className = 'chip-ready-tag not-ready';
+        myChipTag.textContent = 'Chờ';
+      }
+    }
+  }
+
   function renderPlayerWaitingRoster(playersList) {
     var rosterBox = document.getElementById('playerLobbyRosterBox');
     var lbBox = document.getElementById('playerLobbyLeaderboardBox');
     var accessTag = document.getElementById('playerRoomAccessTag');
     var hintText = document.getElementById('playerWaitingHintText');
+    var readyActionBox = document.getElementById('playerReadyActionBox');
 
     var isPublic = (gameState.accessMode === 'public');
 
@@ -2838,7 +2971,8 @@
         avatar: gameState.playerProfile.avatar || '🐼',
         score: gameState.playerLocalScore || 0,
         streak: gameState.playerLocalStreak || 0,
-        isBot: false
+        isBot: false,
+        isReady: !!gameState.isReady
       });
     }
 
@@ -2851,6 +2985,7 @@
       if (rosterBox) rosterBox.style.display = 'none';
       if (hintText) hintText.style.display = 'none';
       if (pulsingLoader) pulsingLoader.style.display = 'none';
+      if (readyActionBox) readyActionBox.style.display = 'none';
       if (btnSoloStart) {
         btnSoloStart.style.display = 'block';
         btnSoloStart.onclick = startPublicSoloGame;
@@ -2894,9 +3029,10 @@
       if (rosterBox) rosterBox.style.display = 'block';
       if (btnSoloStart) btnSoloStart.style.display = 'none';
       if (pulsingLoader) pulsingLoader.style.display = 'block';
+      if (readyActionBox) readyActionBox.style.display = 'block';
       if (hintText) {
         hintText.style.display = 'block';
-        hintText.textContent = 'Bạn đã có mặt trên màn hình lớn! Trận đấu sẽ bắt đầu ngay khi Admin bấm Bắt đầu.';
+        hintText.textContent = 'Bạn đã có mặt trên màn hình lớn! Nhấn "Sẵn sàng thi đấu" và chờ Quản trị viên bấm Bắt đầu.';
       }
 
       var listEl = document.getElementById('playerLobbyRosterList');
@@ -2907,15 +3043,22 @@
         listEl.innerHTML = '';
         list.forEach(function (p) {
           var isMe = (p.id === gameState.myPlayerId);
+          var isReady = isMe ? !!gameState.isReady : !!p.isReady;
           var chip = document.createElement('div');
           chip.className = 'player-chip' + (p.isBot ? ' bot' : '') + (isMe ? ' is-me-chip' : '');
+          var readyPill = isReady
+            ? '<span class="chip-ready-tag is-ready">Sẵn sàng</span>'
+            : '<span class="chip-ready-tag not-ready">Chờ</span>';
           chip.innerHTML =
             '<span class="player-chip-avatar">' + (p.avatar || '🐼') + '</span>' +
-            '<span class="player-chip-name">' + (p.name || 'Người chơi') + (isMe ? ' (Bạn)' : '') + '</span>';
+            '<span class="player-chip-name">' + (p.name || 'Người chơi') + (isMe ? ' (Bạn)' : '') + '</span>' +
+            readyPill;
           listEl.appendChild(chip);
         });
       }
     }
+
+    updatePlayerReadyUI();
   }
 
   function playerJoin() {
@@ -3068,7 +3211,8 @@
       id: gameState.myPlayerId,
       name: cleanName,
       avatar: cleanAvatar,
-      pin: cleanPin
+      pin: cleanPin,
+      isReady: !!gameState.isReady
     };
     broadcastMsg('player_join', joinPayload);
 
@@ -3097,7 +3241,7 @@
     }
   }
 
-  // Pha 1 trên điện thoại: Hiện đề bài trước 3 giây, chưa hiện 4 ô đáp án
+  // Pha 1 trên điện thoại: Hiện đề bài trước 3 giây, pre-fill options và đếm ngược đồng bộ mốc Host
   function onPlayerReceivePhase1(p, isRestore) {
     if (!isRestore) {
       gameState.playerLastChoice = -1;
@@ -3118,6 +3262,10 @@
     var p1Prompt = document.getElementById('playerPhase1Prompt');
     var p1Sub = document.getElementById('playerPhase1Sub');
     var p1Sec = document.getElementById('playerPhase1Sec');
+    var timerSecEl = document.getElementById('playerTimerSec');
+    var timerBadge = document.getElementById('playerTimerBadge');
+    if (timerBadge) timerBadge.style.display = 'inline-flex';
+    if (timerBadge) timerBadge.style.display = 'inline-flex';
 
     var qLabel = 'Câu số ' + ((p.questionIndex || 0) + 1) + '/' + (p.totalQuestions || 10);
     if (miniPrompt) miniPrompt.textContent = qLabel + ' • Đọc đề';
@@ -3125,25 +3273,79 @@
     if (p1Prompt) p1Prompt.textContent = p.prompt || '';
     if (p1Sub) p1Sub.textContent = p.subPrompt || 'Hãy nhìn kỹ đề bài trước khi 4 phương án A, B, C, D mở ra!';
 
-    var sec = p.prepSeconds || 3;
-    if (p1Sec) p1Sec.textContent = sec;
+    // Pre-fill trước các ô đáp án để khi chuyển Pha 2 là xuất hiện tức thì không bị giật lag
+    if (Array.isArray(p.options)) {
+      for (var i = 0; i < 4; i++) {
+        var lbl = document.getElementById('playerPadLabel' + i);
+        if (lbl) lbl.textContent = p.options[i] || '';
+      }
+    }
+
+    var prepSec = p.prepSeconds || 3;
+    var phase1EndAt = p.phase1EndAt || (getHostNow() + (prepSec * 1000));
+    var durationSec = p.durationSec || 15;
+    var phase2EndAt = p.phase2EndAt || (phase1EndAt + (durationSec * 1000));
+
+    // Nếu thời điểm nhận tín hiệu mà đã quá hạn Pha 1 (ví dụ mạng chậm hoặc f5 muộn) -> Chuyển thẳng sang Pha 2!
+    if (getHostNow() >= phase1EndAt) {
+      onPlayerReceivePhase2({
+        pin: p.pin,
+        questionIndex: p.questionIndex,
+        totalQuestions: p.totalQuestions,
+        prompt: p.prompt,
+        options: p.options,
+        durationSec: durationSec,
+        startTime: phase1EndAt,
+        endTime: phase2EndAt,
+        expiresAt: p.expiresAt,
+        durationLabel: p.durationLabel
+      }, isRestore);
+      return;
+    }
+
     if (p1Card) p1Card.style.display = 'flex';
 
-    gameState.playerTimerInterval = setInterval(function () {
-      sec--;
-      if (sec > 0 && p1Sec) {
-        p1Sec.textContent = sec;
-      } else {
-        clearInterval(gameState.playerTimerInterval);
+    var lastDisplayedPrepSec = -1;
+    function updatePlayerP1Tick() {
+      var remMs = Math.max(0, phase1EndAt - getHostNow());
+      var currentSec = Math.ceil(remMs / 1000);
+      if (currentSec !== lastDisplayedPrepSec) {
+        lastDisplayedPrepSec = currentSec;
+        if (p1Sec) p1Sec.textContent = currentSec;
+        if (timerSecEl) timerSecEl.textContent = currentSec;
       }
-    }, 1000);
+
+      if (remMs <= 0) {
+        if (gameState.playerTimerInterval) {
+          clearInterval(gameState.playerTimerInterval);
+          gameState.playerTimerInterval = null;
+        }
+        // Tự động bung đáp án Pha 2 chuẩn xác theo đồng hồ mốc Host!
+        onPlayerReceivePhase2({
+          pin: p.pin,
+          questionIndex: p.questionIndex,
+          totalQuestions: p.totalQuestions,
+          prompt: p.prompt,
+          options: p.options,
+          durationSec: durationSec,
+          startTime: phase1EndAt,
+          endTime: phase2EndAt,
+          expiresAt: p.expiresAt,
+          durationLabel: p.durationLabel
+        }, false);
+      }
+    }
+
+    updatePlayerP1Tick();
+    gameState.playerTimerInterval = setInterval(updatePlayerP1Tick, 100);
   }
 
-  // Pha 2 trên điện thoại: Bung 4 nút A, B, C, D cùng lúc và đếm ngược theo endTime
+  // Pha 2 trên điện thoại: Bung 4 nút A, B, C, D cùng lúc và đếm ngược theo endTime đồng bộ
   function onPlayerReceivePhase2(p, isRestore) {
     if (!isRestore) {
       gameState.playerLastChoice = -1;
     }
+    var wasAlreadyInPhase2 = (gameState.status === 'player_game' && gameState.playerLastPhaseAction === 'phase_2_active');
     gameState.status = 'player_game';
     gameState.playerLastPhaseAction = 'phase_2_active';
     gameState.playerLastPhasePayload = p;
@@ -3157,6 +3359,9 @@
     var miniPrompt = document.getElementById('playerMiniPrompt');
     var p2Wrap = document.getElementById('playerPhase2Wrap');
     var barFill = document.getElementById('playerTimerBarFill');
+    var timerSecEl = document.getElementById('playerTimerSec');
+    var timerBadge = document.getElementById('playerTimerBadge');
+    if (timerBadge) timerBadge.style.display = 'inline-flex';
 
     var qLabel = 'Câu ' + ((p.questionIndex || 0) + 1) + ': ' + (p.prompt || '');
     if (miniPrompt) miniPrompt.textContent = qLabel;
@@ -3168,21 +3373,45 @@
       }
     }
 
-    if (barFill) barFill.style.width = '100%';
     if (p2Wrap) p2Wrap.style.display = 'block';
-    if (!isRestore) SFX.revealPop();
+    if (!isRestore && !wasAlreadyInPhase2) {
+      SFX.revealPop();
+    }
 
-    var durationMs = (p.durationSec || 15) * 1000;
-    var endTime = p.endTime || (Date.now() + durationMs);
+    var durationSec = p.durationSec || 15;
+    var durationMs = durationSec * 1000;
+    var endTime = p.endTime || (getHostNow() + durationMs);
 
-    gameState.playerTimerInterval = setInterval(function () {
-      var remainingMs = Math.max(0, endTime - Date.now());
-      var pct = (remainingMs / durationMs) * 100;
-      if (barFill) barFill.style.width = Math.max(0, pct) + '%';
-      if (remainingMs <= 0) {
-        clearInterval(gameState.playerTimerInterval);
+    var lastTickSec = -1;
+    function updatePlayerP2Tick() {
+      var remainingMs = Math.max(0, endTime - getHostNow());
+      var remainingSec = Math.ceil(remainingMs / 1000);
+
+      if (remainingSec !== lastTickSec) {
+        lastTickSec = remainingSec;
+        if (timerSecEl) timerSecEl.textContent = remainingSec;
+        if (timerBadge) {
+          if (remainingSec <= 5 && remainingSec > 0) {
+            timerBadge.classList.add('urgent');
+          } else {
+            timerBadge.classList.remove('urgent');
+          }
+        }
       }
-    }, 100);
+
+      var pct = Math.max(0, Math.min(100, (remainingMs / durationMs) * 100));
+      if (barFill) barFill.style.width = pct + '%';
+
+      if (remainingMs <= 0) {
+        if (gameState.playerTimerInterval) {
+          clearInterval(gameState.playerTimerInterval);
+          gameState.playerTimerInterval = null;
+        }
+      }
+    }
+
+    updatePlayerP2Tick();
+    gameState.playerTimerInterval = setInterval(updatePlayerP2Tick, 100);
   }
 
   // Pha 3 trên điện thoại: Người chơi chạm chọn 1 đáp án -> Khóa màn hình cá nhân ngay lập tức
@@ -3231,6 +3460,9 @@
 
     showView('playerGameView');
     hideAllPlayerSubCards();
+
+    var timerBadge = document.getElementById('playerTimerBadge');
+    if (timerBadge) timerBadge.style.display = 'none';
 
     var resultOverlay = document.getElementById('playerResultOverlay');
     var resultIcon = document.getElementById('playerResultIcon');
@@ -3394,6 +3626,9 @@
 
     showView('playerGameView');
     hideAllPlayerSubCards();
+
+    var timerBadge = document.getElementById('playerTimerBadge');
+    if (timerBadge) timerBadge.style.display = 'none';
 
     var p5Card = document.getElementById('playerPhase5Card');
     var p5Medal = document.getElementById('playerPhase5Medal');
@@ -3766,7 +4001,15 @@
     if (gameState.role === 'host') {
       if (normalizePin(p.pin) !== normalizePin(gameState.pin)) return;
 
-      if (action === 'player_join') {
+      if (action === 'player_ready') {
+        var targetP = gameState.players.find(function (x) { return x.id === p.playerId; });
+        if (targetP) {
+          targetP.isReady = !!p.isReady;
+          renderPlayerList();
+          broadcastLobbyRoster();
+          saveHostRoomState();
+        }
+      } else if (action === 'player_join') {
         var existingById = gameState.players.find(function (x) { return x.id === p.id; });
         if (!existingById) {
           gameState.players.push({
@@ -3780,17 +4023,23 @@
             lastAnswerIndex: -1,
             answeredAt: 0,
             lastPointsEarned: 0,
-            isBot: false
+            isBot: false,
+            isReady: !!p.isReady
           });
           SFX.pop();
           renderPlayerList();
+          broadcastLobbyRoster();
           if (typeof showToast === 'function') {
             showToast((p.avatar || '🐼') + ' ' + p.name + ' đã vào phòng!', 'success');
           }
         } else {
           existingById.name = p.name || existingById.name;
           existingById.avatar = p.avatar || existingById.avatar;
+          if (typeof p.isReady === 'boolean') {
+            existingById.isReady = p.isReady;
+          }
           renderPlayerList();
+          broadcastLobbyRoster();
         }
 
         // Nếu trận đấu đang diễn ra ở Pha 2 mà người chơi vừa tải lại trang / vào lại, gửi lại câu hỏi hiện tại cho họ
@@ -3855,6 +4104,16 @@
     // --- XỬ LÝ PHÍA NGƯỜI CHƠI (PLAYER) ---
     if (gameState.role === 'player') {
       if (normalizePin(p.pin) !== normalizePin(gameState.pin)) return;
+
+      // Đồng bộ đồng hồ mốc thời gian máy Host (Host Clock Offset compensation)
+      if (data.timestamp && typeof data.timestamp === 'number') {
+        var sampleOffset = data.timestamp - Date.now();
+        if (!gameState.clockOffset) {
+          gameState.clockOffset = sampleOffset;
+        } else {
+          gameState.clockOffset = Math.round(gameState.clockOffset * 0.7 + sampleOffset * 0.3);
+        }
+      }
 
       if (p.expiresAt !== undefined) gameState.roomExpiresAt = p.expiresAt;
       if (p.durationLabel) gameState.roomDurationLabel = p.durationLabel;
@@ -4213,6 +4472,11 @@
     // Player Join & Leave
     var btnPlayerJoin = document.getElementById('btnPlayerJoin');
     if (btnPlayerJoin) btnPlayerJoin.onclick = playerJoin;
+
+    var btnPlayerToggleReady = document.getElementById('btnPlayerToggleReady');
+    if (btnPlayerToggleReady) {
+      btnPlayerToggleReady.onclick = togglePlayerReady;
+    }
 
     var btnPlayerStartPublicSolo = document.getElementById('btnPlayerStartPublicSolo');
     if (btnPlayerStartPublicSolo) {

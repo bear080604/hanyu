@@ -7057,6 +7057,86 @@ details[open] summary {
   margin-bottom: 14px;
 }
 
+.player-ready-action-box {
+  margin: 18px 0 14px;
+  width: 100%;
+}
+
+.btn-player-ready {
+  width: 100%;
+  padding: 13px 20px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  border: 1px solid var(--accent-red);
+  background: var(--accent-red);
+  color: #ffffff;
+  transition: transform 0.12s ease, opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-player-ready:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.btn-player-ready.is-ready-active {
+  background: rgba(38, 107, 77, 0.14);
+  border: 1px solid rgba(38, 107, 77, 0.45);
+  color: #266b4d;
+}
+
+.player-ready-status-text {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.player-ready-indicator-tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-left: 4px;
+}
+
+.player-ready-indicator-tag.not-ready {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.player-ready-indicator-tag.is-ready {
+  background: rgba(38, 107, 77, 0.12);
+  border: 1px solid rgba(38, 107, 77, 0.35);
+  color: #266b4d;
+}
+
+.chip-ready-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: auto;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.chip-ready-tag.is-ready {
+  background: rgba(38, 107, 77, 0.12);
+  border: 1px solid rgba(38, 107, 77, 0.35);
+  color: #266b4d;
+}
+
+.chip-ready-tag.not-ready {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+}
+
 .player-waiting-hint {
   font-size: 0.88rem;
   color: var(--text-secondary);
@@ -7633,6 +7713,26 @@ details[open] summary {
 .player-streak-tag {
   font-size: 0.95rem;
   color: #d97706;
+}
+
+.player-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--accent-red);
+  background: var(--bg-raised);
+  border: 1px solid var(--accent-red-border);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.player-timer-badge.urgent {
+  background: var(--accent-red-subtle);
+  border-color: var(--accent-red);
 }
 
 .player-pad-grid {
