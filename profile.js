@@ -1,105 +1,244 @@
-// ---------- WQProfile module (Single User) ----------
-(function() {
-  let profileModal = null;
-  let statsModal = null;
+// ---------- WQProfile & Admin Authentication Module ----------
+(function () {
+  var profileModal = null;
+  var statsModal = null;
 
-  const WQProfile = {
+  var ADMIN_ACCOUNTS = {
+    admin: '123456',
+    teacher: '123456',
+    wenqing: 'admin123'
+  };
 
-    openProfileModal() {
-      // Lấy data trực tiếp từ WQStorage (single-user, không cần auth)
-      const favorites   = WQStorage.getFavorites() || [];
-      const progress    = WQStorage.getProgress()  || {};
-      const srsData     = WQStorage.getSRS()        || {};
+  function isAdminLoggedIn() {
+    return sessionStorage.getItem('wq_arena_admin_logged') === '1' ||
+      localStorage.getItem('wq_arena_admin_logged') === '1';
+  }
 
-      const learnedList = progress.learned || [];
-      const learnedCount = learnedList.length;
-      const favoritesCount = favorites.length;
+  function getAdminUsername() {
+    return localStorage.getItem('wq_arena_admin_user') || 'admin';
+  }
 
-      // SRS stats
-      let rememberedCount = 0;
-      let reviewTodayCount = 0;
-      const todayStr = new Date().toISOString().split('T')[0];
-      Object.values(srsData).forEach(item => {
-        if (item.interval >= 4) rememberedCount++;
-        if (item.nextReview && item.nextReview <= todayStr) reviewTodayCount++;
-      });
+  function loginAdmin(username, password) {
+    var u = String(username || '').trim().toLowerCase();
+    var p = String(password || '').trim();
+    if ((u === 'admin' && (p === '123456' || p === 'admin123' || p === 'admin')) ||
+      (ADMIN_ACCOUNTS[u] && ADMIN_ACCOUNTS[u] === p)) {
+      sessionStorage.setItem('wq_arena_admin_logged', '1');
+      localStorage.setItem('wq_arena_admin_logged', '1');
+      localStorage.setItem('wq_arena_admin_user', username.trim() || 'admin');
+      syncHeaderProfileButton();
+      window.dispatchEvent(new CustomEvent('wq-admin-auth-changed', {
+        detail: { loggedIn: true, username: getAdminUsername() }
+      }));
+      return true;
+    }
+    return false;
+  }
 
-      const modalBody = document.getElementById('profileModalBody');
+  function logoutAdmin() {
+    sessionStorage.removeItem('wq_arena_admin_logged');
+    localStorage.removeItem('wq_arena_admin_logged');
+    syncHeaderProfileButton();
+    window.dispatchEvent(new CustomEvent('wq-admin-auth-changed', {
+      detail: { loggedIn: false }
+    }));
+  }
+
+  function syncHeaderProfileButton() {
+    var btn = document.getElementById('openProfileBtn');
+    if (!btn) return;
+    var span = btn.querySelector('span');
+    if (isAdminLoggedIn()) {
+      if (span) span.textContent = 'Admin';
+      btn.classList.add('is-admin-active');
+      btn.title = 'Đã đăng nhập Quản trị viên (' + getAdminUsername() + ')';
+    } else {
+      if (span) span.textContent = 'Hồ sơ';
+      btn.classList.remove('is-admin-active');
+      btn.title = 'Đăng nhập Quản trị viên (Admin)';
+    }
+  }
+
+  function getArenaHref() {
+    var isInPages = location.pathname.indexOf('/pages/') !== -1;
+    return isInPages ? 'arena.html' : 'pages/arena.html';
+  }
+
+  var WQProfile = {
+    isAdminLoggedIn: isAdminLoggedIn,
+    getAdminUsername: getAdminUsername,
+    loginAdmin: loginAdmin,
+    logoutAdmin: logoutAdmin,
+    syncHeaderProfileButton: syncHeaderProfileButton,
+
+    openProfileModal: function () {
+      profileModal = profileModal || document.getElementById('profileModal');
+      var modalBody = document.getElementById('profileModalBody');
       if (!modalBody) return;
 
-      modalBody.innerHTML = `
-        <div class="profile-summary" style="display:flex; flex-direction:column; gap:20px;">
-          <div style="text-align:center; padding-bottom:12px; border-bottom:1px solid var(--glass-border);">
-            <div style="font-size:3.5rem; margin-bottom:8px;">🧑‍🎓</div>
-            <h3 style="font-size:1.6rem; color:var(--text-primary); font-family:'Plus Jakarta Sans', sans-serif;">Học viên</h3>
-          </div>
+      // Update modal title
+      var modalTitle = profileModal ? profileModal.querySelector('h2') : null;
 
-          <div class="stats-grid" style="display:grid; grid-template-columns:repeat(2, 1fr); gap:14px;">
-            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
-              <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Đã học</div>
-              <div style="font-size:1.8rem; font-weight:800; color:var(--neon-cyan); margin-top:4px;">${learnedCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
-            </div>
-            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
-              <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Yêu thích</div>
-              <div style="font-size:1.8rem; font-weight:800; color:#d97706; margin-top:4px;">${favoritesCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
-            </div>
-            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
-              <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Đã nhớ</div>
-              <div style="font-size:1.8rem; font-weight:800; color:var(--neon-green, #059669); margin-top:4px;">${rememberedCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
-            </div>
-            <div class="stat-card" style="background:rgba(139,92,246,0.04); border:1px solid var(--glass-border); padding:14px; border-radius:16px; text-align:center;">
-              <div style="font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Ôn hôm nay</div>
-              <div style="font-size:1.8rem; font-weight:800; color:var(--neon-red, #dc2626); margin-top:4px;">${reviewTodayCount} <span style="font-size:0.9rem; font-weight:500; color:var(--text-muted);">từ</span></div>
-            </div>
-          </div>
-        </div>
-      `;
+      if (isAdminLoggedIn()) {
+        if (modalTitle) modalTitle.textContent = 'Tài khoản Quản trị viên';
+
+        var favorites = (window.WQStorage && WQStorage.getFavorites()) || [];
+        var progress = (window.WQStorage && WQStorage.getProgress()) || {};
+        var learnedCount = (progress.learned || []).length;
+        var adminUser = getAdminUsername();
+        var onArenaPage = location.pathname.indexOf('arena.html') !== -1;
+
+        modalBody.innerHTML =
+          '<div class="profile-admin-logged">' +
+            '<div class="profile-admin-header">' +
+              '<div class="profile-admin-avatar">👑</div>' +
+              '<div class="profile-admin-meta">' +
+                '<div class="profile-admin-role-badge">Quản trị viên hệ thống</div>' +
+                '<h3 class="profile-admin-name">' + adminUser + '</h3>' +
+                '<p class="profile-admin-sub">Đã cấp quyền Tạo phòng &amp; Điều khiển Đấu trường Kahoot</p>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="profile-admin-stats">' +
+              '<div class="profile-mini-stat">' +
+                '<span class="p-stat-label">Từ đã học</span>' +
+                '<span class="p-stat-val">' + learnedCount + ' từ</span>' +
+              '</div>' +
+              '<div class="profile-mini-stat">' +
+                '<span class="p-stat-label">Từ yêu thích</span>' +
+                '<span class="p-stat-val">' + favorites.length + ' từ</span>' +
+              '</div>' +
+            '</div>' +
+
+            '<div class="profile-admin-actions">' +
+              '<button type="button" class="btn btn-hero-primary" id="modalGoArenaHostBtn" style="width:100%;">' +
+                '<span>🎮 ' + (onArenaPage ? 'Mở Bảng Tạo & Điều Khiển Trò Chơi' : 'Đi tới Đấu Trường (Tạo Trò Chơi)') + '</span>' +
+              '</button>' +
+              '<button type="button" class="btn btn-secondary" id="modalAdminLogoutBtn" style="width:100%;">' +
+                '<span>Đăng xuất tài khoản Admin</span>' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+
+        var goBtn = document.getElementById('modalGoArenaHostBtn');
+        if (goBtn) {
+          goBtn.onclick = function () {
+            if (profileModal) profileModal.classList.remove('active');
+            if (onArenaPage) {
+              window.dispatchEvent(new CustomEvent('wq-admin-open-host'));
+            } else {
+              window.location.href = getArenaHref();
+            }
+          };
+        }
+
+        var outBtn = document.getElementById('modalAdminLogoutBtn');
+        if (outBtn) {
+          outBtn.onclick = function () {
+            logoutAdmin();
+            if (profileModal) profileModal.classList.remove('active');
+            if (typeof window.showToast === 'function') {
+              window.showToast('Đã đăng xuất tài khoản Quản trị viên.', 'info');
+            }
+          };
+        }
+      } else {
+        if (modalTitle) modalTitle.textContent = 'Đăng nhập Quản trị viên';
+
+        modalBody.innerHTML =
+          '<form id="profileAdminLoginForm" class="profile-login-form" onsubmit="return false;">' +
+            '<p class="profile-login-desc">Đăng nhập dành riêng cho <b>Admin / Giáo viên</b> để mở quyền tạo phòng mã QR và điều khiển trận đấu Kahoot. Học viên thông thường không cần đăng nhập.</p>' +
+
+            '<div class="arena-form-group">' +
+              '<label class="arena-label" for="profAdminUser">Tài khoản Admin:</label>' +
+              '<input type="text" id="profAdminUser" class="auth-input" placeholder="Nhập tài khoản" value="admin" autocomplete="username">' +
+            '</div>' +
+
+            '<div class="arena-form-group">' +
+              '<label class="arena-label" for="profAdminPass">Mật khẩu:</label>' +
+              '<input type="password" id="profAdminPass" class="auth-input" placeholder="Nhập mật khẩu Admin" autocomplete="current-password">' +
+            '</div>' +
+
+            '<div id="profLoginError" class="profile-login-error" style="display:none;">Sai tài khoản hoặc mật khẩu Quản trị viên!</div>' +
+
+            '<button type="submit" class="btn btn-hero-primary" style="width:100%; margin-top:4px;">' +
+              '<span>Đăng nhập Quản trị viên</span>' +
+            '</button>' +
+          '</form>';
+
+        var form = document.getElementById('profileAdminLoginForm');
+        var uInput = document.getElementById('profAdminUser');
+        var pInput = document.getElementById('profAdminPass');
+        var errBox = document.getElementById('profLoginError');
+
+        if (pInput) {
+          setTimeout(function () { pInput.focus(); }, 60);
+        }
+
+        if (form) {
+          form.onsubmit = function (e) {
+            e.preventDefault();
+            var u = uInput ? uInput.value : '';
+            var p = pInput ? pInput.value : '';
+            if (loginAdmin(u, p)) {
+              if (errBox) errBox.style.display = 'none';
+              if (profileModal) profileModal.classList.remove('active');
+              if (typeof window.showToast === 'function') {
+                window.showToast('👑 Đăng nhập Quản trị viên thành công!', 'success');
+              }
+            } else {
+              if (errBox) errBox.style.display = 'block';
+              if (pInput) pInput.select();
+            }
+            return false;
+          };
+        }
+      }
 
       if (profileModal) profileModal.classList.add('active');
     },
 
-    openStatsModal() {
-      const progress   = WQStorage.getProgress() || {};
-      const learnedList = progress.learned || [];
+    openStatsModal: function () {
+      var progress = (window.WQStorage && WQStorage.getProgress()) || {};
+      var learnedList = progress.learned || [];
 
-      const statsModalBody = document.getElementById('statsModalBody');
+      var statsModalBody = document.getElementById('statsModalBody');
       if (!statsModalBody || typeof DATA === 'undefined') return;
 
       statsModalBody.innerHTML = '';
 
-      const container = document.createElement('div');
+      var container = document.createElement('div');
       container.style.cssText = 'display:flex; flex-direction:column; gap:20px;';
 
-      const title = document.createElement('h3');
+      var title = document.createElement('h3');
       title.textContent = 'Tiến trình hoàn thành HSK';
       title.style.cssText = "font-family:'Plus Jakarta Sans', sans-serif; font-size:1.25rem; font-weight:700; color:var(--text-primary); border-bottom:1px solid var(--glass-border); padding-bottom:10px;";
       container.appendChild(title);
 
-      Object.keys(DATA).forEach(lvl => {
-        const words = DATA[lvl];
-        const totalWords = words.length;
-        const learnedInLevel = words.filter(w => learnedList.includes(w.h)).length;
-        const percent = totalWords > 0 ? Math.round((learnedInLevel / totalWords) * 100) : 0;
+      Object.keys(DATA).forEach(function (lvl) {
+        var words = DATA[lvl];
+        if (!Array.isArray(words)) return;
+        var totalWords = words.length;
+        var learnedInLevel = words.filter(function (w) { return learnedList.includes(w.h); }).length;
+        var percent = totalWords > 0 ? Math.round((learnedInLevel / totalWords) * 100) : 0;
 
-        const levelRow = document.createElement('div');
+        var levelRow = document.createElement('div');
         levelRow.style.cssText = 'display:flex; flex-direction:column; gap:6px;';
-        // Escape để an toàn — lvl là key từ DATA nội bộ nên không có XSS risk,
-        // nhưng giữ thói quen dùng textContent cho dynamic values
-        const labelRow = document.createElement('div');
+        var labelRow = document.createElement('div');
         labelRow.style.cssText = 'display:flex; justify-content:space-between; font-size:0.9rem; font-weight:600;';
-        const spanLvl = document.createElement('span');
+        var spanLvl = document.createElement('span');
         spanLvl.style.color = 'var(--text-primary)';
         spanLvl.textContent = lvl;
-        const spanCount = document.createElement('span');
+        var spanCount = document.createElement('span');
         spanCount.style.color = 'var(--text-secondary)';
-        spanCount.textContent = `${learnedInLevel} / ${totalWords} từ (${percent}%)`;
+        spanCount.textContent = learnedInLevel + ' / ' + totalWords + ' từ (' + percent + '%)';
         labelRow.appendChild(spanLvl);
         labelRow.appendChild(spanCount);
 
-        const barBg = document.createElement('div');
+        var barBg = document.createElement('div');
         barBg.style.cssText = 'width:100%; height:10px; background:rgba(139,92,246,0.1); border-radius:5px; border:1px solid var(--glass-border); overflow:hidden;';
-        const barFill = document.createElement('div');
-        barFill.style.cssText = `width:${percent}%; height:100%; background:var(--accent-gradient); border-radius:5px; transition:width 0.5s ease;`;
+        var barFill = document.createElement('div');
+        barFill.style.cssText = 'width:' + percent + '%; height:100%; background:var(--accent-gradient); border-radius:5px; transition:width 0.5s ease;';
 
         barBg.appendChild(barFill);
         levelRow.appendChild(labelRow);
@@ -112,24 +251,25 @@
     }
   };
 
-  // Close modals events
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', function () {
     profileModal = document.getElementById('profileModal');
-    statsModal   = document.getElementById('statsModal');
+    statsModal = document.getElementById('statsModal');
 
-    const closeProfile = document.getElementById('closeProfileModalBtn');
+    syncHeaderProfileButton();
+
+    var closeProfile = document.getElementById('closeProfileModalBtn');
     if (closeProfile && profileModal) {
-      closeProfile.onclick = () => profileModal.classList.remove('active');
+      closeProfile.onclick = function () { profileModal.classList.remove('active'); };
     }
 
-    const closeStats = document.getElementById('closeStatsModalBtn');
+    var closeStats = document.getElementById('closeStatsModalBtn');
     if (closeStats && statsModal) {
-      closeStats.onclick = () => statsModal.classList.remove('active');
+      closeStats.onclick = function () { statsModal.classList.remove('active'); };
     }
 
-    window.addEventListener('click', (e) => {
+    window.addEventListener('click', function (e) {
       if (profileModal && e.target === profileModal) profileModal.classList.remove('active');
-      if (statsModal   && e.target === statsModal)   statsModal.classList.remove('active');
+      if (statsModal && e.target === statsModal) statsModal.classList.remove('active');
     });
   });
 

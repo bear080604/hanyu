@@ -2886,7 +2886,8 @@ body.sidebar-open {
     justify-content: flex-start !important;
     padding: 10px 14px !important;
     width: 100% !important;
-    height: 42px; /* Touch target chuẩn */
+    height: 42px;
+    /* Touch target chuẩn */
     font-size: 0.95rem;
   }
 
@@ -2924,7 +2925,8 @@ body.sidebar-open {
   }
 
   .header-center {
-    display: none; /* Giữ header gọn gàng trên mobile */
+    display: none;
+    /* Giữ header gọn gàng trên mobile */
   }
 
   /* Dùng display: contents để nút Profile và Theme Switch ở cùng hàng 1 với Title,
@@ -2944,7 +2946,8 @@ body.sidebar-open {
   }
 
   .btn-profile span {
-    display: none; /* Chỉ hiện icon profile */
+    display: none;
+    /* Chỉ hiện icon profile */
   }
 
   .theme-switch {
@@ -3126,7 +3129,8 @@ body.sidebar-open {
   .q-opt {
     padding: 12px 14px;
     font-size: 0.95rem;
-    min-height: 46px; /* Touch target chuẩn */
+    min-height: 46px;
+    /* Touch target chuẩn */
     display: flex;
     align-items: center;
     border-radius: 8px;
@@ -3895,7 +3899,8 @@ details[open] summary {
 #studyModeModal .modal-content {
   width: 92% !important;
   max-width: 390px !important;
-  padding: 0 !important; /* Triệt tiêu hoàn toàn padding thừa kế từ .modal-content trên mobile */
+  padding: 0 !important;
+  /* Triệt tiêu hoàn toàn padding thừa kế từ .modal-content trên mobile */
   margin: 0 auto;
   border-radius: 14px !important;
   background: var(--bg-card);
@@ -5970,10 +5975,21 @@ details[open] summary {
   color: #fff;
 }
 
-.gm-icon.gm-red { background: #e21b3c; }
-.gm-icon.gm-blue { background: #1368ce; }
-.gm-icon.gm-yellow { background: #d89e00; }
-.gm-icon.gm-green { background: #26890c; }
+.gm-icon.gm-red {
+  background: #e21b3c;
+}
+
+.gm-icon.gm-blue {
+  background: #1368ce;
+}
+
+.gm-icon.gm-yellow {
+  background: #d89e00;
+}
+
+.gm-icon.gm-green {
+  background: #26890c;
+}
 
 .gm-info {
   flex: 1;
@@ -6565,10 +6581,21 @@ details[open] summary {
   transform: scale(0.98);
 }
 
-.k-ans-card.k-red { background: #e21b3c; }
-.k-ans-card.k-blue { background: #1368ce; }
-.k-ans-card.k-yellow { background: #d89e00; }
-.k-ans-card.k-green { background: #26890c; }
+.k-ans-card.k-red {
+  background: #e21b3c;
+}
+
+.k-ans-card.k-blue {
+  background: #1368ce;
+}
+
+.k-ans-card.k-yellow {
+  background: #d89e00;
+}
+
+.k-ans-card.k-green {
+  background: #26890c;
+}
 
 .k-shape {
   display: flex;
@@ -6721,9 +6748,17 @@ details[open] summary {
   color: var(--text-secondary);
 }
 
-.top-1 .lb-rank { color: #d97706; }
-.top-2 .lb-rank { color: #6b7280; }
-.top-3 .lb-rank { color: #b45309; }
+.top-1 .lb-rank {
+  color: #d97706;
+}
+
+.top-2 .lb-rank {
+  color: #6b7280;
+}
+
+.top-3 .lb-rank {
+  color: #b45309;
+}
 
 .lb-avatar {
   font-size: 1.45rem;
@@ -7056,10 +7091,21 @@ details[open] summary {
   line-height: 1.25;
 }
 
-.player-pad-btn.p-red { background: #e21b3c; }
-.player-pad-btn.p-blue { background: #1368ce; }
-.player-pad-btn.p-yellow { background: #d89e00; }
-.player-pad-btn.p-green { background: #26890c; }
+.player-pad-btn.p-red {
+  background: #e21b3c;
+}
+
+.player-pad-btn.p-blue {
+  background: #1368ce;
+}
+
+.player-pad-btn.p-yellow {
+  background: #d89e00;
+}
+
+.player-pad-btn.p-green {
+  background: #26890c;
+}
 
 .player-submitted-state {
   text-align: center;
@@ -7127,34 +7173,76 @@ details[open] summary {
 
 /* ==================== ARENA KEYFRAME ANIMATIONS ==================== */
 @keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 @keyframes countPulse {
-  0% { transform: scale(0.75); opacity: 0.7; }
-  50% { transform: scale(1.12); opacity: 1; }
-  100% { transform: scale(1); opacity: 0.85; }
+  0% {
+    transform: scale(0.75);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
 }
 
 @keyframes floatCrown {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes bounceTrophy {
-  0% { transform: scale(1) translateY(0); }
-  100% { transform: scale(1.06) translateY(-6px); }
+  0% {
+    transform: scale(1) translateY(0);
+  }
+
+  100% {
+    transform: scale(1.06) translateY(-6px);
+  }
 }
 
 @keyframes bounceAvatar {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes pulseUrgent {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.08); }
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.08);
+  }
 }
 
 .arena-banner-card:hover {
@@ -7424,10 +7512,21 @@ details[open] summary {
   transition: height 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s;
 }
 
-.k-bar-fill.k-red { background: #e21b3c; }
-.k-bar-fill.k-blue { background: #1368ce; }
-.k-bar-fill.k-yellow { background: #d89e00; }
-.k-bar-fill.k-green { background: #26890c; }
+.k-bar-fill.k-red {
+  background: #e21b3c;
+}
+
+.k-bar-fill.k-blue {
+  background: #1368ce;
+}
+
+.k-bar-fill.k-yellow {
+  background: #d89e00;
+}
+
+.k-bar-fill.k-green {
+  background: #26890c;
+}
 
 .k-bar-fill.is-wrong-bar {
   opacity: 0.38;
@@ -7449,10 +7548,21 @@ details[open] summary {
   text-align: center;
 }
 
-.k-bar-label.k-red { background: #e21b3c; }
-.k-bar-label.k-blue { background: #1368ce; }
-.k-bar-label.k-yellow { background: #d89e00; }
-.k-bar-label.k-green { background: #26890c; }
+.k-bar-label.k-red {
+  background: #e21b3c;
+}
+
+.k-bar-label.k-blue {
+  background: #1368ce;
+}
+
+.k-bar-label.k-yellow {
+  background: #d89e00;
+}
+
+.k-bar-label.k-green {
+  background: #26890c;
+}
 
 .k-opt-prefix {
   font-weight: 800;
@@ -7492,6 +7602,7 @@ details[open] summary {
     opacity: 0;
     transform: translateY(16px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -7679,4 +7790,131 @@ details[open] summary {
 .phase5-wait-hint {
   font-size: 0.84rem;
   color: var(--text-muted);
+}
+
+
+/* ==================== HEADER PROFILE ADMIN MODAL STYLES ==================== */
+.btn-profile.is-admin-active {
+  border-color: var(--accent-red) !important;
+  background: var(--accent-red-subtle) !important;
+  color: var(--accent-red) !important;
+  font-weight: 700;
+}
+
+.profile-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-login-desc {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 4px;
+}
+
+.profile-login-error {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #ef4444;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.profile-admin-logged {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.profile-admin-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.profile-admin-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: var(--accent-red-subtle);
+  border: 1px solid var(--accent-red-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.9rem;
+  flex-shrink: 0;
+}
+
+.profile-admin-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-admin-role-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 9px;
+  border-radius: 999px;
+  margin-bottom: 4px;
+}
+
+.profile-admin-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 2px;
+}
+
+.profile-admin-sub {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.profile-admin-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.profile-mini-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.p-stat-label {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.p-stat-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.profile-admin-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

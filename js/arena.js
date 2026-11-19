@@ -149,10 +149,16 @@
   }
 
   function logoutAdmin() {
-    sessionStorage.removeItem('wq_arena_admin_logged');
-    localStorage.removeItem('wq_arena_admin_logged');
+    stopCloudPolling();
+    cleanupCloudRoomMessages();
     gameState.status = 'config';
-    switchRoleTab('host');
+    if (window.WQProfile && typeof window.WQProfile.logoutAdmin === 'function') {
+      window.WQProfile.logoutAdmin();
+    } else {
+      sessionStorage.removeItem('wq_arena_admin_logged');
+      localStorage.removeItem('wq_arena_admin_logged');
+      switchRoleTab('player');
+    }
     if (typeof showToast === 'function') {
       showToast('Đã đăng xuất tài khoản Quản trị viên.', 'info');
     }
@@ -318,7 +324,8 @@
     var roleTabs = document.getElementById('arenaRoleTabs');
     if (roleTabs) {
       var inActiveMatch = (viewId === 'hostGameView' || viewId === 'hostLeaderboardView' || viewId === 'hostPodiumView' || viewId === 'playerGameView');
-      roleTabs.style.display = inActiveMatch ? 'none' : 'flex';
+      // Chỉ hiển thị thanh chuyển đổi Admin/Player khi đã đăng nhập Admin ở ô Hồ sơ!
+      roleTabs.style.display = (isAdminLoggedIn() && !inActiveMatch) ? 'flex' : 'none';
     }
   }
 
@@ -453,8 +460,11 @@
       var sub = document.getElementById('playerJoinRoomSub');
       if (badge) badge.textContent = 'Phòng thi đấu #' + cleanP;
       if (sub) sub.textContent = 'Mã PIN đã được điền sẵn! Hãy nhập Tên hiển thị của bạn để vào phòng.';
+    } else if (isAdminLoggedIn()) {
+      // Nếu đã đăng nhập Admin ở ô Hồ sơ, mở thẳng Bảng Điều Khiển Tạo Phòng
+      switchRoleTab('host');
     } else {
-      // Mặc định: Nếu chưa có ?pin, hiển thị tab Người chơi (hoặc nếu vừa tạo phòng ở Admin thì giữ nguyên)
+      // Người chơi thông thường: chỉ hiện giao diện Nhập PIN
       switchRoleTab('player');
     }
   }
@@ -463,23 +473,17 @@
     var tabHostBtn = document.getElementById('tabHostBtn');
     var tabPlayerBtn = document.getElementById('tabPlayerBtn');
 
-    if (role === 'host') {
+    if (role === 'host' && isAdminLoggedIn()) {
       gameState.role = 'host';
       if (tabHostBtn) tabHostBtn.classList.add('active');
       if (tabPlayerBtn) tabPlayerBtn.classList.remove('active');
 
-      if (!isAdminLoggedIn()) {
-        showView('adminLoginView');
-        var pwInput = document.getElementById('adminPasswordInput');
-        if (pwInput) setTimeout(function () { pwInput.focus(); }, 60);
+      var adminNameEl = document.getElementById('adminCurrentName');
+      if (adminNameEl) adminNameEl.textContent = getAdminName();
+      if (gameState.status === 'lobby') {
+        showView('hostLobbyView');
       } else {
-        var adminNameEl = document.getElementById('adminCurrentName');
-        if (adminNameEl) adminNameEl.textContent = getAdminName();
-        if (gameState.status === 'lobby') {
-          showView('hostLobbyView');
-        } else {
-          showView('hostConfigView');
-        }
+        showView('hostConfigView');
       }
     } else {
       gameState.role = 'player';
@@ -1860,6 +1864,26 @@
     if (btnAdminLogout) {
       btnAdminLogout.onclick = logoutAdmin;
     }
+
+    // Lắng nghe sự kiện Đăng nhập / Đăng xuất Admin từ nút "Hồ sơ" trên Header
+    window.addEventListener('wq-admin-auth-changed', function (ev) {
+      var isLogged = ev && ev.detail && ev.detail.loggedIn;
+      if (isLogged) {
+        SFX.correct();
+        switchRoleTab('host');
+      } else {
+        stopCloudPolling();
+        cleanupCloudRoomMessages();
+        gameState.status = 'config';
+        switchRoleTab('player');
+      }
+    });
+
+    window.addEventListener('wq-admin-open-host', function () {
+      if (isAdminLoggedIn()) {
+        switchRoleTab('host');
+      }
+    });
 
     // Chọn 4 chế độ Game Kahoot
     var gmCards = document.querySelectorAll('.arena-gamemode-card');
