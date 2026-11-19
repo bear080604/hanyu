@@ -77,3 +77,22 @@ CREATE TABLE IF NOT EXISTS custom_deck_words (
 );
 
 CREATE INDEX IF NOT EXISTS idx_custom_deck ON custom_deck_words(deck_id);
+
+-- Bảng tin nhắn thời gian thực cho Arena (Siêu nhẹ, không JOIN)
+CREATE TABLE IF NOT EXISTS arena_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pin TEXT NOT NULL,
+  msg TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_arena_msg_pin ON arena_messages(pin, id);
+
+-- Bảng lưu trữ phòng chơi Arena
+CREATE TABLE IF NOT EXISTS arena_rooms (
+  pin TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  is_public INTEGER DEFAULT 0,
+  meta_json TEXT NOT NULL,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_arena_rooms_public ON arena_rooms(is_public, updated_at);

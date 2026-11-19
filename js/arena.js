@@ -203,41 +203,45 @@
 
     // 3. Cloudflare Worker D1 Sync (Cho điện thoại 4G/WiFi khác thiết bị)
     if (syncToCloud !== false && payload && payload.pin) {
-      var channelKey = 'arena_sync_' + normalizePin(payload.pin);
-      fetch(CLOUD_API_BASE + '/api/decks', {
+      var cleanPin = normalizePin(payload.pin);
+      fetch(CLOUD_API_BASE + '/api/arena/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          user_id: channelKey,
-          name: JSON.stringify(msg),
-          words: []
+          pin: cleanPin,
+          msg: msg
         })
       }).then(function (r) { return r.json(); }).then(function (res) {
-        if (res && res.deck_id) {
-          _cloudRoomDeckIds.push(res.deck_id);
+        if (res && res.id) {
+          _cloudRoomDeckIds.push(res.id);
         }
       }).catch(function () { });
     }
   }
 
+  var _lastSyncMsgId = 0;
   function startCloudPolling(pin) {
     stopCloudPolling();
     var cleanPin = normalizePin(pin);
     if (!cleanPin) return;
-    var channelKey = 'arena_sync_' + cleanPin;
+    _lastSyncMsgId = 0;
 
     _cloudPollInterval = setInterval(function () {
       if (!gameState.pin || normalizePin(gameState.pin) !== cleanPin) return;
-      fetch(CLOUD_API_BASE + '/api/decks?user_id=' + encodeURIComponent(channelKey))
+      if (typeof document !== 'undefined' && document.hidden) return; // Tiết kiệm request khi ẩn tab / khóa màn hình
+
+      fetch(CLOUD_API_BASE + '/api/arena/sync?pin=' + encodeURIComponent(cleanPin) + '&since=' + _lastSyncMsgId)
         .then(function (r) { return r.json(); })
         .then(function (res) {
           if (!res || !Array.isArray(res.data)) return;
-          // Sắp xếp theo id tăng dần để xử lý đúng thứ tự thời gian
-          var items = res.data.slice().sort(function (a, b) { return (a.id || 0) - (b.id || 0); });
-          items.forEach(function (item) {
-            if (!item || !item.name) return;
+          res.data.forEach(function (item) {
+            if (!item) return;
+            if (item.id && item.id > _lastSyncMsgId) {
+              _lastSyncMsgId = item.id;
+            }
             try {
-              var msg = JSON.parse(item.name);
+              var raw = item.msg || item.name;
+              var msg = typeof raw === 'string' ? JSON.parse(raw) : raw;
               if (msg && msg.msgId && !_processedMsgIds[msg.msgId]) {
                 handleIncomingSyncMessage(msg);
               }
@@ -245,7 +249,7 @@
           });
         })
         .catch(function () { });
-    }, 450);
+    }, 1000); // 1.000ms: mượt mà, giảm hơn 55% lượng request so với 450ms
   }
 
   function stopCloudPolling() {
@@ -256,6 +260,10 @@
   }
 
   function cleanupCloudRoomMessages() {
+    if (gameState.pin) {
+      var cleanPin = normalizePin(gameState.pin);
+      fetch(CLOUD_API_BASE + '/api/arena/sync?pin=' + encodeURIComponent(cleanPin), { method: 'DELETE' }).catch(function () { });
+    }
     var ids = _cloudRoomDeckIds.slice();
     _cloudRoomDeckIds = [];
     ids.forEach(function (id) {
@@ -1872,6 +1880,7 @@
   function startPublicRoomsPolling() {
     if (_publicRoomsPollInterval) clearInterval(_publicRoomsPollInterval);
     _publicRoomsPollInterval = setInterval(function () {
+      if (typeof document !== 'undefined' && document.hidden) return; // Tiết kiệm request khi ẩn tab
       if (gameState.role === 'player' && (gameState.status === 'config' || gameState.status === 'player_join')) {
         var joinView = document.getElementById('playerJoinView');
         if (joinView && joinView.style.display !== 'none') {

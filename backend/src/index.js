@@ -274,6 +274,176 @@ export default {
         });
       }
 
+      // ==================== ARENA REALTIME SYNC ENDPOINTS ====================
+
+      // POST /api/arena/sync - Lưu tin nhắn realtime cho phòng Arena (Siêu nhẹ, không JOIN)
+      if (path === '/api/arena/sync' && method === 'POST') {
+        const body = await request.json();
+        const pin = String(body.pin || body.user_id || '').replace(/^arena_sync_/, '').trim();
+        const msgStr = typeof body.msg === 'string' ? body.msg : JSON.stringify(body.msg || body.name || {});
+
+        if (!pin) {
+          return errorResponse('Missing pin', 400);
+        }
+
+        let msgId = Date.now();
+        if (env && env.DB) {
+          try {
+            const res = await env.DB.prepare(
+              'INSERT INTO arena_messages (pin, msg) VALUES (?, ?)'
+            ).bind(pin, msgStr).run();
+            msgId = res.meta.last_row_id;
+          } catch (dbErr) {
+            try {
+              await env.DB.prepare(
+                'CREATE TABLE IF NOT EXISTS arena_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, pin TEXT NOT NULL, msg TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)'
+              ).run();
+              const res2 = await env.DB.prepare(
+                'INSERT INTO arena_messages (pin, msg) VALUES (?, ?)'
+              ).bind(pin, msgStr).run();
+              msgId = res2.meta.last_row_id;
+            } catch (err2) {
+              console.error('Failed to insert arena_message:', err2);
+            }
+          }
+        }
+
+        return jsonResponse({ success: true, id: msgId, deck_id: msgId }, 201);
+      }
+
+      // GET /api/arena/sync?pin=...&since=... - Lấy tin nhắn mới của phòng (Chỉ lấy tin nhắn mới)
+      if (path === '/api/arena/sync' && method === 'GET') {
+        const pin = String(url.searchParams.get('pin') || url.searchParams.get('user_id') || '').replace(/^arena_sync_/, '').trim();
+        const sinceId = parseInt(url.searchParams.get('since')) || 0;
+
+        if (!pin) {
+          return errorResponse('Missing pin', 400);
+        }
+
+        if (env && env.DB) {
+          try {
+            const { results } = await env.DB.prepare(
+              'SELECT id, msg FROM arena_messages WHERE pin = ? AND id > ? ORDER BY id ASC LIMIT 100'
+            ).bind(pin, sinceId).all();
+
+            const formatted = (results || []).map(r => ({
+              id: r.id,
+              msg: r.msg,
+              name: r.msg
+            }));
+            return jsonResponse({ success: true, count: formatted.length, data: formatted });
+          } catch (dbErr) {
+            try {
+              await env.DB.prepare(
+                'CREATE TABLE IF NOT EXISTS arena_messages (id INTEGER PRIMARY KEY AUTOINCREMENT, pin TEXT NOT NULL, msg TEXT NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)'
+              ).run();
+            } catch (e) {}
+            return jsonResponse({ success: true, count: 0, data: [] });
+          }
+        }
+
+        return jsonResponse({ success: true, count: 0, data: [] });
+      }
+
+      // DELETE /api/arena/sync?pin=... - Dọn dẹp tin nhắn khi kết thúc phòng
+      if (path === '/api/arena/sync' && method === 'DELETE') {
+        const pin = String(url.searchParams.get('pin') || '').trim();
+        if (pin && env && env.DB) {
+          try {
+            await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
+          } catch (e) {}
+        }
+        return jsonResponse({ success: true, message: 'Arena messages cleaned' });
+      }
+
+      // POST /api/arena/rooms - Đăng ký / cập nhật phòng Arena
+      if (path === '/api/arena/rooms' && method === 'POST') {
+        const body = await request.json();
+        const pin = String(body.pin || '').trim();
+        const name = String(body.name || '').trim();
+        const isPublic = body.is_public ? 1 : 0;
+        const metaJson = typeof body.meta === 'string' ? body.meta : JSON.stringify(body.meta || body);
+
+        if (!pin) return errorResponse('Missing pin', 400);
+
+        if (env && env.DB) {
+          try {
+            await env.DB.prepare(`
+              INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json, updated_at)
+              VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            `).bind(pin, name, isPublic, metaJson).run();
+          } catch (e) {
+            try {
+              await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS arena_rooms (
+                  pin TEXT PRIMARY KEY,
+                  name TEXT NOT NULL,
+                  is_public INTEGER DEFAULT 0,
+                  meta_json TEXT NOT NULL,
+                  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+              `).run();
+              await env.DB.prepare(`
+                INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json, updated_at)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+              `).bind(pin, name, isPublic, metaJson).run();
+            } catch (err2) {}
+          }
+        }
+
+        return jsonResponse({ success: true, message: 'Room saved', pin });
+      }
+
+      // GET /api/arena/rooms - Lấy danh sách phòng công khai hoặc chi tiết phòng
+      if (path === '/api/arena/rooms' && method === 'GET') {
+        const pin = url.searchParams.get('pin');
+        if (env && env.DB) {
+          try {
+            if (pin) {
+              const { results } = await env.DB.prepare(
+                'SELECT * FROM arena_rooms WHERE pin = ?'
+              ).bind(pin).all();
+              if (results && results.length > 0) {
+                return jsonResponse({ success: true, data: results[0] });
+              }
+              return errorResponse('Room not found', 404);
+            }
+
+            const { results } = await env.DB.prepare(`
+              SELECT * FROM arena_rooms 
+              WHERE is_public = 1 
+              ORDER BY updated_at DESC 
+              LIMIT 30
+            `).all();
+
+            const rooms = (results || []).map(r => {
+              try {
+                return JSON.parse(r.meta_json);
+              } catch (e) {
+                return { pin: r.pin, name: r.name };
+              }
+            });
+
+            return jsonResponse({ success: true, count: rooms.length, data: rooms });
+          } catch (e) {
+            return jsonResponse({ success: true, count: 0, data: [] });
+          }
+        }
+        return jsonResponse({ success: true, count: 0, data: [] });
+      }
+
+      // DELETE /api/arena/rooms/:pin - Xóa phòng
+      if (path.startsWith('/api/arena/rooms/') && method === 'DELETE') {
+        const pin = path.split('/').pop();
+        if (pin && env && env.DB) {
+          try {
+            await env.DB.prepare('DELETE FROM arena_rooms WHERE pin = ?').bind(pin).run();
+            await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
+          } catch (e) {}
+        }
+        return jsonResponse({ success: true, message: 'Room removed' });
+      }
+
       // ==================== CUSTOM DECK ENDPOINTS ====================
 
       // GET /api/decks?user_id=... - Lấy danh sách bộ từ tự tạo
@@ -281,6 +451,51 @@ export default {
         const userId = url.searchParams.get('user_id');
         if (!userId) {
           return errorResponse('Missing user_id');
+        }
+
+        // Fast-path bypass for legacy arena callers (loại bỏ hoàn toàn LEFT JOIN):
+        if (userId.startsWith('arena_sync_')) {
+          const pin = userId.replace('arena_sync_', '');
+          if (env && env.DB) {
+            try {
+              const { results } = await env.DB.prepare(
+                'SELECT id, msg as name FROM arena_messages WHERE pin = ? ORDER BY id ASC LIMIT 100'
+              ).bind(pin).all();
+              return jsonResponse({ success: true, count: results.length, data: results });
+            } catch (e) {
+              return jsonResponse({ success: true, count: 0, data: [] });
+            }
+          }
+          return jsonResponse({ success: true, data: [] });
+        }
+
+        if (userId === 'arena_public_rooms') {
+          if (env && env.DB) {
+            try {
+              const { results } = await env.DB.prepare(
+                'SELECT pin as id, meta_json as name FROM arena_rooms WHERE is_public = 1 ORDER BY updated_at DESC LIMIT 30'
+              ).all();
+              return jsonResponse({ success: true, count: results.length, data: results });
+            } catch (e) {
+              return jsonResponse({ success: true, count: 0, data: [] });
+            }
+          }
+          return jsonResponse({ success: true, data: [] });
+        }
+
+        if (userId.startsWith('arena_meta_')) {
+          const pin = userId.replace('arena_meta_', '');
+          if (env && env.DB) {
+            try {
+              const { results } = await env.DB.prepare(
+                'SELECT pin as id, meta_json as name FROM arena_rooms WHERE pin = ?'
+              ).bind(pin).all();
+              return jsonResponse({ success: true, count: results.length, data: results });
+            } catch (e) {
+              return jsonResponse({ success: true, count: 0, data: [] });
+            }
+          }
+          return jsonResponse({ success: true, data: [] });
         }
 
         if (!env || !env.DB) {
@@ -312,11 +527,52 @@ export default {
 
       // POST /api/decks - Tạo bộ từ mới
       if (path === '/api/decks' && method === 'POST') {
+        const body = await request.json();
+        const { user_id, name, words } = body;
+
+        // Fast-path bypass for legacy arena callers:
+        if (user_id && user_id.startsWith('arena_sync_')) {
+          const pin = user_id.replace('arena_sync_', '');
+          const msgStr = typeof name === 'string' ? name : JSON.stringify(name || {});
+          let msgId = Date.now();
+          if (env && env.DB) {
+            try {
+              const res = await env.DB.prepare('INSERT INTO arena_messages (pin, msg) VALUES (?, ?)').bind(pin, msgStr).run();
+              msgId = res.meta.last_row_id;
+            } catch (e) {}
+          }
+          return jsonResponse({ success: true, deck_id: msgId, id: msgId }, 201);
+        }
+
+        if (user_id && user_id.startsWith('arena_meta_')) {
+          const pin = user_id.replace('arena_meta_', '');
+          const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
+          if (env && env.DB) {
+            try {
+              await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, 0, ?)').bind(pin, pin, metaStr).run();
+            } catch (e) {}
+          }
+          return jsonResponse({ success: true, deck_id: pin }, 201);
+        }
+
+        if (user_id === 'arena_public_rooms') {
+          let pin = '';
+          try {
+            const parsed = typeof name === 'string' ? JSON.parse(name) : name;
+            pin = parsed.pin || '';
+          } catch (e) {}
+          const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
+          if (pin && env && env.DB) {
+            try {
+              await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, 1, ?)').bind(pin, pin, metaStr).run();
+            } catch (e) {}
+          }
+          return jsonResponse({ success: true, deck_id: pin }, 201);
+        }
+
         if (!env || !env.DB) {
           return errorResponse('D1 Database not configured for deck creation', 503);
         }
-        const body = await request.json();
-        const { user_id, name, words } = body;
 
         if (!user_id || !name || !Array.isArray(words)) {
           return errorResponse('Missing required fields');
@@ -466,6 +722,9 @@ export default {
         }
         const deckId = path.split('/').pop();
         await env.DB.prepare('DELETE FROM custom_decks WHERE id = ?').bind(deckId).run();
+        try {
+          await env.DB.prepare('DELETE FROM arena_messages WHERE id = ?').bind(deckId).run();
+        } catch (e) {}
         return jsonResponse({ success: true, message: 'Deck deleted' });
       }
 
@@ -484,6 +743,8 @@ export default {
             search: '/api/search?q=...',
             levels: '/api/levels',
             decks: '/api/decks',
+            arena_sync: '/api/arena/sync',
+            arena_rooms: '/api/arena/rooms',
           },
         });
       }
