@@ -2076,6 +2076,7 @@
       gameState.phase5AutoTimer = null;
     }
     if (gameState.soloAutoAdvanceTimer) {
+      clearTimeout(gameState.soloAutoAdvanceTimer);
       clearInterval(gameState.soloAutoAdvanceTimer);
       gameState.soloAutoAdvanceTimer = null;
     }
@@ -2552,16 +2553,16 @@
       })
     });
 
-    // Tự động đếm ngược 5 giây để chuyển tiếp sang Pha 5 (Bảng Xếp Hạng Đấu Thủ)
+    // Tự động đếm ngược 3 giây để chuyển tiếp sang Pha 5 (Bảng Xếp Hạng Đấu Thủ)
     if (gameState.phase4AutoTimer) {
       clearInterval(gameState.phase4AutoTimer);
       gameState.phase4AutoTimer = null;
     }
     var goP5Btn = document.getElementById('btnGoPhase5Leaderboard');
-    var p4SecondsLeft = 5;
+    var p4SecondsLeft = 3;
     function updateP4ButtonLabel() {
       if (goP5Btn) {
-        goP5Btn.innerHTML = '<span>Bảng xếp hạng sau ' + p4SecondsLeft + 's (Bấm để qua ngay) ➔</span>';
+        goP5Btn.innerHTML = '<span>⏳ Tự động xem Bảng xếp hạng sau ' + p4SecondsLeft + 's...</span>';
       }
     }
     updateP4ButtonLabel();
@@ -2685,18 +2686,18 @@
       })
     });
 
-    // Tự động đếm ngược 5 giây để chuyển tiếp sang Câu tiếp theo (hoặc Podium)
+    // Tự động đếm ngược 3 giây để chuyển tiếp sang Câu tiếp theo (hoặc Podium)
     if (gameState.phase5AutoTimer) {
       clearInterval(gameState.phase5AutoTimer);
       gameState.phase5AutoTimer = null;
     }
-    var p5SecondsLeft = 5;
+    var p5SecondsLeft = 3;
     function updateP5ButtonLabel() {
       if (continueBtn) {
         if (isLast) {
-          continueBtn.innerHTML = '<span>Tổng kết Bục Vinh Quang sau ' + p5SecondsLeft + 's 🏆 (Bấm để qua ngay)</span>';
+          continueBtn.innerHTML = '<span>🏆 Tự động vinh danh sau ' + p5SecondsLeft + 's...</span>';
         } else {
-          continueBtn.innerHTML = '<span>Câu tiếp theo sau ' + p5SecondsLeft + 's (Câu ' + (gameState.currentQuestionIndex + 2) + ') ➔ (Bấm để qua ngay)</span>';
+          continueBtn.innerHTML = '<span>⏳ Tự động qua Câu ' + (gameState.currentQuestionIndex + 2) + ' sau ' + p5SecondsLeft + 's...</span>';
         }
       }
     }
@@ -3285,13 +3286,16 @@
           streakPill.style.display = 'none';
         }
       }
+      var isLast = (gameState.currentQuestionIndex >= gameState.totalQuestions - 1);
+
       if (rankStatus) {
         rankStatus.textContent = gameState.isSoloRunner
-          ? 'Tuyệt vời! Bấm Câu tiếp theo bên dưới để làm tiếp.'
+          ? (isLast ? 'Xuất sắc! Đang tổng kết Bảng xếp hạng...' : 'Tuyệt vời! Tự động qua câu mới sau 2.5s...')
           : 'Tuyệt vời! Hãy nhìn lên màn hình lớn để xem biểu đồ thống kê.';
       }
       if (!isRestore) SFX.correct();
     } else {
+      var isLast = (gameState.currentQuestionIndex >= gameState.totalQuestions - 1);
       var correctLetter = p.correctLetter || OPTION_LETTERS[p.correctIndex] || 'A';
       if (resultIcon) resultIcon.textContent = gameState.playerLastChoice === -1 ? '⏰' : '😢';
       if (resultText) {
@@ -3303,63 +3307,70 @@
       if (streakPill) streakPill.style.display = 'none';
       if (rankStatus) {
         rankStatus.textContent = gameState.isSoloRunner
-          ? 'Đừng nản chí! Bấm Câu tiếp theo bên dưới để gỡ điểm nhé.'
+          ? (isLast ? 'Hết trận rồi! Đang tổng kết Bảng xếp hạng...' : 'Đừng nản chí! Tự động qua câu mới sau 2.5s...')
           : 'Đừng nản chí, chuẩn bị gỡ điểm ở câu tiếp theo nhé!';
       }
       if (!isRestore) SFX.wrong();
     }
 
-    // Nút "Câu tiếp theo" dành cho người chơi phòng công khai (Solo)
+    // Cơ chế tự động chuyển câu phòng công khai (Solo): Hoàn toàn tự động, KHÔNG CẦN BẤM NÚT CÂU TIẾP THEO
     var soloNextBtn = document.getElementById('playerSoloNextBtn');
-    if (soloNextBtn) {
-      if (gameState.isSoloRunner) {
-        var isLast = (gameState.currentQuestionIndex >= gameState.totalQuestions - 1);
-        soloNextBtn.style.display = 'inline-flex';
-        var soloSecLeft = 4;
-        function updateSoloBtnText() {
-          if (soloNextBtn) {
-            soloNextBtn.innerHTML = isLast
-              ? '<span>Tổng kết sau ' + soloSecLeft + 's 🏆 (Bấm để qua ngay)</span>'
-              : ('<span>Câu tiếp sau ' + soloSecLeft + 's (Câu ' + (gameState.currentQuestionIndex + 2) + '/' + gameState.totalQuestions + ') ➔</span>');
-          }
-        }
-        updateSoloBtnText();
-        if (gameState.soloAutoAdvanceTimer) {
-          clearInterval(gameState.soloAutoAdvanceTimer);
-          gameState.soloAutoAdvanceTimer = null;
-        }
-        gameState.soloAutoAdvanceTimer = setInterval(function () {
-          soloSecLeft--;
-          if (soloSecLeft <= 0) {
-            if (gameState.soloAutoAdvanceTimer) {
-              clearInterval(gameState.soloAutoAdvanceTimer);
-              gameState.soloAutoAdvanceTimer = null;
-            }
-            soloNextBtn.style.display = 'none';
-            if (isLast) {
-              finishPublicSoloGame();
-            } else {
-              runPublicSoloQuestion(gameState.currentQuestionIndex + 1);
-            }
-          } else {
-            updateSoloBtnText();
-          }
-        }, 1000);
+    if (soloNextBtn) soloNextBtn.style.display = 'none';
 
-        soloNextBtn.onclick = function () {
+    var progressWrap = document.getElementById('soloAutoProgressWrap');
+    var progressFill = document.getElementById('soloAutoProgressFill');
+    var progressText = document.getElementById('soloAutoProgressText');
+
+    if (gameState.isSoloRunner) {
+      if (progressWrap) progressWrap.style.display = 'flex';
+      if (progressText) {
+        progressText.textContent = isLast ? '⏳ Tự động tổng kết sau 2.5s...' : '⏳ Tự động qua câu mới sau 2.5s...';
+      }
+      if (progressFill) {
+        progressFill.style.transition = 'none';
+        progressFill.style.width = '100%';
+        void progressFill.offsetHeight;
+        progressFill.style.transition = 'width 2.5s linear';
+        progressFill.style.width = '0%';
+      }
+
+      if (gameState.soloAutoAdvanceTimer) {
+        clearTimeout(gameState.soloAutoAdvanceTimer);
+        gameState.soloAutoAdvanceTimer = null;
+      }
+
+      gameState.soloAutoAdvanceTimer = setTimeout(function () {
+        gameState.soloAutoAdvanceTimer = null;
+        if (progressWrap) progressWrap.style.display = 'none';
+        if (isLast) {
+          finishPublicSoloGame();
+        } else {
+          runPublicSoloQuestion(gameState.currentQuestionIndex + 1);
+        }
+      }, 2500);
+
+      // Cho phép chạm bất kỳ đâu trên màn hình kết quả để qua ngay nếu không muốn đợi
+      if (resultOverlay) {
+        resultOverlay.style.cursor = 'pointer';
+        resultOverlay.onclick = function () {
+          if (!gameState.isSoloRunner) return;
           if (gameState.soloAutoAdvanceTimer) {
-            clearInterval(gameState.soloAutoAdvanceTimer);
+            clearTimeout(gameState.soloAutoAdvanceTimer);
             gameState.soloAutoAdvanceTimer = null;
           }
-          soloNextBtn.style.display = 'none';
+          if (progressWrap) progressWrap.style.display = 'none';
           if (isLast) {
             finishPublicSoloGame();
           } else {
             runPublicSoloQuestion(gameState.currentQuestionIndex + 1);
           }
         };
-      } else {
-        soloNextBtn.style.display = 'none';
+      }
+    } else {
+      if (progressWrap) progressWrap.style.display = 'none';
+      if (resultOverlay) {
+        resultOverlay.style.cursor = 'default';
+        resultOverlay.onclick = null;
       }
     }
   }
@@ -3458,9 +3469,12 @@
 
   function runPublicSoloQuestion(qIdx) {
     if (gameState.soloAutoAdvanceTimer) {
+      clearTimeout(gameState.soloAutoAdvanceTimer);
       clearInterval(gameState.soloAutoAdvanceTimer);
       gameState.soloAutoAdvanceTimer = null;
     }
+    var progressWrap = document.getElementById('soloAutoProgressWrap');
+    if (progressWrap) progressWrap.style.display = 'none';
 
     if (qIdx >= gameState.totalQuestions || qIdx >= gameState.questions.length) {
       finishPublicSoloGame();
@@ -3569,9 +3583,12 @@
 
   function finishPublicSoloGame() {
     if (gameState.soloAutoAdvanceTimer) {
+      clearTimeout(gameState.soloAutoAdvanceTimer);
       clearInterval(gameState.soloAutoAdvanceTimer);
       gameState.soloAutoAdvanceTimer = null;
     }
+    var progressWrap = document.getElementById('soloAutoProgressWrap');
+    if (progressWrap) progressWrap.style.display = 'none';
 
     gameState.status = 'player_game';
     gameState.isSoloRunner = false;

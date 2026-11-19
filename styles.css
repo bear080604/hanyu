@@ -8799,10 +8799,13 @@ details[open] summary {
 }
 
 @keyframes pulseButton {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 4px 14px rgba(192, 57, 43, 0.35);
   }
+
   50% {
     transform: scale(1.025);
     box-shadow: 0 6px 22px rgba(192, 57, 43, 0.55);
@@ -8832,6 +8835,42 @@ details[open] summary {
 .btn-solo-next-q:hover {
   background: #f3f4f6;
   transform: translateY(-1px);
+}
+
+.solo-auto-progress-wrap {
+  margin-top: 18px;
+  width: 100%;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.solo-auto-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.solo-auto-progress-fill {
+  height: 100%;
+  width: 100%;
+  background: #ffffff;
+  border-radius: 999px;
+  transform-origin: left center;
+}
+
+.solo-auto-progress-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.2px;
 }
 
 .solo-finish-actions {
