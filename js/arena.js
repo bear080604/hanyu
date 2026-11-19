@@ -333,6 +333,7 @@
   function initArena() {
     loadSavedPlayerProfile();
     populateDeckOptions();
+    syncCustomDecksFromCloud();
     bindEvents();
     setupCrossTabSync();
     checkUrlParams();
@@ -342,6 +343,93 @@
         populateDeckOptions();
       }
     }, 900);
+  }
+
+  function normalizeCloudWord(w) {
+    if (!w) return w;
+    var enriched = {
+      h: w.h || w.hanzi || '',
+      p: w.p || w.pinyin || '',
+      m: w.m || w.meaning || '',
+      ex: w.ex || w.e || w.example || '',
+      exp: w.exp || w.example_pinyin || '',
+      exm: w.exm || w.example_meaning || ''
+    };
+    if (typeof window.enrichWordWithSentence === 'function') {
+      return window.enrichWordWithSentence(enriched);
+    }
+    return enriched;
+  }
+
+  function syncCustomDecksFromCloud() {
+    fetch(CLOUD_API_BASE + '/api/decks?user_id=default_user')
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.success || !Array.isArray(res.data)) return;
+        var localDecks = [];
+        try {
+          localDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
+        } catch (e) {
+          localDecks = [];
+        }
+
+        var cloudIds = {};
+        var cloudDecks = res.data.map(function (d) {
+          cloudIds[d.id] = true;
+          var matchLocal = localDecks.find(function (ld) {
+            return String(ld.cloudId || ld.id) === String(d.id) ||
+              (ld.name === d.name && Array.isArray(ld.words) && ld.words.length > 0);
+          });
+          var cachedWords = (matchLocal && Array.isArray(matchLocal.words)) ? matchLocal.words : [];
+          return {
+            id: d.id,
+            cloudId: d.id,
+            name: d.name,
+            words: cachedWords,
+            wordCount: Number(d.word_count) || cachedWords.length || 0,
+            createdAt: (d.created_at || '').split('T')[0] || (matchLocal && matchLocal.createdAt) || ''
+          };
+        });
+
+        var unsyncedLocal = localDecks.filter(function (ld) {
+          return !ld.cloudId && !cloudIds[ld.id] && !cloudDecks.some(function (cd) { return cd.name === ld.name; });
+        });
+
+        var merged = unsyncedLocal.concat(cloudDecks);
+        try {
+          localStorage.setItem('wq_custom_decks', JSON.stringify(merged));
+        } catch (e) { }
+
+        populateDeckOptions();
+
+        // Tự động tải ngầm danh sách từ vựng (words) của các bộ từ tự tạo chưa cache words
+        merged.forEach(function (deckItem) {
+          var targetId = deckItem.cloudId || deckItem.id;
+          if (targetId && (!Array.isArray(deckItem.words) || deckItem.words.length === 0) && (deckItem.wordCount > 0)) {
+            fetch(CLOUD_API_BASE + '/api/decks/' + encodeURIComponent(targetId))
+              .then(function (r) { return r.json(); })
+              .then(function (detailRes) {
+                if (detailRes && detailRes.success && detailRes.data && Array.isArray(detailRes.data.words)) {
+                  var normalizedWords = detailRes.data.words.map(normalizeCloudWord);
+                  try {
+                    var currentList = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
+                    var target = currentList.find(function (x) {
+                      return String(x.cloudId || x.id) === String(targetId);
+                    });
+                    if (target) {
+                      target.words = normalizedWords;
+                      target.wordCount = normalizedWords.length;
+                      localStorage.setItem('wq_custom_decks', JSON.stringify(currentList));
+                      populateDeckOptions();
+                    }
+                  } catch (e) { }
+                }
+              })
+              .catch(function () { });
+          }
+        });
+      })
+      .catch(function () { });
   }
 
   function loadSavedPlayerProfile() {
@@ -378,44 +466,36 @@
     select.innerHTML = '';
 
     var hasPendingCustom = false;
+    var pendingDeckName = '';
     try {
       var pendingStr = localStorage.getItem('wq_pending_deck');
       if (pendingStr) {
         var pending = JSON.parse(pendingStr);
-        if (pending && Array.isArray(pending.words) && pending.words.length >= 4) {
+        if (pending && Array.isArray(pending.words) && pending.words.length >= 1) {
+          pendingDeckName = String(pending.name || '').trim();
           var optPending = document.createElement('option');
           optPending.value = 'pending_custom';
-          optPending.textContent = '📦 ' + (pending.name || 'Bộ từ đang chọn') + ' (' + pending.words.length + ' từ)';
+          optPending.textContent = '📦 ' + (pendingDeckName || 'Bộ từ đang chọn') + ' (' + pending.words.length + ' từ)';
           select.appendChild(optPending);
           hasPendingCustom = true;
         }
       }
     } catch (e) { }
 
-    if (typeof DATA !== 'undefined') {
-      Object.keys(DATA).forEach(function (lvl) {
-        if (lvl === 'custom') return;
-        var count = DATA[lvl] ? DATA[lvl].length : 0;
-        if (count >= 4) {
-          var opt = document.createElement('option');
-          opt.value = lvl;
-          opt.textContent = lvl + ' (' + count + ' từ)';
-          select.appendChild(opt);
-        }
-      });
-    }
-
+    // 1. Hiển thị TẤT CẢ các bộ từ trong mục Tự tạo (wq_custom_decks - bao gồm cả Cloud & Local)
     try {
       var customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
       if (Array.isArray(customDecks) && customDecks.length > 0) {
         var optGroup = document.createElement('optgroup');
-        optGroup.label = 'Bộ từ tự tạo đã lưu';
+        optGroup.label = '📚 Bộ từ Tự tạo đã lưu';
         customDecks.forEach(function (cd) {
-          var count = cd.words ? cd.words.length : 0;
-          if (count >= 4) {
+          var count = (Array.isArray(cd.words) && cd.words.length > 0)
+            ? cd.words.length
+            : (Number(cd.wordCount) || Number(cd.word_count) || 0);
+          if (count >= 1) {
             var opt = document.createElement('option');
-            opt.value = 'custom:' + (cd.id || cd.name);
-            opt.textContent = cd.name + ' (' + count + ' từ)';
+            opt.value = 'custom:' + (cd.cloudId || cd.id || cd.name);
+            opt.textContent = '📘 ' + cd.name + ' (' + count + ' từ)';
             optGroup.appendChild(opt);
           }
         });
@@ -425,9 +505,10 @@
       }
     } catch (e) { }
 
+    // 2. Từ yêu thích
     try {
       var favs = JSON.parse(localStorage.getItem('wq_favorites')) || [];
-      if (Array.isArray(favs) && favs.length >= 4) {
+      if (Array.isArray(favs) && favs.length >= 1) {
         var optFav = document.createElement('option');
         optFav.value = 'favorites';
         optFav.textContent = '⭐ Từ yêu thích (' + favs.length + ' từ)';
@@ -435,10 +516,28 @@
       }
     } catch (e) { }
 
+    // 3. Các cấp độ HSK 1 - 6 mặc định
+    if (typeof DATA !== 'undefined') {
+      var hskGroup = document.createElement('optgroup');
+      hskGroup.label = '📖 Giáo trình HSK tiêu chuẩn';
+      Object.keys(DATA).forEach(function (lvl) {
+        if (lvl === 'custom') return;
+        var count = DATA[lvl] ? DATA[lvl].length : 0;
+        if (count >= 4) {
+          var opt = document.createElement('option');
+          opt.value = lvl;
+          opt.textContent = lvl + ' (' + count + ' từ)';
+          hskGroup.appendChild(opt);
+        }
+      });
+      if (hskGroup.children.length > 0) {
+        select.appendChild(hskGroup);
+      }
+    }
+
     if (hasPendingCustom && localStorage.getItem('wq_pending_mode') === 'arena') {
       select.value = 'pending_custom';
       localStorage.removeItem('wq_pending_mode');
-      // Nếu chuyển sang từ trang Tự tạo và đã đăng nhập Admin thì mở thẳng cấu hình Admin
       if (isAdminLoggedIn()) {
         switchRoleTab('host');
       }
@@ -527,8 +626,12 @@
       var customId = deckVal.replace('custom:', '');
       try {
         var customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
-        var found = customDecks.find(function (d) { return String(d.id || d.name) === customId; });
-        return (found && found.words) ? found.words : [];
+        var found = customDecks.find(function (d) {
+          return String(d.cloudId || d.id || d.name) === customId ||
+            String(d.id) === customId ||
+            String(d.name) === customId;
+        });
+        return (found && Array.isArray(found.words)) ? found.words : [];
       } catch (e) {
         return [];
       }
@@ -542,8 +645,32 @@
     return [];
   }
 
+  function fetchCustomDeckWordsFromCloud(customId) {
+    return fetch(CLOUD_API_BASE + '/api/decks/' + encodeURIComponent(customId))
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res && res.success && res.data && Array.isArray(res.data.words) && res.data.words.length > 0) {
+          var normalizedWords = res.data.words.map(normalizeCloudWord);
+          try {
+            var currentList = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
+            var target = currentList.find(function (d) {
+              return String(d.cloudId || d.id || d.name) === String(customId) || String(d.id) === String(customId);
+            });
+            if (target) {
+              target.words = normalizedWords;
+              target.wordCount = normalizedWords.length;
+              localStorage.setItem('wq_custom_decks', JSON.stringify(currentList));
+            }
+          } catch (e) { }
+          return normalizedWords;
+        }
+        return [];
+      })
+      .catch(function () { return []; });
+  }
+
   // ==================== ADMIN: TẠO PHÒNG & SINH BỘ ĐỀ ====================
-  function createRoom() {
+  async function createRoom() {
     if (!isAdminLoggedIn()) {
       showView('adminLoginView');
       return;
@@ -557,9 +684,18 @@
     var deckVal = deckSelect ? deckSelect.value : 'HSK 1';
     var words = getWordsFromDeckVal(deckVal);
 
-    if (!words || words.length < 4) {
+    // Nếu chọn bộ từ Tự tạo trên Cloud mà words chưa kịp tải vào cache thì tải ngay lập tức
+    if ((!words || words.length === 0) && deckVal && deckVal.indexOf('custom:') === 0) {
+      var customId = deckVal.replace('custom:', '');
       if (typeof showToast === 'function') {
-        showToast('Bộ từ này cần ít nhất 4 từ vựng để tạo 4 phương án A, B, C, D!', 'error');
+        showToast('⏳ Đang tải danh sách từ vựng của bộ tự tạo...', 'info');
+      }
+      words = await fetchCustomDeckWordsFromCloud(customId);
+    }
+
+    if (!words || words.length === 0) {
+      if (typeof showToast === 'function') {
+        showToast('Bộ từ này đang trống, chưa có từ vựng nào!', 'error');
       }
       return;
     }
@@ -611,6 +747,7 @@
 
     var selectedWords = words.slice(0, gameState.totalQuestions);
     var mode = gameState.gameMode;
+    var fallbackPool = (typeof DATA !== 'undefined' && Array.isArray(DATA['HSK 1'])) ? DATA['HSK 1'] : [];
 
     gameState.questions = selectedWords.map(function (w, qIdx) {
       var cleanH = cleanHanzi(w.h);
@@ -626,6 +763,14 @@
       }
 
       var distractors = words.filter(function (other) { return cleanHanzi(other.h) !== cleanH; });
+      if (distractors.length < 3 && fallbackPool.length > 0) {
+        var extraPool = fallbackPool.filter(function (fw) {
+          var fh = cleanHanzi(fw.h);
+          return fh !== cleanH && !distractors.some(function (d) { return cleanHanzi(d.h) === fh; });
+        });
+        shuffleWithRng(extraPool, rng);
+        distractors = distractors.concat(extraPool.slice(0, 3 - distractors.length));
+      }
       shuffleWithRng(distractors, rng);
       var wrongPicks = distractors.slice(0, 3);
 

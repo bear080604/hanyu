@@ -111,6 +111,21 @@
           customHistory = unsyncedLocal.concat(cloudDecks);
           localStorage.setItem('wq_custom_decks', JSON.stringify(customHistory));
           renderCustomHistory();
+
+          // Tự động tải ngầm từ vựng chi tiết cho các bộ từ trên Cloud chưa có words trong localStorage
+          customHistory.forEach(function (deckItem) {
+            var targetId = deckItem.cloudId || deckItem.id;
+            if (targetId && (!Array.isArray(deckItem.words) || deckItem.words.length === 0) && (deckItem.wordCount > 0)) {
+              window.WeiQuanAPI.getDeckById(targetId).then(function (detailRes) {
+                if (detailRes && detailRes.success && detailRes.data && Array.isArray(detailRes.data.words) && detailRes.data.words.length > 0) {
+                  deckItem.words = detailRes.data.words;
+                  deckItem.wordCount = detailRes.data.words.length;
+                  saveCustomHistory();
+                  renderCustomHistory();
+                }
+              }).catch(function () { });
+            }
+          });
         }
       }).catch(function (err) {
         console.warn('⚠️ Không thể load decks từ cloud:', err);

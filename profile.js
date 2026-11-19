@@ -90,34 +90,34 @@
 
         modalBody.innerHTML =
           '<div class="profile-admin-logged">' +
-            '<div class="profile-admin-header">' +
-              '<div class="profile-admin-avatar">👑</div>' +
-              '<div class="profile-admin-meta">' +
-                '<div class="profile-admin-role-badge">Quản trị viên hệ thống</div>' +
-                '<h3 class="profile-admin-name">' + adminUser + '</h3>' +
-                '<p class="profile-admin-sub">Đã cấp quyền Tạo phòng &amp; Điều khiển Đấu trường Kahoot</p>' +
-              '</div>' +
-            '</div>' +
+          '<div class="profile-admin-header">' +
+          '<div class="profile-admin-avatar">👑</div>' +
+          '<div class="profile-admin-meta">' +
+          '<div class="profile-admin-role-badge">Quản trị viên hệ thống</div>' +
+          '<h3 class="profile-admin-name">' + adminUser + '</h3>' +
+          '<p class="profile-admin-sub">Đã cấp quyền Tạo phòng &amp; Điều khiển Đấu trường Kahoot</p>' +
+          '</div>' +
+          '</div>' +
 
-            '<div class="profile-admin-stats">' +
-              '<div class="profile-mini-stat">' +
-                '<span class="p-stat-label">Từ đã học</span>' +
-                '<span class="p-stat-val">' + learnedCount + ' từ</span>' +
-              '</div>' +
-              '<div class="profile-mini-stat">' +
-                '<span class="p-stat-label">Từ yêu thích</span>' +
-                '<span class="p-stat-val">' + favorites.length + ' từ</span>' +
-              '</div>' +
-            '</div>' +
+          '<div class="profile-admin-stats">' +
+          '<div class="profile-mini-stat">' +
+          '<span class="p-stat-label">Từ đã học</span>' +
+          '<span class="p-stat-val">' + learnedCount + ' từ</span>' +
+          '</div>' +
+          '<div class="profile-mini-stat">' +
+          '<span class="p-stat-label">Từ yêu thích</span>' +
+          '<span class="p-stat-val">' + favorites.length + ' từ</span>' +
+          '</div>' +
+          '</div>' +
 
-            '<div class="profile-admin-actions">' +
-              '<button type="button" class="btn btn-hero-primary" id="modalGoArenaHostBtn" style="width:100%;">' +
-                '<span>🎮 ' + (onArenaPage ? 'Mở Bảng Tạo & Điều Khiển Trò Chơi' : 'Đi tới Đấu Trường (Tạo Trò Chơi)') + '</span>' +
-              '</button>' +
-              '<button type="button" class="btn btn-secondary" id="modalAdminLogoutBtn" style="width:100%;">' +
-                '<span>Đăng xuất tài khoản Admin</span>' +
-              '</button>' +
-            '</div>' +
+          '<div class="profile-admin-actions">' +
+          '<button type="button" class="btn btn-hero-primary" id="modalGoArenaHostBtn" style="width:100%;">' +
+          '<span>🎮 ' + (onArenaPage ? 'Mở Bảng Tạo & Điều Khiển Trò Chơi' : 'Đi tới Đấu Trường (Tạo Trò Chơi)') + '</span>' +
+          '</button>' +
+          '<button type="button" class="btn btn-secondary" id="modalAdminLogoutBtn" style="width:100%;">' +
+          '<span>Đăng xuất tài khoản Admin</span>' +
+          '</button>' +
+          '</div>' +
           '</div>';
 
         var goBtn = document.getElementById('modalGoArenaHostBtn');
@@ -147,21 +147,21 @@
 
         modalBody.innerHTML =
           '<form id="profileAdminLoginForm" class="profile-login-form" onsubmit="return false;">' +
-            '<div class="arena-form-group">' +
-              '<label class="arena-label" for="profAdminUser">Tài khoản:</label>' +
-              '<input type="text" id="profAdminUser" class="auth-input" placeholder="Nhập tài khoản" autocomplete="username">' +
-            '</div>' +
+          '<div class="arena-form-group">' +
+          '<label class="arena-label" for="profAdminUser">Tài khoản:</label>' +
+          '<input type="text" id="profAdminUser" class="auth-input" placeholder="Nhập tài khoản" autocomplete="username">' +
+          '</div>' +
 
-            '<div class="arena-form-group">' +
-              '<label class="arena-label" for="profAdminPass">Mật khẩu:</label>' +
-              '<input type="password" id="profAdminPass" class="auth-input" placeholder="Nhập mật khẩu" autocomplete="current-password">' +
-            '</div>' +
+          '<div class="arena-form-group">' +
+          '<label class="arena-label" for="profAdminPass">Mật khẩu:</label>' +
+          '<input type="password" id="profAdminPass" class="auth-input" placeholder="Nhập mật khẩu" autocomplete="current-password">' +
+          '</div>' +
 
-            '<div id="profLoginError" class="profile-login-error" style="display:none;">Sai tài khoản hoặc mật khẩu!</div>' +
+          '<div id="profLoginError" class="profile-login-error" style="display:none;">Sai tài khoản hoặc mật khẩu!</div>' +
 
-            '<button type="submit" class="btn btn-hero-primary" style="width:100%; margin-top:4px;">' +
-              '<span>Đăng nhập</span>' +
-            '</button>' +
+          '<button type="submit" class="btn btn-hero-primary" style="width:100%; margin-top:4px;">' +
+          '<span>Đăng nhập</span>' +
+          '</button>' +
           '</form>';
 
         var form = document.getElementById('profileAdminLoginForm');
