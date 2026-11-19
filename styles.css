@@ -7395,6 +7395,41 @@ details[open] summary {
   border-color: rgba(245, 158, 11, 0.3);
 }
 
+.arena-rt-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  transition: all 0.25s ease;
+}
+
+.arena-rt-badge-ws {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+:root:not(.light-theme) .arena-rt-badge-ws {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+}
+
+.arena-rt-badge-http {
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+:root:not(.light-theme) .arena-rt-badge-http {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
 .player-room-access-tag {
   display: inline-flex;
   align-items: center;

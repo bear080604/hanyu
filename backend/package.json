@@ -13,7 +13,12 @@
     "db:seed:remote": "wrangler d1 execute weiquan_hsk --remote --file=./seed.sql",
     "db:seed:decks": "wrangler d1 execute weiquan_hsk --remote --file=./seed_custom_decks.sql"
   },
-  "keywords": ["cloudflare", "workers", "d1", "hsk"],
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "d1",
+    "hsk"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {

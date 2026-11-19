@@ -1,0 +1,16 @@
+{
+  "name": "hanyu-arena-partykit",
+  "version": "1.0.0",
+  "description": "PartyKit Real-time WebSocket server for Hanyu Arena",
+  "main": "server.js",
+  "scripts": {
+    "dev": "partykit dev",
+    "deploy": "partykit deploy"
+  },
+  "keywords": ["partykit", "cloudflare", "websocket", "realtime", "arena"],
+  "author": "bear080604",
+  "license": "MIT",
+  "devDependencies": {
+    "partykit": "^0.0.108"
+  }
+}

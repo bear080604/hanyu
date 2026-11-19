@@ -13,6 +13,16 @@
   'use strict';
 
   var CLOUD_API_BASE = 'https://hanyu.nhannguyen2005111.workers.dev';
+  var DEFAULT_PARTYKIT_HOST = 'hanyu-arena.bear080604.partykit.dev';
+  function getPartyKitHost() {
+    try {
+      var custom = localStorage.getItem('wq_partykit_host');
+      if (custom && custom.trim()) {
+        return custom.trim().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      }
+    } catch (e) { }
+    return DEFAULT_PARTYKIT_HOST;
+  }
   var OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 
   // ==================== WEB AUDIO SOUND EFFECTS ====================
@@ -150,6 +160,7 @@
 
   function logoutAdmin() {
     stopCloudPolling();
+    disconnectPartyKit();
     cleanupCloudRoomMessages();
     gameState.status = 'config';
     gameState.role = 'player';
@@ -201,8 +212,19 @@
       localStorage.setItem('wq_arena_sync', JSON.stringify(msg));
     } catch (e) { }
 
-    // 3. Cloudflare Worker D1 Sync (Cho điện thoại 4G/WiFi khác thiết bị)
-    if (syncToCloud !== false && payload && payload.pin) {
+    // 3. WebSocket Realtime qua PartyKit (<20ms, 0 request HTTP/D1)
+    var sentViaWs = false;
+    if (_partySocket && _partySocket.readyState === WebSocket.OPEN) {
+      try {
+        _partySocket.send(JSON.stringify(msg));
+        sentViaWs = true;
+      } catch (err) {
+        sentViaWs = false;
+      }
+    }
+
+    // 4. Cloudflare Worker D1 Sync (Dự phòng khi chưa có WebSocket hoặc WebSocket bị ngắt)
+    if (!sentViaWs && syncToCloud !== false && payload && payload.pin) {
       var cleanPin = normalizePin(payload.pin);
       fetch(CLOUD_API_BASE + '/api/arena/sync', {
         method: 'POST',
@@ -217,6 +239,136 @@
         }
       }).catch(function () { });
     }
+  }
+
+  // ==================== PARTYKIT REAL-TIME WEBSOCKET (DUAL-MODE) ====================
+  var _partySocket = null;
+  var _wsConnected = false;
+  var _wsReconnectTimer = null;
+  var _wsCurrentPin = null;
+
+  function updateRealtimeBadge(isWs) {
+    var hostBadge = document.getElementById('arenaRealtimeStatusBadge');
+    if (hostBadge) {
+      if (isWs) {
+        hostBadge.textContent = '⚡ WebSocket (PartyKit)';
+        hostBadge.className = 'arena-rt-badge arena-rt-badge-ws';
+        hostBadge.title = 'Đang dùng WebSocket siêu tốc (<20ms), 0 request HTTP';
+      } else {
+        hostBadge.textContent = '🔄 HTTP Smart Poll';
+        hostBadge.className = 'arena-rt-badge arena-rt-badge-http';
+        hostBadge.title = 'Đang dùng HTTP Polling dự phòng';
+      }
+    }
+    var playerBadge = document.getElementById('playerRealtimeBadge');
+    if (playerBadge) {
+      playerBadge.style.display = 'inline-flex';
+      if (isWs) {
+        playerBadge.textContent = '⚡ WebSocket';
+        playerBadge.className = 'arena-rt-badge arena-rt-badge-ws';
+      } else {
+        playerBadge.textContent = '🔄 HTTP Poll';
+        playerBadge.className = 'arena-rt-badge arena-rt-badge-http';
+      }
+    }
+  }
+
+  function connectPartyKit(pin) {
+    disconnectPartyKit();
+    var cleanPin = normalizePin(pin);
+    if (!cleanPin) return;
+    _wsCurrentPin = cleanPin;
+
+    var host = getPartyKitHost();
+    if (!host) {
+      startCloudPolling(cleanPin);
+      return;
+    }
+
+    var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    if (host.includes('partykit.dev')) {
+      protocol = 'wss:';
+    }
+    var wsUrl = protocol + '//' + host + '/parties/main/' + encodeURIComponent(cleanPin);
+
+    try {
+      console.log('⚡ [PartyKit] Connecting to:', wsUrl);
+      _partySocket = new WebSocket(wsUrl);
+
+      _partySocket.onopen = function () {
+        console.log('✅ [PartyKit] WebSocket connected to room:', cleanPin);
+        _wsConnected = true;
+        // Dừng HTTP polling khi WebSocket đang hoạt động để tiết kiệm 100% request!
+        stopCloudPolling();
+        updateRealtimeBadge(true);
+      };
+
+      _partySocket.onmessage = function (event) {
+        try {
+          var msg = JSON.parse(event.data);
+          if (msg && msg.type === 'pk_ack') return;
+          if (msg && msg.msgId && !_processedMsgIds[msg.msgId]) {
+            handleIncomingSyncMessage(msg);
+          }
+        } catch (err) {
+          console.warn('⚠️ [PartyKit] Message parse error:', err);
+        }
+      };
+
+      _partySocket.onerror = function (err) {
+        console.warn('⚠️ [PartyKit] WebSocket error, fallback to HTTP Smart Polling');
+        _wsConnected = false;
+        updateRealtimeBadge(false);
+        startCloudPolling(cleanPin);
+      };
+
+      _partySocket.onclose = function () {
+        console.log('🔌 [PartyKit] WebSocket disconnected');
+        _wsConnected = false;
+        updateRealtimeBadge(false);
+        if (gameState.pin && normalizePin(gameState.pin) === cleanPin) {
+          startCloudPolling(cleanPin);
+          if (!_wsReconnectTimer) {
+            _wsReconnectTimer = setTimeout(function () {
+              _wsReconnectTimer = null;
+              if (gameState.pin && normalizePin(gameState.pin) === cleanPin) {
+                connectPartyKit(cleanPin);
+              }
+            }, 3000);
+          }
+        }
+      };
+    } catch (e) {
+      console.warn('⚠️ [PartyKit] Init failed, fallback to polling:', e);
+      _wsConnected = false;
+      startCloudPolling(cleanPin);
+    }
+  }
+
+  function disconnectPartyKit() {
+    if (_wsReconnectTimer) {
+      clearTimeout(_wsReconnectTimer);
+      _wsReconnectTimer = null;
+    }
+    if (_partySocket) {
+      try {
+        _partySocket.onopen = null;
+        _partySocket.onmessage = null;
+        _partySocket.onerror = null;
+        _partySocket.onclose = null;
+        _partySocket.close();
+      } catch (e) { }
+      _partySocket = null;
+    }
+    _wsConnected = false;
+    _wsCurrentPin = null;
+  }
+
+  function startRoomSync(pin) {
+    var cleanPin = normalizePin(pin);
+    if (!cleanPin) return;
+    // Thử kết nối WebSocket PartyKit trước; tự động fallback sang HTTP Polling nếu chưa có
+    connectPartyKit(cleanPin);
   }
 
   var _lastSyncMsgId = 0;
@@ -835,6 +987,7 @@
     if (normalizePin(gameState.pin) === cleanP) {
       clearAllRoundTimers();
       stopCloudPolling();
+      disconnectPartyKit();
       cleanupCloudRoomMessages();
       gameState.pin = '';
       gameState.players = [];
@@ -955,7 +1108,7 @@
       localStorage.setItem('wq_arena_active_host_pin', cleanP);
       syncBrowserUrl(cleanP, 'host');
       publishRoomMeta(saved);
-      startCloudPolling(cleanP);
+      startRoomSync(cleanP);
       startExpiryCountdownTicker();
       renderLobby();
 
@@ -1067,7 +1220,7 @@
       gameState.roomDurationLabel = sess.roomDurationLabel || '30 phút';
 
       syncBrowserUrl(cleanP, 'player');
-      startCloudPolling(cleanP);
+      startRoomSync(cleanP);
       startExpiryCountdownTicker();
       updatePlayerReadyUI();
 
@@ -1147,6 +1300,7 @@
   function playerLeaveRoom(silent) {
     stopPlayerJoinHeartbeat();
     stopCloudPolling();
+    disconnectPartyKit();
     if (gameState.playerTimerInterval) {
       clearInterval(gameState.playerTimerInterval);
       gameState.playerTimerInterval = null;
@@ -1475,7 +1629,7 @@
     showView('hostLobbyView');
     SFX.pop();
 
-    startCloudPolling(gameState.pin);
+    startRoomSync(gameState.pin);
 
     var roomPayload = {
       pin: gameState.pin,
@@ -3608,7 +3762,7 @@
     showView('playerLobbyView');
     SFX.pop();
 
-    startCloudPolling(cleanPin);
+    startRoomSync(cleanPin);
 
     var joinPayload = {
       id: gameState.myPlayerId,
@@ -4749,6 +4903,7 @@
         }
       } else {
         stopCloudPolling();
+        disconnectPartyKit();
         cleanupCloudRoomMessages();
         gameState.role = 'player';
         gameState.pin = '';

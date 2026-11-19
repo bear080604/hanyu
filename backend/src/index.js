@@ -165,7 +165,7 @@ export default {
             if (results.length > 0) {
               return jsonResponse({ success: true, data: results[0] });
             }
-          } catch (e) {}
+          } catch (e) { }
         }
         return errorResponse('Vocabulary not found', 404);
       }
@@ -207,7 +207,7 @@ export default {
             if (results && results.length > 0) {
               return jsonResponse({ success: true, data: results });
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const fallbackLevels = Object.keys(VOCAB_DATA).map(lvl => ({
@@ -242,7 +242,7 @@ export default {
                 data: results,
               });
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const qLower = query.toLowerCase();
