@@ -149,6 +149,34 @@
                 </select>
               </div>
             </div>
+
+            <!-- CHẾ ĐỘ PHÒNG: CÔNG KHAI HOẶC RIÊNG TƯ (NHẬP MÃ PIN) -->
+            <div class="arena-form-row">
+              <div class="arena-form-group">
+                <label class="arena-label">🌐 Chế độ phòng &amp; Quyền tham gia:</label>
+                <div class="arena-access-cards" id="hostAccessModeCards">
+                  <label class="arena-access-card active" data-access="public">
+                    <input type="radio" name="hostAccessMode" value="public" checked style="display:none;">
+                    <div class="access-card-head">
+                      <span class="access-card-icon">🌐</span>
+                      <span class="access-card-title">Công Khai (Public)</span>
+                      <span class="access-card-badge">Khuyên dùng</span>
+                    </div>
+                    <p class="access-card-desc">Hiện trực tiếp <b>Bảng Xếp Hạng</b> phòng đấu; người chơi thấy ngay trên sảnh và vào tự do không cần gõ mã PIN.</p>
+                  </label>
+
+                  <label class="arena-access-card" data-access="private">
+                    <input type="radio" name="hostAccessMode" value="private" style="display:none;">
+                    <div class="access-card-head">
+                      <span class="access-card-icon">🔒</span>
+                      <span class="access-card-title">Riêng Tư (Private)</span>
+                      <span class="access-card-badge private">Cần PIN</span>
+                    </div>
+                    <p class="access-card-desc">Chỉ những ai có mã PIN 6 số hoặc quét mã QR mới vào được phòng thi đấu.</p>
+                  </label>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Danh sách phòng đang lưu trữ chưa hết hạn để Admin mở lại bất cứ lúc nào -->
@@ -179,11 +207,12 @@
         <div class="glass-card arena-card lobby-card">
           <div class="lobby-header">
             <div class="lobby-pin-wrap">
-              <div class="lobby-pin-label">MÃ PIN PHÒNG THI ĐẤU (CLOUDFLARE SYNC)</div>
+              <div class="lobby-pin-label" id="lobbyPinLabel">MÃ PIN PHÒNG THI ĐẤU (CLOUDFLARE SYNC)</div>
               <div class="lobby-pin-code" id="displayRoomPin">------</div>
             </div>
             <div class="lobby-header-right">
-              <div class="lobby-live-count-pill">
+              <div class="lobby-access-pill" id="lobbyAccessBadge">🌐 Phòng Công Khai</div>
+              <div class="lobby-live-count-pill" id="lobbyCountPill">
                 <span>👥 Đã vào phòng: <b id="lobbyTopPlayerCount">0</b> người</span>
               </div>
               <div class="lobby-expiry-pill" id="lobbyExpiryBadge">⏳ Lưu trữ: 30 phút</div>
@@ -192,8 +221,24 @@
           </div>
 
           <div class="lobby-body">
-            <!-- Đưa danh sách người chơi lên ưu tiên hiển thị để Admin thấy ngay ai vừa xuất hiện -->
-            <div class="lobby-players-panel">
+            <!-- 1. BẢNG XẾP HẠNG TRỰC TIẾP (KHI LÀ PHÒNG CÔNG KHAI) -->
+            <div class="lobby-players-panel host-public-lb-panel" id="hostPublicLeaderboardPanel" style="display: none;">
+              <div class="lobby-players-header">
+                <h3>🏆 Bảng Xếp Hạng Đấu Thủ (<span id="hostLbPlayerCount">0</span>)</h3>
+                <button type="button" class="btn-add-bot" id="btnAddBotLb">
+                  + Thêm bạn học ảo 🤖
+                </button>
+              </div>
+              <div class="host-lb-desc-bar">
+                <span>🌐 Phòng Công Khai • Bảng xếp hạng cập nhật trực tiếp theo điểm số</span>
+              </div>
+              <div class="host-lobby-lb-list" id="hostLobbyLeaderboardList">
+                <div class="empty-lobby-text">Đang chờ người chơi tham gia phòng công khai... (Hoặc bấm "+ Thêm bạn học ảo 🤖" để test ngay)</div>
+              </div>
+            </div>
+
+            <!-- 2. DANH SÁCH CHIP NGƯỜI CHƠI (KHI LÀ PHÒNG RIÊNG TƯ - NHẬP PIN) -->
+            <div class="lobby-players-panel" id="hostPlayersPanelSimple">
               <div class="lobby-players-header">
                 <h3>👥 Người chơi đã xuất hiện (<span id="playerCount">0</span>)</h3>
                 <button type="button" class="btn-add-bot" id="btnAddBot">
@@ -208,7 +253,7 @@
             <div class="lobby-qr-container">
               <div id="lobbyQrBox" class="lobby-qr-box"></div>
               <div class="lobby-qr-hint">
-                <span>Người chơi quét mã QR hoặc nhập PIN để vào phòng</span>
+                <span id="lobbyQrHintText">Người chơi quét mã QR hoặc nhập PIN để vào phòng</span>
                 <div class="lobby-qr-actions">
                   <button type="button" class="btn-copy-link" id="btnCopyJoinLink" title="Sao chép link mời">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -445,42 +490,87 @@
           <div class="player-join-header">
             <span class="arena-badge" id="playerJoinRoomBadge">Đấu Trường Trực Tuyến</span>
             <h2>Tham Gia Phòng Thi Đấu</h2>
-            <p id="playerJoinRoomSub">Nhập mã PIN gồm 6 chữ số trên màn hình Admin và đặt biệt danh của bạn để vào trận!
-            </p>
+            <p id="playerJoinRoomSub">Tham gia phòng thi đấu công khai hoặc nhập mã PIN bí mật từ Admin để bắt đầu tranh tài!</p>
           </div>
 
-          <div class="player-join-form">
-            <div class="arena-form-group">
-              <label class="arena-label" for="playerInputPin">MÃ PIN PHÒNG (6 SỐ):</label>
-              <input type="text" id="playerInputPin" class="auth-input pin-input" placeholder="VD: 842910" maxlength="8"
-                inputmode="numeric">
+          <!-- Tabs chọn chế độ vào phòng -->
+          <div class="player-join-tabs" id="playerJoinTabs">
+            <button type="button" class="player-join-tab active" id="tabJoinPublic" data-jointab="public">
+              <span class="tab-icon">🌐</span>
+              <span>Phòng Công Khai Đang Mở</span>
+              <span class="tab-public-count" id="publicRoomsCountBadge">0</span>
+            </button>
+            <button type="button" class="player-join-tab" id="tabJoinPrivate" data-jointab="private">
+              <span class="tab-icon">🔒</span>
+              <span>Nhập Mã PIN (Phòng Riêng)</span>
+            </button>
+          </div>
+
+          <!-- TAB 1: DANH SÁCH PHÒNG CÔNG KHAI -->
+          <div class="player-join-tab-panel" id="panelJoinPublic">
+            <div class="public-rooms-header-row">
+              <span class="pub-rooms-subtitle">Các phòng đấu mở tự do • Hiện trực tiếp Bảng xếp hạng</span>
+              <button type="button" class="btn-refresh-pub-rooms" id="btnRefreshPublicRooms" title="Làm mới danh sách">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Làm mới</span>
+              </button>
             </div>
 
-            <div class="arena-form-group">
-              <label class="arena-label" for="playerInputName">Tên hiển thị (Nickname):</label>
-              <input type="text" id="playerInputName" class="auth-input"
-                placeholder="Gõ biệt danh của bạn (VD: Gấu, Minh...)" maxlength="18" autocomplete="nickname">
+            <!-- Thanh Profile nhanh -->
+            <div class="player-quick-profile-bar" id="playerQuickProfileBar">
+              <div class="quick-profile-left">
+                <span class="quick-profile-avatar" id="quickProfileAvatar">🐼</span>
+                <span class="quick-profile-name" id="quickProfileName">Bạn</span>
+              </div>
+              <button type="button" class="btn-edit-quick-profile" id="btnEditQuickProfile">Đổi Nickname / Linh vật ✎</button>
             </div>
 
-            <div class="arena-form-group">
-              <label class="arena-label">Chọn linh vật đại diện:</label>
-              <div class="avatar-pick-grid" id="avatarPickGrid">
-                <button type="button" class="avatar-btn active" data-avatar="🐼">🐼</button>
-                <button type="button" class="avatar-btn" data-avatar="🦊">🦊</button>
-                <button type="button" class="avatar-btn" data-avatar="🐯">🐯</button>
-                <button type="button" class="avatar-btn" data-avatar="🐉">🐉</button>
-                <button type="button" class="avatar-btn" data-avatar="🐱">🐱</button>
-                <button type="button" class="avatar-btn" data-avatar="🐰">🐰</button>
-                <button type="button" class="avatar-btn" data-avatar="🦁">🦁</button>
-                <button type="button" class="avatar-btn" data-avatar="🐻">🐻</button>
-                <button type="button" class="avatar-btn" data-avatar="🐸">🐸</button>
-                <button type="button" class="avatar-btn" data-avatar="🦄">🦄</button>
+            <div class="public-rooms-list" id="publicRoomsList">
+              <div class="empty-public-rooms">
+                <div class="empty-pub-icon">🌐</div>
+                <div class="empty-pub-title">Hiện chưa có phòng thi đấu công khai nào đang mở</div>
+                <div class="empty-pub-desc">Bạn có thể chọn tab <b>"Nhập Mã PIN"</b> để vào phòng riêng tư, hoặc nhờ Admin tạo phòng công khai nhé!</div>
               </div>
             </div>
+          </div>
 
-            <button type="button" class="btn btn-hero-primary" id="btnPlayerJoin" style="width: 100%; margin-top: 8px;">
-              <span>Vào phòng chờ ➔</span>
-            </button>
+          <!-- TAB 2: FORM NHẬP MÃ PIN (PHÒNG RIÊNG TƯ) -->
+          <div class="player-join-tab-panel" id="panelJoinPrivate" style="display: none;">
+            <div class="player-join-form">
+              <div class="arena-form-group">
+                <label class="arena-label" for="playerInputPin">MÃ PIN PHÒNG (6 SỐ):</label>
+                <input type="text" id="playerInputPin" class="auth-input pin-input" placeholder="VD: 842910" maxlength="8"
+                  inputmode="numeric">
+              </div>
+
+              <div class="arena-form-group">
+                <label class="arena-label" for="playerInputName">Tên hiển thị (Nickname):</label>
+                <input type="text" id="playerInputName" class="auth-input"
+                  placeholder="Gõ biệt danh của bạn (VD: Gấu, Minh...)" maxlength="18" autocomplete="nickname">
+              </div>
+
+              <div class="arena-form-group">
+                <label class="arena-label">Chọn linh vật đại diện:</label>
+                <div class="avatar-pick-grid" id="avatarPickGrid">
+                  <button type="button" class="avatar-btn active" data-avatar="🐼">🐼</button>
+                  <button type="button" class="avatar-btn" data-avatar="🦊">🦊</button>
+                  <button type="button" class="avatar-btn" data-avatar="🐯">🐯</button>
+                  <button type="button" class="avatar-btn" data-avatar="🐉">🐉</button>
+                  <button type="button" class="avatar-btn" data-avatar="🐱">🐱</button>
+                  <button type="button" class="avatar-btn" data-avatar="🐰">🐰</button>
+                  <button type="button" class="avatar-btn" data-avatar="🦁">🦁</button>
+                  <button type="button" class="avatar-btn" data-avatar="🐻">🐻</button>
+                  <button type="button" class="avatar-btn" data-avatar="🐸">🐸</button>
+                  <button type="button" class="avatar-btn" data-avatar="🦄">🦄</button>
+                </div>
+              </div>
+
+              <button type="button" class="btn btn-hero-primary" id="btnPlayerJoin" style="width: 100%; margin-top: 8px;">
+                <span>Vào phòng chờ ➔</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -491,12 +581,28 @@
           <div class="player-big-avatar" id="playerWaitingAvatar">🐼</div>
           <h2 class="player-waiting-name" id="playerWaitingName">Bạn</h2>
           <div class="player-waiting-badges-row">
-            <span class="player-waiting-badge">Đã kết nối phòng #<span id="playerConnectedPin">------</span></span>
+            <span class="player-waiting-badge" id="playerConnectedBadge">Đã kết nối phòng #<span id="playerConnectedPin">------</span></span>
+            <span class="player-room-access-tag" id="playerRoomAccessTag">🌐 Công khai</span>
             <span class="player-room-expiry-badge" id="playerRoomExpiryBadge" style="display: none;">⏳ Lưu trữ: 30 phút</span>
           </div>
 
-          <!-- Hiển thị trực tiếp số lượng & danh sách người chơi đã xuất hiện trong phòng -->
-          <div class="player-lobby-roster-box">
+          <!-- BẢNG XẾP HẠNG TRỰC TIẾP (KHI LÀ PHÒNG CÔNG KHAI) -->
+          <div class="player-lobby-leaderboard-box" id="playerLobbyLeaderboardBox" style="display: none;">
+            <div class="player-lobby-lb-head">
+              <div class="player-lobby-lb-title">
+                <span>🏆 BẢNG XẾP HẠNG ĐẤU THỦ</span>
+                <span class="public-room-indicator">🌐 Công khai</span>
+              </div>
+              <span class="player-lobby-lb-myrank" id="playerLobbyMyRankBadge">Hạng 1</span>
+            </div>
+            <div class="player-lobby-lb-list" id="playerLobbyLeaderboardList"></div>
+            <div class="player-lobby-lb-footer" id="playerLobbyLeaderboardFooter">
+              <span>🟢 Trận đấu sẽ bắt đầu khi Admin bấm "Bắt đầu"</span>
+            </div>
+          </div>
+
+          <!-- HIỂN THỊ CHIP DANH SÁCH NGƯỜI CHƠI (KHI LÀ PHÒNG RIÊNG TƯ) -->
+          <div class="player-lobby-roster-box" id="playerLobbyRosterBox">
             <div class="player-lobby-roster-head">
               <span>👥 Người chơi đã xuất hiện trong phòng</span>
               <span class="player-lobby-count-pill" id="playerLobbyCountBadge">1 người</span>
@@ -504,10 +610,10 @@
             <div class="player-lobby-roster-list" id="playerLobbyRosterList"></div>
           </div>
 
-          <p class="player-waiting-hint">Bạn đã có mặt trên màn hình lớn! Tải lại trang hoặc lỡ thoát ra vào lại đều tự động giữ nguyên vị trí trong phòng.</p>
+          <p class="player-waiting-hint" id="playerWaitingHintText">Bạn đã có mặt trên màn hình lớn! Tải lại trang hoặc lỡ thoát ra vào lại đều tự động giữ nguyên vị trí trong phòng.</p>
           <div class="pulsing-loader"></div>
           <div style="margin-top: 16px;">
-            <button type="button" class="btn-player-leave-room" id="btnPlayerLeaveLobby">🚪 Rời phòng / Đổi mã PIN khác</button>
+            <button type="button" class="btn-player-leave-room" id="btnPlayerLeaveLobby">🚪 Rời phòng / Chọn phòng khác</button>
           </div>
         </div>
       </div>
@@ -609,6 +715,29 @@
       </div>
 
     </section>
+  </div>
+
+  <!-- Modal Xem Nhanh Bảng Xếp Hạng Phòng Công Khai -->
+  <div id="publicLeaderboardModal" class="modal" aria-modal="true" role="dialog" aria-label="Bảng xếp hạng phòng">
+    <div class="modal-content glass-card"
+      style="max-width:520px; width:92%; max-height:85vh; overflow-y:auto; border-radius:18px; padding:24px; position:relative;">
+      <button id="closePublicLbModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;" aria-label="Đóng">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <div class="pub-modal-header" style="text-align: center; margin-bottom: 16px;">
+        <span class="arena-badge" id="pubModalBadge">🌐 Phòng Công Khai #------</span>
+        <h2 id="pubModalTitle" style="font-size:1.3rem; font-weight:700; margin:8px 0 4px; color:var(--text-primary);">🏆 Bảng Xếp Hạng Đấu Thủ</h2>
+        <p id="pubModalMeta" style="font-size:0.86rem; color:var(--text-secondary); margin:0;">Đang tải danh sách đấu thủ...</p>
+      </div>
+      <div id="pubModalLeaderboardList" class="leaderboard-list"></div>
+      <div style="margin-top:20px; display:flex; gap:10px;">
+        <button type="button" class="btn btn-secondary" id="btnClosePubModal" style="flex:1;">Đóng</button>
+        <button type="button" class="btn btn-hero-primary" id="btnJoinFromPubModal" style="flex:1.6;">Vào thi đấu ngay ➔</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal Hồ sơ cá nhân -->
