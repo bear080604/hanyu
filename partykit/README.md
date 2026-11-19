@@ -25,10 +25,10 @@ cd partykit
 npx partykit deploy
 ```
 
-* Lần đầu tiên chạy, trình duyệt sẽ tự mở trang **PartyKit Login**: bạn chỉ cần bấm **"Log in with GitHub"** (dùng tài khoản GitHub `bear080604` của bạn).
+* Lần đầu tiên chạy, trình duyệt sẽ tự mở trang **PartyKit Login**: bạn chỉ cần bấm **"Log in with GitHub"** (dùng tài khoản GitHub `phuonganhkhanh683` của bạn).
 * Sau khi deploy thành công, PartyKit sẽ cấp cho bạn một domain dạng:
   ```
-  hanyu-arena.bear080604.partykit.dev
+  hanyu-arena.phuonganhkhanh683.partykit.dev
   ```
 
 ---
@@ -36,10 +36,10 @@ npx partykit deploy
 ## ⚙️ 3. Cấu hình trên Frontend
 
 Frontend Hanyu đã được tích hợp sẵn cơ chế **Dual-Mode (WebSocket First + HTTP Polling Fallback)**:
-* Mặc định kết nối tới domain PartyKit của bạn: `hanyu-arena.bear080604.partykit.dev`.
+* Mặc định kết nối tới domain PartyKit của bạn: `hanyu-arena.phuonganhkhanh683.partykit.dev`.
 * Nếu muốn đổi domain khác hoặc test local, bạn có thể lưu vào localStorage của trình duyệt:
   ```javascript
-  localStorage.setItem('wq_partykit_host', 'hanyu-arena.bear080604.partykit.dev');
+  localStorage.setItem('wq_partykit_host', 'hanyu-arena.phuonganhkhanh683.partykit.dev');
   // Hoặc test local:
   localStorage.setItem('wq_partykit_host', '127.0.0.1:1999');
   ```

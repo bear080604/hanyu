@@ -1,5 +1,5 @@
 // Service Worker — WenQing Chinese
-const CACHE_NAME = 'wenqing-v34';
+const CACHE_NAME = 'wenqing-v35';
 const STATIC_ASSETS = [
   '/hanyu/',
   '/hanyu/index.html',

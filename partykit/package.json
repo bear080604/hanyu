@@ -8,7 +8,7 @@
     "deploy": "partykit deploy"
   },
   "keywords": ["partykit", "cloudflare", "websocket", "realtime", "arena"],
-  "author": "bear080604",
+  "author": "phuonganhkhanh683",
   "license": "MIT",
   "devDependencies": {
     "partykit": "^0.0.108"

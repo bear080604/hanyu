@@ -13,7 +13,7 @@
   'use strict';
 
   var CLOUD_API_BASE = 'https://hanyu.nhannguyen2005111.workers.dev';
-  var DEFAULT_PARTYKIT_HOST = 'hanyu-arena.bear080604.partykit.dev';
+  var DEFAULT_PARTYKIT_HOST = 'hanyu-arena.phuonganhkhanh683.partykit.dev';
   function getPartyKitHost() {
     try {
       var custom = localStorage.getItem('wq_partykit_host');
