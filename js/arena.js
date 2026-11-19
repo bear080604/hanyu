@@ -292,11 +292,11 @@
     var wsUrl = protocol + '//' + host + '/parties/main/' + encodeURIComponent(cleanPin);
 
     try {
-      console.log('⚡ [PartyKit] Connecting to:', wsUrl);
+      console.log('⚡ [WebSocket] Connecting to:', wsUrl);
       _partySocket = new WebSocket(wsUrl);
 
       _partySocket.onopen = function () {
-        console.log('✅ [PartyKit] WebSocket connected to room:', cleanPin);
+        console.log('✅ [WebSocket] Connected to room:', cleanPin);
         _wsConnected = true;
         // Dừng HTTP polling khi WebSocket đang hoạt động để tiết kiệm 100% request!
         stopCloudPolling();
@@ -311,19 +311,19 @@
             handleIncomingSyncMessage(msg);
           }
         } catch (err) {
-          console.warn('⚠️ [PartyKit] Message parse error:', err);
+          console.warn('⚠️ [WebSocket] Message parse error:', err);
         }
       };
 
       _partySocket.onerror = function (err) {
-        console.warn('⚠️ [PartyKit] WebSocket error, fallback to HTTP Smart Polling');
+        console.warn('⚠️ [WebSocket] Connection error, fallback to HTTP Smart Polling');
         _wsConnected = false;
         updateRealtimeBadge(false);
         startCloudPolling(cleanPin);
       };
 
       _partySocket.onclose = function () {
-        console.log('🔌 [PartyKit] WebSocket disconnected');
+        console.log('🔌 [WebSocket] Disconnected');
         _wsConnected = false;
         updateRealtimeBadge(false);
         if (gameState.pin && normalizePin(gameState.pin) === cleanPin) {
@@ -339,7 +339,7 @@
         }
       };
     } catch (e) {
-      console.warn('⚠️ [PartyKit] Init failed, fallback to polling:', e);
+      console.warn('⚠️ [WebSocket] Init failed, fallback to polling:', e);
       _wsConnected = false;
       startCloudPolling(cleanPin);
     }

@@ -136,6 +136,10 @@ Dark Theme (Nền than đậm #141312):
 | `WQ_ARENA_PLAYER_PROFILE` | Thông tin hồ sơ tạm của người chơi (`{ name, avatar }`) |
 | `WQ_ARENA_ADMIN_AUTH` | Token xác thực quyền Admin (`{ isAdmin: true, loginAt: ... }`) |
 
+### 7.3. Đồng bộ Thời gian thực (Real-time Architecture)
+- **Primary:** Cloudflare Workers Durable Objects (`ArenaRoom`) qua giao thức WebSocket hai chiều (`wss://hanyu.phuonganhkhanh683.workers.dev/parties/main/:pin`), độ trễ <20ms, 0 HTTP request, 0 D1 quota.
+- **Fallback:** Cloudflare Edge Cache (`caches.default`) + Smart HTTP Polling (`/api/arena/sync`) chu kỳ 1.000ms khi mất kết nối mạng.
+
 ---
 
-*Tài liệu được cập nhật tự động cùng phiên bản hệ thống Hanyu v31.*
+*Tài liệu được cập nhật tự động cùng phiên bản hệ thống Hanyu v37.*

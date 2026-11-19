@@ -207,6 +207,26 @@ DELETE /api/decks/1
 GET /api/health
 ```
 
+### ⚡ Arena Real-time (WebSocket & Sync)
+
+#### WebSocket Real-time (Cloudflare Durable Objects)
+```http
+WSS /parties/main/:pin
+WSS /ws?pin=:pin
+```
+- Kết nối hai chiều siêu tốc (<20ms) giữa Host và Người chơi.
+- Sử dụng WebSocket Hibernation API: 0% CPU khi idle, 0 HTTP request, 0 D1 quota.
+
+#### Smart Sync Polling (Dự phòng tự động khi ngắt kết nối WebSocket)
+```http
+GET  /api/arena/sync?pin=123456&since=0
+POST /api/arena/sync
+DELETE /api/arena/sync?pin=123456
+GET  /api/arena/rooms
+POST /api/arena/rooms
+```
+- Sử dụng Cloudflare Edge Cache (`caches.default`) kết hợp RAM Buffer để không tốn D1 row reads.
+
 ## 🔧 Development
 
 ### Local development
