@@ -409,6 +409,10 @@ export default {
         const pin = String(url.searchParams.get('pin') || '').trim();
         if (pin) {
           MEMORY_ARENA_MESSAGES.delete(pin);
+          try {
+            const cache = caches.default;
+            await cache.delete(`https://arena-cache.internal/sync/${pin}`);
+          } catch (e) {}
           if (env && env.DB) {
             try {
               await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
