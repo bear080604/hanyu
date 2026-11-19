@@ -349,6 +349,11 @@
     wasEarlyCutoff: false,
     // Player-side state
     myPlayerId: '',
+    isSoloRunner: false,
+    soloPhaseTimer: null,
+    soloTimeoutTimer: null,
+    soloQuestionStartTime: 0,
+    soloQuestionEndTime: 0,
     playerTimerInterval: null,
     playerLastChoice: -1,
     playerLocalScore: 0,
@@ -1387,6 +1392,7 @@
       durationLabel: gameState.roomDurationLabel,
       playerCount: 0,
       players: [],
+      questions: gameState.questions,
       status: 'lobby',
       createdAt: nowMs,
       updatedAt: nowMs
@@ -2749,11 +2755,19 @@
       });
     }
 
+    var pulsingLoader = document.querySelector('#playerLobbyView .pulsing-loader');
+    var btnSoloStart = document.getElementById('btnPlayerStartPublicSolo');
+
     if (isPublic) {
-      // ===== PHÒNG CÔNG KHAI: HIỆN BẢNG XẾP HẠNG TRỰC TIẾP =====
+      // ===== PHÒNG CÔNG KHAI: HIỆN BẢNG XẾP HẠNG TRỰC TIẾP & NÚT BẮT ĐẦU CHƠI NGAY =====
       if (lbBox) lbBox.style.display = 'block';
       if (rosterBox) rosterBox.style.display = 'none';
-      if (hintText) hintText.textContent = 'Bạn đã có tên trên Bảng xếp hạng phòng đấu! Trận đấu sẽ bắt đầu ngay khi Admin bấm Bắt đầu.';
+      if (hintText) hintText.style.display = 'none';
+      if (pulsingLoader) pulsingLoader.style.display = 'none';
+      if (btnSoloStart) {
+        btnSoloStart.style.display = 'block';
+        btnSoloStart.onclick = startPublicSoloGame;
+      }
 
       var lbListEl = document.getElementById('playerLobbyLeaderboardList');
       var myRankBadge = document.getElementById('playerLobbyMyRankBadge');
@@ -2788,10 +2802,15 @@
         });
       }
     } else {
-      // ===== PHÒNG RIÊNG TƯ: HIỆN DANH SÁCH CHIP NGƯỜI CHƠI =====
+      // ===== PHÒNG RIÊNG TƯ: HIỆN DANH SÁCH CHIP NGƯỜI CHƠI (CHỜ ADMIN BẤM BẮT ĐẦU) =====
       if (lbBox) lbBox.style.display = 'none';
       if (rosterBox) rosterBox.style.display = 'block';
-      if (hintText) hintText.textContent = 'Bạn đã có mặt trên màn hình lớn! Tải lại trang hoặc lỡ thoát ra vào lại đều tự động giữ nguyên vị trí trong phòng.';
+      if (btnSoloStart) btnSoloStart.style.display = 'none';
+      if (pulsingLoader) pulsingLoader.style.display = 'block';
+      if (hintText) {
+        hintText.style.display = 'block';
+        hintText.textContent = 'Bạn đã có mặt trên màn hình lớn! Trận đấu sẽ bắt đầu ngay khi Admin bấm Bắt đầu.';
+      }
 
       var listEl = document.getElementById('playerLobbyRosterList');
       var badgeEl = document.getElementById('playerLobbyCountBadge');
@@ -2861,6 +2880,13 @@
           gameState.roomExpiresAt = hostRoom.expiresAt || null;
           gameState.roomDurationLabel = hostRoom.durationLabel || '30 phút';
           if (hostRoom.accessMode) detectedAccessMode = hostRoom.accessMode;
+          if (Array.isArray(hostRoom.questions) && hostRoom.questions.length > 0) {
+            gameState.questions = hostRoom.questions;
+            gameState.totalQuestions = hostRoom.questions.length;
+            gameState.timePerQuestion = hostRoom.timePerQuestion || 15;
+            gameState.gameMode = hostRoom.gameMode || gameState.gameMode;
+            gameState.deckName = hostRoom.deckName || gameState.deckName;
+          }
         }
       } else {
         var pubRooms = getSavedPublicRooms();
@@ -2869,11 +2895,24 @@
           detectedAccessMode = 'public';
           if (matchPub.expiresAt) gameState.roomExpiresAt = matchPub.expiresAt;
           if (matchPub.durationLabel) gameState.roomDurationLabel = matchPub.durationLabel;
+          if (Array.isArray(matchPub.questions) && matchPub.questions.length > 0) {
+            gameState.questions = matchPub.questions;
+            gameState.totalQuestions = matchPub.questions.length;
+            gameState.timePerQuestion = matchPub.timePerQuestion || 15;
+            gameState.gameMode = matchPub.gameMode || gameState.gameMode;
+            gameState.deckName = matchPub.deckName || gameState.deckName;
+          }
         }
       }
     } catch (e) { }
 
     gameState.accessMode = detectedAccessMode;
+    if (!Array.isArray(gameState.questions) || gameState.questions.length === 0) {
+      if (!gameState.deckWords || gameState.deckWords.length === 0) {
+        gameState.deckWords = getWordsFromDeckVal(gameState.deckName || gameState.deckValue || 'HSK 1');
+      }
+      generateQuestions(cleanPin);
+    }
     savePlayerProfile(cleanName, cleanAvatar);
 
     // Nếu trước đó đã có phiên trong phòng này với cùng tên thì tái sử dụng ID để giữ nguyên điểm số
@@ -2958,6 +2997,8 @@
 
   function hideAllPlayerSubCards() {
     stopPlayerJoinHeartbeat();
+    clearTimeout(gameState.soloPhaseTimer);
+    clearTimeout(gameState.soloTimeoutTimer);
     var ids = ['playerPhase1Card', 'playerPhase2Wrap', 'playerSubmittedState', 'playerResultOverlay', 'playerPhase5Card'];
     ids.forEach(function (id) {
       var el = document.getElementById(id);
@@ -3082,6 +3123,15 @@
       answerIndex: numericChoice,
       pin: gameState.pin
     });
+
+    // NẾU ĐANG CHƠI PHÒNG CÔNG KHAI (SOLO RUNNER):
+    // Lập tức ngắt sớm chuyển sang Pha 4 chấm điểm cho người chơi!
+    if (gameState.isSoloRunner) {
+      clearTimeout(gameState.soloTimeoutTimer);
+      setTimeout(function () {
+        runPublicSoloPhase4(gameState.currentQuestionIndex, numericChoice);
+      }, 350);
+    }
   }
 
   // Pha 4 trên điện thoại: Lật bài -> Đổi toàn bộ nền sang Xanh Lá (Chính xác!) hoặc Đỏ (Sai mất rồi!)
@@ -3150,7 +3200,9 @@
         }
       }
       if (rankStatus) {
-        rankStatus.textContent = 'Tuyệt vời! Hãy nhìn lên màn hình lớn để xem biểu đồ thống kê.';
+        rankStatus.textContent = gameState.isSoloRunner
+          ? 'Tuyệt vời! Bấm Câu tiếp theo bên dưới để làm tiếp.'
+          : 'Tuyệt vời! Hãy nhìn lên màn hình lớn để xem biểu đồ thống kê.';
       }
       if (!isRestore) SFX.correct();
     } else {
@@ -3164,9 +3216,33 @@
       }
       if (streakPill) streakPill.style.display = 'none';
       if (rankStatus) {
-        rankStatus.textContent = 'Đừng nản chí, chuẩn bị gỡ điểm ở câu tiếp theo nhé!';
+        rankStatus.textContent = gameState.isSoloRunner
+          ? 'Đừng nản chí! Bấm Câu tiếp theo bên dưới để gỡ điểm nhé.'
+          : 'Đừng nản chí, chuẩn bị gỡ điểm ở câu tiếp theo nhé!';
       }
       if (!isRestore) SFX.wrong();
+    }
+
+    // Nút "Câu tiếp theo" dành cho người chơi phòng công khai (Solo)
+    var soloNextBtn = document.getElementById('playerSoloNextBtn');
+    if (soloNextBtn) {
+      if (gameState.isSoloRunner) {
+        var isLast = (gameState.currentQuestionIndex >= gameState.totalQuestions - 1);
+        soloNextBtn.style.display = 'inline-flex';
+        soloNextBtn.innerHTML = isLast
+          ? '<span>Xem Tổng Kết Bảng Xếp Hạng 🏆</span>'
+          : ('<span>Câu tiếp theo (Câu ' + (gameState.currentQuestionIndex + 2) + '/' + gameState.totalQuestions + ') ➔</span>');
+        soloNextBtn.onclick = function () {
+          soloNextBtn.style.display = 'none';
+          if (isLast) {
+            finishPublicSoloGame();
+          } else {
+            runPublicSoloQuestion(gameState.currentQuestionIndex + 1);
+          }
+        };
+      } else {
+        soloNextBtn.style.display = 'none';
+      }
     }
   }
 
@@ -3211,6 +3287,309 @@
 
     if (p5Card) p5Card.style.display = 'block';
     if (!isRestore) SFX.pop();
+  }
+
+  // ==================== CƠ CHẾ TỰ ĐỘNG THI ĐẤU PHÒNG CÔNG KHAI (SOLO RUNNER) ====================
+  function startPublicSoloGame() {
+    if (!gameState.pin) return;
+    stopPlayerJoinHeartbeat();
+
+    // 1. Đảm bảo danh sách câu hỏi đã sẵn sàng
+    if (!Array.isArray(gameState.questions) || gameState.questions.length === 0) {
+      try {
+        var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + gameState.pin);
+        if (hostRoomRaw) {
+          var hr = JSON.parse(hostRoomRaw);
+          if (hr && Array.isArray(hr.questions) && hr.questions.length > 0) {
+            gameState.questions = hr.questions;
+            gameState.totalQuestions = hr.questions.length;
+            gameState.timePerQuestion = hr.timePerQuestion || 15;
+            gameState.gameMode = hr.gameMode || gameState.gameMode;
+          }
+        }
+      } catch (e1) { }
+    }
+
+    if (!Array.isArray(gameState.questions) || gameState.questions.length === 0) {
+      var pubRooms = getSavedPublicRooms();
+      var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === normalizePin(gameState.pin); });
+      if (matchPub && Array.isArray(matchPub.questions) && matchPub.questions.length > 0) {
+        gameState.questions = matchPub.questions;
+        gameState.totalQuestions = matchPub.questions.length;
+        gameState.timePerQuestion = matchPub.timePerQuestion || 15;
+        gameState.gameMode = matchPub.gameMode || gameState.gameMode;
+      }
+    }
+
+    if (!Array.isArray(gameState.questions) || gameState.questions.length === 0) {
+      if (!gameState.deckWords || gameState.deckWords.length === 0) {
+        gameState.deckWords = getWordsFromDeckVal(gameState.deckName || gameState.deckValue || 'HSK 1');
+      }
+      generateQuestions(gameState.pin);
+    }
+
+    gameState.isSoloRunner = true;
+    gameState.currentQuestionIndex = 0;
+    gameState.totalQuestions = (gameState.questions && gameState.questions.length) || 10;
+    gameState.playerLocalScore = 0;
+    gameState.playerLocalStreak = 0;
+    gameState.playerLastChoice = -1;
+
+    runPublicSoloQuestion(0);
+  }
+
+  function runPublicSoloQuestion(qIdx) {
+    if (qIdx >= gameState.totalQuestions || qIdx >= gameState.questions.length) {
+      finishPublicSoloGame();
+      return;
+    }
+
+    gameState.currentQuestionIndex = qIdx;
+    gameState.playerLastChoice = -1;
+    var q = gameState.questions[qIdx];
+    if (!q) {
+      finishPublicSoloGame();
+      return;
+    }
+
+    // Pha 1: Get Ready 3s
+    var p1Payload = {
+      pin: gameState.pin,
+      questionIndex: qIdx,
+      totalQuestions: gameState.totalQuestions,
+      prompt: q.prompt,
+      subPrompt: q.subPrompt,
+      prepSeconds: 3,
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel
+    };
+
+    onPlayerReceivePhase1(p1Payload, false);
+
+    if (q.hanziAudio && typeof speak === 'function') {
+      speak(q.hanziAudio);
+    }
+
+    clearTimeout(gameState.soloPhaseTimer);
+    gameState.soloPhaseTimer = setTimeout(function () {
+      if (gameState.role !== 'player' || !gameState.isSoloRunner) return;
+      var durationSec = gameState.timePerQuestion || 15;
+      var endTime = Date.now() + durationSec * 1000;
+      gameState.soloQuestionStartTime = Date.now();
+      gameState.soloQuestionEndTime = endTime;
+
+      var p2Payload = {
+        pin: gameState.pin,
+        questionIndex: qIdx,
+        totalQuestions: gameState.totalQuestions,
+        prompt: q.prompt,
+        options: q.options,
+        durationSec: durationSec,
+        endTime: endTime,
+        expiresAt: gameState.roomExpiresAt,
+        durationLabel: gameState.roomDurationLabel
+      };
+
+      onPlayerReceivePhase2(p2Payload, false);
+
+      // Đếm ngược hết giờ Pha 2
+      clearTimeout(gameState.soloTimeoutTimer);
+      gameState.soloTimeoutTimer = setTimeout(function () {
+        if (gameState.role !== 'player' || !gameState.isSoloRunner) return;
+        if (gameState.playerLastChoice === -1) {
+          runPublicSoloPhase4(qIdx, -1);
+        }
+      }, durationSec * 1000);
+    }, 3000);
+  }
+
+  function runPublicSoloPhase4(qIdx, choiceIdx) {
+    var q = gameState.questions[qIdx];
+    if (!q) return;
+
+    var isCorrect = (choiceIdx !== -1 && Number(choiceIdx) === Number(q.correctIndex));
+    var correctLetter = OPTION_LETTERS[q.correctIndex] || 'A';
+
+    var earned = 0;
+    if (isCorrect) {
+      var timeUsedMs = Date.now() - (gameState.soloQuestionStartTime || Date.now());
+      var totalDurationMs = (gameState.timePerQuestion || 15) * 1000;
+      var speedRatio = Math.max(0, Math.min(1, 1 - (timeUsedMs / totalDurationMs)));
+      earned = Math.round(500 + 500 * speedRatio);
+      gameState.playerLocalScore += earned;
+      gameState.playerLocalStreak += 1;
+    } else {
+      gameState.playerLocalStreak = 0;
+    }
+
+    // Cập nhật điểm và thứ hạng lên BXH Công Khai
+    updatePlayerScoreInPublicRoom(gameState.pin, gameState.myPlayerId, gameState.playerLocalScore, gameState.playerLocalStreak);
+
+    var p4Payload = {
+      pin: gameState.pin,
+      questionIndex: qIdx,
+      correctIndex: q.correctIndex,
+      correctLetter: correctLetter,
+      correctText: q.options[q.correctIndex] || '',
+      scores: [{
+        id: gameState.myPlayerId,
+        score: gameState.playerLocalScore,
+        streak: gameState.playerLocalStreak,
+        lastEarned: earned
+      }],
+      expiresAt: gameState.roomExpiresAt,
+      durationLabel: gameState.roomDurationLabel
+    };
+
+    onPlayerReceivePhase4(p4Payload, false);
+  }
+
+  function finishPublicSoloGame() {
+    gameState.status = 'player_game';
+    gameState.isSoloRunner = false;
+    hideAllPlayerSubCards();
+    showView('playerGameView');
+
+    updatePlayerScoreInPublicRoom(gameState.pin, gameState.myPlayerId, gameState.playerLocalScore, gameState.playerLocalStreak);
+
+    var myRank = 1;
+    var totalPlayers = 1;
+    var pubRooms = getSavedPublicRooms();
+    var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === normalizePin(gameState.pin); });
+    if (matchPub && Array.isArray(matchPub.players)) {
+      var sorted = matchPub.players.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+      totalPlayers = sorted.length;
+      var foundIdx = sorted.findIndex(function (p) { return p.id === gameState.myPlayerId; });
+      if (foundIdx !== -1) myRank = foundIdx + 1;
+    }
+
+    var p5Card = document.getElementById('playerPhase5Card');
+    var p5Medal = document.getElementById('playerPhase5Medal');
+    var p5Title = document.getElementById('playerPhase5Title');
+    var p5Gap = document.getElementById('playerPhase5Gap');
+    var p5Total = document.getElementById('playerPhase5Total');
+
+    if (p5Medal) {
+      p5Medal.textContent = myRank === 1 ? '👑' : (myRank === 2 ? '🥈' : (myRank === 3 ? '🥉' : '🏅'));
+    }
+    if (p5Title) {
+      p5Title.textContent = 'Hoàn thành bài thi! Hạng #' + myRank + (totalPlayers > 1 ? (' / ' + totalPlayers + ' người') : '');
+    }
+    if (p5Gap) {
+      p5Gap.textContent = (myRank === 1)
+        ? '🎉 Tuyệt đỉnh! Bạn đang giữ vị trí Top 1 Quán Quân của phòng!'
+        : ('Chúc mừng bạn đã ghi danh lên Bảng Xếp Hạng Công Khai phòng #' + formatPinCode(gameState.pin));
+    }
+    if (p5Total) {
+      p5Total.textContent = 'Tổng điểm đạt được: ' + (gameState.playerLocalScore || 0).toLocaleString() + ' đ';
+    }
+
+    var p5Wait = document.getElementById('playerPhase5WaitHint') || document.querySelector('#playerPhase5Card .phase5-wait-hint');
+    if (p5Wait) {
+      p5Wait.innerHTML =
+        '<div class="solo-finish-actions">' +
+        '<button type="button" class="btn btn-hero-primary" id="btnSoloBackToLobby">🏆 Xem Bảng Xếp Hạng Phòng</button>' +
+        '<button type="button" class="btn btn-secondary" id="btnSoloPlayAgain">🔄 Thi đấu lại</button>' +
+        '</div>';
+
+      var backBtn = document.getElementById('btnSoloBackToLobby');
+      if (backBtn) {
+        backBtn.onclick = function () {
+          showView('playerLobbyView');
+          renderPlayerWaitingRoster((matchPub && matchPub.players) || []);
+        };
+      }
+      var replayBtn = document.getElementById('btnSoloPlayAgain');
+      if (replayBtn) {
+        replayBtn.onclick = function () {
+          startPublicSoloGame();
+        };
+      }
+    }
+
+    if (p5Card) p5Card.style.display = 'block';
+    SFX.fanfare();
+    if (typeof confetti === 'function') {
+      try {
+        confetti({ particleCount: 110, spread: 80, origin: { y: 0.6 } });
+      } catch (e) { }
+    }
+  }
+
+  function updatePlayerScoreInPublicRoom(pin, playerId, score, streak) {
+    var cleanPin = normalizePin(pin);
+    if (!cleanPin) return;
+
+    var playerName = gameState.playerProfile.name || 'Người chơi';
+    var playerAvatar = gameState.playerProfile.avatar || '🐼';
+
+    var pubRooms = getSavedPublicRooms();
+    var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
+
+    if (matchPub) {
+      if (!Array.isArray(matchPub.players)) matchPub.players = [];
+      var existing = matchPub.players.find(function (p) { return p.id === playerId; });
+      if (existing) {
+        existing.score = Math.max(existing.score || 0, score);
+        existing.streak = Math.max(existing.streak || 0, streak);
+      } else {
+        matchPub.players.push({
+          id: playerId,
+          name: playerName,
+          avatar: playerAvatar,
+          score: score,
+          streak: streak,
+          isBot: false
+        });
+      }
+      matchPub.playerCount = matchPub.players.length;
+      matchPub.updatedAt = Date.now();
+      saveSavedPublicRooms(pubRooms);
+    }
+
+    try {
+      var rList = (matchPub && matchPub.players) || [];
+      localStorage.setItem('wq_arena_roster_' + cleanPin, JSON.stringify({
+        pin: cleanPin,
+        accessMode: 'public',
+        players: rList,
+        updatedAt: Date.now()
+      }));
+    } catch (e) { }
+
+    try {
+      var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + cleanPin);
+      if (hostRoomRaw) {
+        var hostRoom = JSON.parse(hostRoomRaw);
+        if (hostRoom && Array.isArray(hostRoom.players)) {
+          var hExisting = hostRoom.players.find(function (p) { return p.id === playerId; });
+          if (hExisting) {
+            hExisting.score = Math.max(hExisting.score || 0, score);
+            hExisting.streak = Math.max(hExisting.streak || 0, streak);
+          } else {
+            hostRoom.players.push({
+              id: playerId,
+              name: playerName,
+              avatar: playerAvatar,
+              score: score,
+              streak: streak,
+              isBot: false
+            });
+          }
+          localStorage.setItem('wq_arena_host_room_' + cleanPin, JSON.stringify(hostRoom));
+          if (gameState.role === 'host' && normalizePin(gameState.pin) === cleanPin) {
+            gameState.players = hostRoom.players;
+            renderPlayerList();
+          }
+        }
+      }
+    } catch (e) { }
+
+    broadcastMsg('lobby_roster_sync', {
+      pin: cleanPin,
+      accessMode: 'public',
+      players: (matchPub && matchPub.players) || []
+    }, true);
   }
 
   // ==================== BỘ XỬ LÝ TIN NHẮN ĐỒNG BỘ TRUNG TÂM ====================
@@ -3294,6 +3673,28 @@
           });
         }
         recordPlayerAnswerOnHost(p.playerId, p.answerIndex);
+      } else if (action === 'player_score_update') {
+        var existingPS = gameState.players.find(function (x) { return x.id === p.playerId; });
+        if (!existingPS && p.playerId) {
+          gameState.players.push({
+            id: p.playerId,
+            name: p.name || 'Người chơi',
+            avatar: p.avatar || '🐼',
+            score: p.score || 0,
+            prevRank: gameState.players.length + 1,
+            streak: p.streak || 0,
+            lives: 3,
+            lastAnswerIndex: -1,
+            answeredAt: Date.now(),
+            lastPointsEarned: p.earned || 0,
+            isBot: false
+          });
+        } else if (existingPS) {
+          existingPS.score = Math.max(existingPS.score || 0, p.score || 0);
+          existingPS.streak = Math.max(existingPS.streak || 0, p.streak || 0);
+          existingPS.lastPointsEarned = p.earned || 0;
+        }
+        renderPlayerList();
       }
       return;
     }
@@ -3647,6 +4048,11 @@
     // Player Join & Leave
     var btnPlayerJoin = document.getElementById('btnPlayerJoin');
     if (btnPlayerJoin) btnPlayerJoin.onclick = playerJoin;
+
+    var btnPlayerStartPublicSolo = document.getElementById('btnPlayerStartPublicSolo');
+    if (btnPlayerStartPublicSolo) {
+      btnPlayerStartPublicSolo.onclick = startPublicSoloGame;
+    }
 
     var btnPlayerLeaveLobby = document.getElementById('btnPlayerLeaveLobby');
     if (btnPlayerLeaveLobby) {
