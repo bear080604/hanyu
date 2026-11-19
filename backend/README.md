@@ -77,18 +77,19 @@ Mở: http://localhost:8787
 
 ```bash
 # Login vào tài khoản Cloudflare
-npx wrangler login
+npx wrangler@3 login
 
 # Tạo database D1 (nếu tài khoản mới chưa có)
-npx wrangler d1 create weiquan_hsk
+npx wrangler@3 d1 create weiquan_hsk
 # Copy database_id in ra vào backend/wrangler.toml
 
 # Khởi tạo bảng và seed dữ liệu
-npx wrangler d1 execute weiquan_hsk --remote --file=./schema.sql
-npx wrangler d1 execute weiquan_hsk --remote --file=./seed.sql
+npx wrangler@3 d1 execute weiquan_hsk --remote --file=./schema.sql
+npx wrangler@3 d1 execute weiquan_hsk --remote --file=./seed.sql
+npx wrangler@3 d1 execute weiquan_hsk --remote --file=./seed_custom_decks.sql
 
 # Deploy Worker lên Cloudflare
-npx wrangler deploy
+npx wrangler@3 deploy
 ```
 
 ## 📡 API Endpoints
