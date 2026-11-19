@@ -137,7 +137,8 @@
 
             <div class="arena-form-row">
               <div class="arena-form-group">
-                <label class="arena-label" for="hostRoomDuration">⏳ Thời hạn lưu trữ phòng chơi (Tồn tại để mọi người vào chơi / tải lại trang không mất):</label>
+                <label class="arena-label" for="hostRoomDuration">⏳ Thời hạn lưu trữ phòng chơi (Tồn tại để mọi người
+                  vào chơi / tải lại trang không mất):</label>
                 <select id="hostRoomDuration" class="auth-input arena-select">
                   <option value="15m">15 phút</option>
                   <option value="30m" selected>30 phút (Tiêu chuẩn)</option>
@@ -162,7 +163,8 @@
                       <span class="access-card-title">Công Khai (Public)</span>
                       <span class="access-card-badge">Khuyên dùng</span>
                     </div>
-                    <p class="access-card-desc">Hiện trực tiếp <b>Bảng Xếp Hạng</b> phòng đấu; người chơi thấy ngay trên sảnh và vào tự do không cần gõ mã PIN.</p>
+                    <p class="access-card-desc">Hiện trực tiếp <b>Bảng Xếp Hạng</b> phòng đấu; người chơi thấy ngay trên
+                      sảnh và vào tự do không cần gõ mã PIN.</p>
                   </label>
 
                   <label class="arena-access-card" data-access="private">
@@ -172,7 +174,8 @@
                       <span class="access-card-title">Riêng Tư (Private)</span>
                       <span class="access-card-badge private">Cần PIN</span>
                     </div>
-                    <p class="access-card-desc">Chỉ những ai có mã PIN 6 số hoặc quét mã QR mới vào được phòng thi đấu.</p>
+                    <p class="access-card-desc">Chỉ những ai có mã PIN 6 số hoặc quét mã QR mới vào được phòng thi đấu.
+                    </p>
                   </label>
                 </div>
               </div>
@@ -217,12 +220,14 @@
               </div>
               <div class="lobby-expiry-pill" id="lobbyExpiryBadge">⏳ Lưu trữ: 30 phút</div>
               <div class="lobby-meta-info" id="lobbyDeckInfo">HSK 1 • 10 câu</div>
+              <button type="button" class="btn-lobby-new-game" id="btnLobbyCreateNewGame" title="Tạo phòng thi đấu mới">➕ Tạo game mới</button>
             </div>
           </div>
 
           <div class="lobby-body">
             <!-- 1. BẢNG XẾP HẠNG TRỰC TIẾP (KHI LÀ PHÒNG CÔNG KHAI) -->
-            <div class="lobby-players-panel host-public-lb-panel" id="hostPublicLeaderboardPanel" style="display: none;">
+            <div class="lobby-players-panel host-public-lb-panel" id="hostPublicLeaderboardPanel"
+              style="display: none;">
               <div class="lobby-players-header">
                 <h3>🏆 Bảng Xếp Hạng Đấu Thủ (<span id="hostLbPlayerCount">0</span>)</h3>
                 <button type="button" class="btn-add-bot" id="btnAddBotLb">
@@ -233,7 +238,8 @@
                 <span>🌐 Phòng Công Khai • Bảng xếp hạng cập nhật trực tiếp theo điểm số</span>
               </div>
               <div class="host-lobby-lb-list" id="hostLobbyLeaderboardList">
-                <div class="empty-lobby-text">Đang chờ người chơi tham gia phòng công khai... (Hoặc bấm "+ Thêm bạn học ảo 🤖" để test ngay)</div>
+                <div class="empty-lobby-text">Đang chờ người chơi tham gia phòng công khai... (Hoặc bấm "+ Thêm bạn học
+                  ảo 🤖" để test ngay)</div>
               </div>
             </div>
 
@@ -487,10 +493,22 @@
       <!-- ==================== 6. PLAYER: MÀN HÌNH NHẬP PIN / QUÉT QR (MẶC ĐỊNH CHO NGƯỜI CHƠI) ==================== -->
       <div class="arena-view" id="playerJoinView">
         <div class="glass-card arena-card player-join-card">
+          <!-- Thanh điều hướng nhanh cho Admin nếu đang ở màn hình Người chơi -->
+          <div class="admin-quick-switch-banner" id="adminJoinViewBanner" style="display: none;">
+            <div class="admin-quick-switch-info">
+              <span class="admin-quick-switch-badge">👑 Quản Trị Viên</span>
+              <span>Bạn đang đăng nhập Quản trị viên (Admin)</span>
+            </div>
+            <div class="admin-quick-switch-actions">
+              <button type="button" class="btn-admin-switch-act" id="btnAdminGoCreateFromJoin">🎮 Bảng Tạo &amp; Điều Khiển Game ➔</button>
+            </div>
+          </div>
+
           <div class="player-join-header">
             <span class="arena-badge" id="playerJoinRoomBadge">Đấu Trường Trực Tuyến</span>
             <h2>Tham Gia Phòng Thi Đấu</h2>
-            <p id="playerJoinRoomSub">Tham gia phòng thi đấu công khai hoặc nhập mã PIN bí mật từ Admin để bắt đầu tranh tài!</p>
+            <p id="playerJoinRoomSub">Tham gia phòng thi đấu công khai hoặc nhập mã PIN bí mật từ Admin để bắt đầu tranh
+              tài!</p>
           </div>
 
           <!-- Tabs chọn chế độ vào phòng -->
@@ -512,7 +530,7 @@
               <span class="pub-rooms-subtitle">Các phòng đấu mở tự do • Hiện trực tiếp Bảng xếp hạng</span>
               <button type="button" class="btn-refresh-pub-rooms" id="btnRefreshPublicRooms" title="Làm mới danh sách">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
                 <span>Làm mới</span>
               </button>
@@ -524,14 +542,16 @@
                 <span class="quick-profile-avatar" id="quickProfileAvatar">🐼</span>
                 <span class="quick-profile-name" id="quickProfileName">Bạn</span>
               </div>
-              <button type="button" class="btn-edit-quick-profile" id="btnEditQuickProfile">Đổi Nickname / Linh vật ✎</button>
+              <button type="button" class="btn-edit-quick-profile" id="btnEditQuickProfile">Đổi Nickname / Linh vật
+                ✎</button>
             </div>
 
             <div class="public-rooms-list" id="publicRoomsList">
               <div class="empty-public-rooms">
                 <div class="empty-pub-icon">🌐</div>
                 <div class="empty-pub-title">Hiện chưa có phòng thi đấu công khai nào đang mở</div>
-                <div class="empty-pub-desc">Bạn có thể chọn tab <b>"Nhập Mã PIN"</b> để vào phòng riêng tư, hoặc nhờ Admin tạo phòng công khai nhé!</div>
+                <div class="empty-pub-desc">Bạn có thể chọn tab <b>"Nhập Mã PIN"</b> để vào phòng riêng tư, hoặc nhờ
+                  Admin tạo phòng công khai nhé!</div>
               </div>
             </div>
           </div>
@@ -541,8 +561,8 @@
             <div class="player-join-form">
               <div class="arena-form-group">
                 <label class="arena-label" for="playerInputPin">MÃ PIN PHÒNG (6 SỐ):</label>
-                <input type="text" id="playerInputPin" class="auth-input pin-input" placeholder="VD: 842910" maxlength="8"
-                  inputmode="numeric">
+                <input type="text" id="playerInputPin" class="auth-input pin-input" placeholder="VD: 842910"
+                  maxlength="8" inputmode="numeric">
               </div>
 
               <div class="arena-form-group">
@@ -567,7 +587,8 @@
                 </div>
               </div>
 
-              <button type="button" class="btn btn-hero-primary" id="btnPlayerJoin" style="width: 100%; margin-top: 8px;">
+              <button type="button" class="btn btn-hero-primary" id="btnPlayerJoin"
+                style="width: 100%; margin-top: 8px;">
                 <span>Vào phòng chờ ➔</span>
               </button>
             </div>
@@ -578,12 +599,26 @@
       <!-- ==================== 7. PLAYER: PHÒNG CHỜ TRÊN ĐIỆN THOẠI ==================== -->
       <div class="arena-view" id="playerLobbyView" style="display: none;">
         <div class="glass-card arena-card player-waiting-card">
+          <!-- Thanh điều hướng nhanh cho Admin nếu đang test phòng với vai trò Người chơi -->
+          <div class="admin-quick-switch-banner" id="adminLobbyViewBanner" style="display: none;">
+            <div class="admin-quick-switch-info">
+              <span class="admin-quick-switch-badge">👑 Quản Trị Viên</span>
+              <span>Bạn đang ở chế độ Người chơi để test phòng <b>#<span id="adminLobbyPinText">------</span></b></span>
+            </div>
+            <div class="admin-quick-switch-actions">
+              <button type="button" class="btn-admin-switch-act" id="btnAdminReturnHostFromLobby">🎮 Quay lại Bảng Host Điều Khiển ➔</button>
+              <button type="button" class="btn-admin-switch-sec" id="btnAdminCreateNewFromLobby">➕ Tạo game mới</button>
+            </div>
+          </div>
+
           <div class="player-big-avatar" id="playerWaitingAvatar">🐼</div>
           <h2 class="player-waiting-name" id="playerWaitingName">Bạn</h2>
           <div class="player-waiting-badges-row">
-            <span class="player-waiting-badge" id="playerConnectedBadge">Đã kết nối phòng #<span id="playerConnectedPin">------</span></span>
+            <span class="player-waiting-badge" id="playerConnectedBadge">Đã kết nối phòng #<span
+                id="playerConnectedPin">------</span></span>
             <span class="player-room-access-tag" id="playerRoomAccessTag">🌐 Công khai</span>
-            <span class="player-room-expiry-badge" id="playerRoomExpiryBadge" style="display: none;">⏳ Lưu trữ: 30 phút</span>
+            <span class="player-room-expiry-badge" id="playerRoomExpiryBadge" style="display: none;">⏳ Lưu trữ: 30
+              phút</span>
           </div>
 
           <!-- BẢNG XẾP HẠNG TRỰC TIẾP (KHI LÀ PHÒNG CÔNG KHAI) -->
@@ -610,10 +645,12 @@
             <div class="player-lobby-roster-list" id="playerLobbyRosterList"></div>
           </div>
 
-          <p class="player-waiting-hint" id="playerWaitingHintText">Bạn đã có mặt trên màn hình lớn! Tải lại trang hoặc lỡ thoát ra vào lại đều tự động giữ nguyên vị trí trong phòng.</p>
+          <p class="player-waiting-hint" id="playerWaitingHintText">Bạn đã có mặt trên màn hình lớn! Tải lại trang hoặc
+            lỡ thoát ra vào lại đều tự động giữ nguyên vị trí trong phòng.</p>
           <div class="pulsing-loader"></div>
           <div style="margin-top: 16px;">
-            <button type="button" class="btn-player-leave-room" id="btnPlayerLeaveLobby">🚪 Rời phòng / Chọn phòng khác</button>
+            <button type="button" class="btn-player-leave-room" id="btnPlayerLeaveLobby">🚪 Rời phòng / Chọn phòng
+              khác</button>
           </div>
         </div>
       </div>
@@ -628,7 +665,8 @@
           </div>
           <div class="player-q-prompt" id="playerMiniPrompt">Câu 1</div>
           <div class="player-streak-tag" id="playerStreakTag" style="display: none;">🔥 <span>0</span></div>
-          <button type="button" class="btn-player-leave-mini" id="btnPlayerLeaveGame" title="Rời phòng thi đấu">🚪 Rời</button>
+          <button type="button" class="btn-player-leave-mini" id="btnPlayerLeaveGame" title="Rời phòng thi đấu">🚪
+            Rời</button>
         </div>
 
         <!-- PHA 1 TRÊN ĐIỆN THOẠI: Đọc đề 3 giây (Chưa hiện 4 nút bấm đáp án) -->
@@ -721,21 +759,26 @@
   <div id="publicLeaderboardModal" class="modal" aria-modal="true" role="dialog" aria-label="Bảng xếp hạng phòng">
     <div class="modal-content glass-card"
       style="max-width:520px; width:92%; max-height:85vh; overflow-y:auto; border-radius:18px; padding:24px; position:relative;">
-      <button id="closePublicLbModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;" aria-label="Đóng">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <button id="closePublicLbModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;"
+        aria-label="Đóng">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
       </button>
       <div class="pub-modal-header" style="text-align: center; margin-bottom: 16px;">
         <span class="arena-badge" id="pubModalBadge">🌐 Phòng Công Khai #------</span>
-        <h2 id="pubModalTitle" style="font-size:1.3rem; font-weight:700; margin:8px 0 4px; color:var(--text-primary);">🏆 Bảng Xếp Hạng Đấu Thủ</h2>
-        <p id="pubModalMeta" style="font-size:0.86rem; color:var(--text-secondary); margin:0;">Đang tải danh sách đấu thủ...</p>
+        <h2 id="pubModalTitle" style="font-size:1.3rem; font-weight:700; margin:8px 0 4px; color:var(--text-primary);">
+          🏆 Bảng Xếp Hạng Đấu Thủ</h2>
+        <p id="pubModalMeta" style="font-size:0.86rem; color:var(--text-secondary); margin:0;">Đang tải danh sách đấu
+          thủ...</p>
       </div>
       <div id="pubModalLeaderboardList" class="leaderboard-list"></div>
       <div style="margin-top:20px; display:flex; gap:10px;">
         <button type="button" class="btn btn-secondary" id="btnClosePubModal" style="flex:1;">Đóng</button>
-        <button type="button" class="btn btn-hero-primary" id="btnJoinFromPubModal" style="flex:1.6;">Vào thi đấu ngay ➔</button>
+        <button type="button" class="btn btn-hero-primary" id="btnJoinFromPubModal" style="flex:1.6;">Vào thi đấu ngay
+          ➔</button>
       </div>
     </div>
   </div>

@@ -152,11 +152,16 @@
     stopCloudPolling();
     cleanupCloudRoomMessages();
     gameState.status = 'config';
+    gameState.role = 'player';
+    gameState.pin = '';
+    gameState.myPlayerId = '';
+    syncBrowserUrl('', '');
     if (window.WQProfile && typeof window.WQProfile.logoutAdmin === 'function') {
       window.WQProfile.logoutAdmin();
     } else {
       sessionStorage.removeItem('wq_arena_admin_logged');
       localStorage.removeItem('wq_arena_admin_logged');
+      localStorage.removeItem('wq_arena_admin_user');
       switchRoleTab('player');
     }
     if (typeof showToast === 'function') {
@@ -375,6 +380,20 @@
   };
 
   // ==================== VIEW MANAGEMENT ====================
+  function renderAdminReturnBanner(pin) {
+    var isLogged = isAdminLoggedIn();
+    var joinBanner = document.getElementById('adminJoinViewBanner');
+    var lobbyBanner = document.getElementById('adminLobbyViewBanner');
+    var lobbyPinText = document.getElementById('adminLobbyPinText');
+
+    if (joinBanner) joinBanner.style.display = isLogged ? 'flex' : 'none';
+    if (lobbyBanner) lobbyBanner.style.display = isLogged ? 'flex' : 'none';
+    if (lobbyPinText) {
+      var displayPin = pin || gameState.pin || localStorage.getItem('wq_arena_active_host_pin') || '';
+      lobbyPinText.textContent = formatPinCode(displayPin);
+    }
+  }
+
   function showView(viewId) {
     var allViews = document.querySelectorAll('.arena-view');
     allViews.forEach(function (v) {
@@ -390,6 +409,7 @@
       // Chỉ hiển thị thanh chuyển đổi Admin/Player khi đã đăng nhập Admin ở ô Hồ sơ!
       roleTabs.style.display = (isAdminLoggedIn() && !inActiveMatch) ? 'flex' : 'none';
     }
+    renderAdminReturnBanner(gameState.pin);
   }
 
   // ==================== INIT ARENA ====================
@@ -1080,10 +1100,15 @@
     gameState.playerLastPhaseAction = '';
     gameState.playerLastPhasePayload = null;
     syncBrowserUrl('', '');
-    showView('playerJoinView');
+
+    if (isAdminLoggedIn()) {
+      switchRoleTab('host');
+    } else {
+      showView('playerJoinView');
+    }
 
     if (!silent && typeof showToast === 'function') {
-      showToast('Đã rời phòng thi đấu. Bạn có thể nhập mã PIN mới!', 'info');
+      showToast('Đã rời phòng thi đấu.', 'info');
     }
   }
 
@@ -1091,20 +1116,55 @@
     pruneExpiredRooms();
     var urlParams = new URLSearchParams(window.location.search);
     var pinParam = normalizePin(urlParams.get('pin'));
-    var roleParam = urlParams.get('role');
+    var roleParam = (urlParams.get('role') || '').trim().toLowerCase();
 
-    // 1. Nếu URL có role=host và đã đăng nhập Admin -> Khôi phục thẳng phòng Admin
-    if (isAdminLoggedIn() && roleParam === 'host' && pinParam) {
-      if (restoreHostRoomByPin(pinParam)) return;
+    // ==================== 1. QUẢN TRỊ VIÊN (ADMIN) ĐÃ ĐĂNG NHẬP ====================
+    if (isAdminLoggedIn()) {
+      // 1A. Nếu URL có pinParam
+      if (pinParam) {
+        var hostRoomData = localStorage.getItem('wq_arena_host_room_' + pinParam);
+        var activeHostPin = normalizePin(localStorage.getItem('wq_arena_active_host_pin'));
+        var isMyHostRoom = !!hostRoomData || (activeHostPin === pinParam);
+
+        // Nếu phòng này do chính Admin này làm chủ:
+        if (isMyHostRoom) {
+          // Chỉ khôi phục vai trò người chơi khi URL CỐ Ý truyền role=player (mở tab test người chơi)
+          if (roleParam === 'player') {
+            if (restorePlayerSessionByPin(pinParam)) {
+              renderAdminReturnBanner(pinParam);
+              return;
+            }
+          }
+          // Ngược lại, luôn khôi phục vai trò Host điều khiển phòng thi đấu!
+          if (restoreHostRoomByPin(pinParam)) {
+            return;
+          }
+        } else {
+          // Phòng của người khác hoặc không còn lưu trên máy:
+          if (roleParam === 'player') {
+            if (restorePlayerSessionByPin(pinParam)) {
+              renderAdminReturnBanner(pinParam);
+              return;
+            }
+          }
+        }
+      }
+
+      // 1B. Nếu mở trang không có mã PIN hoặc không tìm thấy phòng:
+      // Luôn đưa Admin về Bảng Thiết Lập & Tạo Game (hostConfigView)
+      // Dọn sạch URL để reload F5 không bị kẹt
+      syncBrowserUrl('', '');
+      switchRoleTab('host');
+      return;
     }
 
-    // 2. Nếu URL có ?pin=XXXXXX (Người chơi quét QR hoặc tải lại trang khi đang chơi)
-    if (pinParam && roleParam !== 'host') {
-      // Thử khôi phục phiên đang chơi của người chơi ở phòng này (nếu lỡ tải lại trang / thoát ra vào lại)
+    // ==================== 2. NGƯỜI CHƠI THÔNG THƯỜNG (CHƯA ĐĂNG NHẬP ADMIN) ====================
+    if (pinParam) {
+      // Khôi phục phiên đang chơi nếu lỡ tải lại trang
       if (restorePlayerSessionByPin(pinParam)) {
         return;
       }
-      // Nếu là người chơi mới vào link ?pin=XXXXXX
+      // Người chơi mới vào link có mã PIN
       switchRoleTab('player');
       var tabJoinPrivate = document.getElementById('tabJoinPrivate');
       if (tabJoinPrivate) tabJoinPrivate.click();
@@ -1118,61 +1178,62 @@
       return;
     }
 
-    // 3. Nếu mở trang Đấu trường không có param trên URL:
-    if (isAdminLoggedIn()) {
-      // Kiểm tra xem Admin có phòng đang mở chưa hết hạn không
-      var activeHostPin = normalizePin(localStorage.getItem('wq_arena_active_host_pin'));
-      if (activeHostPin && restoreHostRoomByPin(activeHostPin)) {
-        return;
-      }
-      switchRoleTab('host');
-    } else {
-      // Kiểm tra xem Người chơi có đang ở trong phòng nào chưa hết hạn mà lỡ thoát ra không
-      var lastPlayerPin = normalizePin(localStorage.getItem('wq_arena_last_player_pin'));
-      if (lastPlayerPin && restorePlayerSessionByPin(lastPlayerPin)) {
-        return;
-      }
-      switchRoleTab('player');
+    // Mở trang không có mã PIN:
+    var lastPlayerPin = normalizePin(localStorage.getItem('wq_arena_last_player_pin'));
+    if (lastPlayerPin && restorePlayerSessionByPin(lastPlayerPin)) {
+      return;
     }
+    switchRoleTab('player');
   }
 
   function switchRoleTab(role) {
     var tabHostBtn = document.getElementById('tabHostBtn');
     var tabPlayerBtn = document.getElementById('tabPlayerBtn');
 
-    if (isAdminLoggedIn() && role !== 'player') {
-      // Admin luôn giữ vai trò 'host' để nhận tín hiệu người chơi vào phòng ở cả 2 Tab
+    if (isAdminLoggedIn()) {
+      // Khi đã đăng nhập Admin, vai trò chủ đạo luôn là 'host'
       gameState.role = 'host';
+      gameState.myPlayerId = '';
+      gameState.playerLastChoice = -1;
+      gameState.playerLastPhaseAction = '';
+      gameState.playerLastPhasePayload = null;
+
       var adminNameEl = document.getElementById('adminCurrentName');
       if (adminNameEl) adminNameEl.textContent = getAdminName();
 
       if (role === 'lobby_view') {
+        // Tab 2: Phòng Chờ & Người Chơi
         if (tabPlayerBtn) tabPlayerBtn.classList.add('active');
         if (tabHostBtn) tabHostBtn.classList.remove('active');
 
-        if (!gameState.pin) {
+        if (gameState.pin) {
+          syncBrowserUrl(gameState.pin, 'host');
+          renderLobby();
+          showView('hostLobbyView');
+        } else {
           var activeHostPin = normalizePin(localStorage.getItem('wq_arena_active_host_pin'));
           if (activeHostPin && restoreHostRoomByPin(activeHostPin)) {
             return;
           }
-          createRoom();
-        } else {
-          syncBrowserUrl(gameState.pin, 'host');
-          renderLobby();
-          showView('hostLobbyView');
+          if (typeof showToast === 'function') {
+            showToast('Chưa có phòng thi đấu nào đang mở. Hãy thiết lập cấu hình và bấm Tạo Game nhé!', 'info');
+          }
+          switchRoleTab('host');
         }
       } else {
-        // Tab 1: Thiết Lập & Tạo Game
+        // Tab 1: Thiết Lập & Tạo Game (hostConfigView)
         if (tabHostBtn) tabHostBtn.classList.add('active');
         if (tabPlayerBtn) tabPlayerBtn.classList.remove('active');
+        syncBrowserUrl('', '');
         renderSavedRoomsList();
         showView('hostConfigView');
       }
     } else {
+      // Người chơi thông thường
       gameState.role = 'player';
       if (tabPlayerBtn) tabPlayerBtn.classList.add('active');
       if (tabHostBtn) tabHostBtn.classList.remove('active');
-      if (gameState.status === 'player_lobby') {
+      if (gameState.status === 'player_lobby' && gameState.pin) {
         showView('playerLobbyView');
       } else {
         showView('playerJoinView');
@@ -1736,7 +1797,8 @@
   function buildRoomShareUrl() {
     var base = window.location.origin + window.location.pathname;
     var params = new URLSearchParams({
-      pin: gameState.pin
+      pin: gameState.pin,
+      role: 'player'
     });
     return base + '?' + params.toString();
   }
@@ -3365,20 +3427,67 @@
       var isLogged = ev && ev.detail && ev.detail.loggedIn;
       if (isLogged) {
         SFX.correct();
+        gameState.role = 'host';
+        gameState.myPlayerId = '';
+        gameState.playerLastChoice = -1;
+        gameState.playerLastPhaseAction = '';
+        gameState.playerLastPhasePayload = null;
+        syncBrowserUrl('', '');
         switchRoleTab('host');
+        if (typeof showToast === 'function') {
+          showToast('👑 Chào mừng Quản trị viên! Đã mở Bảng Tạo Game.', 'success');
+        }
       } else {
         stopCloudPolling();
         cleanupCloudRoomMessages();
+        gameState.role = 'player';
+        gameState.pin = '';
+        gameState.myPlayerId = '';
         gameState.status = 'config';
+        syncBrowserUrl('', '');
         switchRoleTab('player');
       }
     });
 
     window.addEventListener('wq-admin-open-host', function () {
       if (isAdminLoggedIn()) {
+        syncBrowserUrl('', '');
         switchRoleTab('host');
       }
     });
+
+    var btnLobbyCreateNewGame = document.getElementById('btnLobbyCreateNewGame');
+    if (btnLobbyCreateNewGame) {
+      btnLobbyCreateNewGame.onclick = function () {
+        saveHostRoomState();
+        switchRoleTab('host');
+      };
+    }
+
+    var btnAdminGoCreateFromJoin = document.getElementById('btnAdminGoCreateFromJoin');
+    if (btnAdminGoCreateFromJoin) {
+      btnAdminGoCreateFromJoin.onclick = function () {
+        switchRoleTab('host');
+      };
+    }
+
+    var btnAdminReturnHostFromLobby = document.getElementById('btnAdminReturnHostFromLobby');
+    if (btnAdminReturnHostFromLobby) {
+      btnAdminReturnHostFromLobby.onclick = function () {
+        var cleanPin = normalizePin(gameState.pin || localStorage.getItem('wq_arena_active_host_pin'));
+        if (cleanPin && restoreHostRoomByPin(cleanPin)) {
+          return;
+        }
+        switchRoleTab('host');
+      };
+    }
+
+    var btnAdminCreateNewFromLobby = document.getElementById('btnAdminCreateNewFromLobby');
+    if (btnAdminCreateNewFromLobby) {
+      btnAdminCreateNewFromLobby.onclick = function () {
+        switchRoleTab('host');
+      };
+    }
 
     // Chọn 4 chế độ Game Kahoot
     var gmCards = document.querySelectorAll('.arena-gamemode-card');
