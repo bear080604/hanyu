@@ -342,7 +342,7 @@ export default {
                 allMsgs = prev.concat(roomMsgs.filter(m => !prev.some(p => p.id === m.id)));
                 if (allMsgs.length > 100) allMsgs = allMsgs.slice(-100);
               }
-            } catch (e) {}
+            } catch (e) { }
           }
           await cache.put(cacheUrl, new Response(JSON.stringify(allMsgs), {
             headers: {
@@ -350,7 +350,7 @@ export default {
               'Cache-Control': 'public, max-age=600'
             }
           }));
-        } catch (cacheErr) {}
+        } catch (cacheErr) { }
 
         // 3. Đồng thời ghi vào D1 nếu DB khả dụng
         if (env && env.DB) {
@@ -415,7 +415,7 @@ export default {
                 }));
               }
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         // 3. Fallback RAM: Nếu cache chưa có
@@ -444,7 +444,7 @@ export default {
           if (env && env.DB) {
             try {
               await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
-            } catch (e) {}
+            } catch (e) { }
           }
         }
         return jsonResponse({ success: true, message: 'Arena messages cleaned' });
@@ -469,7 +469,7 @@ export default {
               INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json, updated_at)
               VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
             `).bind(pin, name, isPublic, metaJson).run();
-          } catch (e) {}
+          } catch (e) { }
         }
 
         return jsonResponse({ success: true, message: 'Room saved', pin });
@@ -487,7 +487,7 @@ export default {
               if (results && results.length > 0) {
                 return jsonResponse({ success: true, data: results[0] });
               }
-            } catch (e) {}
+            } catch (e) { }
           }
           if (MEMORY_ARENA_ROOMS.has(pin)) {
             return jsonResponse({ success: true, data: MEMORY_ARENA_ROOMS.get(pin) });
@@ -514,7 +514,7 @@ export default {
                 }
               });
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         if (rooms.length === 0) {
@@ -542,7 +542,7 @@ export default {
             try {
               await env.DB.prepare('DELETE FROM arena_rooms WHERE pin = ?').bind(pin).run();
               await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
-            } catch (e) {}
+            } catch (e) { }
           }
         }
         return jsonResponse({ success: true, message: 'Room removed' });
