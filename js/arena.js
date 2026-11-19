@@ -13,7 +13,7 @@
   'use strict';
 
   var CLOUD_API_BASE = 'https://hanyu.phuonganhkhanh683.workers.dev';
-  var DEFAULT_PARTYKIT_HOST = '';
+  var DEFAULT_PARTYKIT_HOST = 'hanyu.phuonganhkhanh683.workers.dev';
   function getPartyKitHost() {
     try {
       var custom = localStorage.getItem('wq_partykit_host');
@@ -251,7 +251,7 @@
     var hostBadge = document.getElementById('arenaRealtimeStatusBadge');
     if (hostBadge) {
       if (isWs) {
-        hostBadge.textContent = '⚡ WebSocket (PartyKit)';
+        hostBadge.textContent = '⚡ WebSocket (Live)';
         hostBadge.className = 'arena-rt-badge arena-rt-badge-ws';
         hostBadge.title = 'Đang dùng WebSocket siêu tốc (<20ms), 0 request HTTP';
       } else {

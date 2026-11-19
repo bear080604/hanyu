@@ -42,6 +42,34 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
+    // ==================== WEBSOCKET REALTIME (DURABLE OBJECTS / PARTYSOCKET) ====================
+    const upgradeHeader = request.headers.get('Upgrade');
+    if (
+      (upgradeHeader && upgradeHeader.toLowerCase() === 'websocket') ||
+      path.startsWith('/parties/') ||
+      path === '/ws' ||
+      path.startsWith('/arena/ws')
+    ) {
+      if (upgradeHeader && upgradeHeader.toLowerCase() === 'websocket') {
+        let pin = 'default';
+        const match = path.match(/^\/parties\/[^\/]+\/([^\/\?]+)/);
+        if (match) {
+          pin = decodeURIComponent(match[1]);
+        } else {
+          pin = url.searchParams.get('pin') || url.searchParams.get('room') || 'default';
+        }
+
+        const cleanPin = pin.replace(/\D/g, '') || pin;
+        if (env && env.ARENA_ROOM) {
+          const id = env.ARENA_ROOM.idFromName(cleanPin.toUpperCase());
+          const roomObj = env.ARENA_ROOM.get(id);
+          return roomObj.fetch(request);
+        } else {
+          return new Response('Durable Object ARENA_ROOM not bound', { status: 503 });
+        }
+      }
+    }
+
     try {
       // ==================== VOCABULARY ENDPOINTS ====================
 
@@ -412,7 +440,7 @@ export default {
           try {
             const cache = caches.default;
             await cache.delete(`https://arena-cache.internal/sync/${pin}`);
-          } catch (e) {}
+          } catch (e) { }
           if (env && env.DB) {
             try {
               await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
@@ -615,7 +643,7 @@ export default {
             try {
               const res = await env.DB.prepare('INSERT INTO arena_messages (pin, msg) VALUES (?, ?)').bind(pin, msgStr).run();
               msgId = res.meta.last_row_id;
-            } catch (e) {}
+            } catch (e) { }
           }
           return jsonResponse({ success: true, deck_id: msgId, id: msgId }, 201);
         }
@@ -626,7 +654,7 @@ export default {
           if (env && env.DB) {
             try {
               await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, 0, ?)').bind(pin, pin, metaStr).run();
-            } catch (e) {}
+            } catch (e) { }
           }
           return jsonResponse({ success: true, deck_id: pin }, 201);
         }
@@ -636,12 +664,12 @@ export default {
           try {
             const parsed = typeof name === 'string' ? JSON.parse(name) : name;
             pin = parsed.pin || '';
-          } catch (e) {}
+          } catch (e) { }
           const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
           if (pin && env && env.DB) {
             try {
               await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, 1, ?)').bind(pin, pin, metaStr).run();
-            } catch (e) {}
+            } catch (e) { }
           }
           return jsonResponse({ success: true, deck_id: pin }, 201);
         }
@@ -800,7 +828,7 @@ export default {
         await env.DB.prepare('DELETE FROM custom_decks WHERE id = ?').bind(deckId).run();
         try {
           await env.DB.prepare('DELETE FROM arena_messages WHERE id = ?').bind(deckId).run();
-        } catch (e) {}
+        } catch (e) { }
         return jsonResponse({ success: true, message: 'Deck deleted' });
       }
 
@@ -834,3 +862,52 @@ export default {
     }
   },
 };
+
+// ==================== DURABLE OBJECT: ARENA ROOM ====================
+// Mỗi phòng Arena (mã PIN) tương ứng với 1 Durable Object instance duy nhất trên toàn cầu
+// Sử dụng WebSocket Hibernation API giúp 0% CPU khi idle, kết nối cực nhanh (<20ms), 0 HTTP requests
+export class ArenaRoom {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
+
+  async fetch(request) {
+    const webSocketPair = new WebSocketPair();
+    const [client, server] = Object.values(webSocketPair);
+
+    // Bật Cloudflare WebSocket Hibernation API
+    this.state.acceptWebSocket(server);
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  }
+
+  async webSocketMessage(ws, message) {
+    // Broadcast tin nhắn tới tất cả người chơi khác trong cùng phòng PIN
+    const sockets = this.state.getWebSockets();
+    for (const client of sockets) {
+      if (client !== ws) {
+        try {
+          client.send(message);
+        } catch (e) {
+          try { client.close(1011, 'Send error'); } catch (err) {}
+        }
+      }
+    }
+  }
+
+  async webSocketClose(ws, code, reason, wasClean) {
+    try {
+      ws.close(code, reason);
+    } catch (e) {}
+  }
+
+  async webSocketError(ws, error) {
+    try {
+      ws.close(1011, 'WebSocket error');
+    } catch (e) {}
+  }
+}
