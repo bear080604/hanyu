@@ -23,6 +23,7 @@ D:\hanyu\
 │   └── hsk_1.json ...          # Dữ liệu JSON gốc theo từng cấp độ HSK
 │
 ├── pages/                      # Các trang chức năng chính
+│   ├── arena.html              # 🏆 Đấu trường thi đấu Kahoot thời gian thực (Host & Player)
 │   ├── flash.html              # Học Flashcard 3D lật thẻ + Autoplay
 │   ├── quiz.html               # Trắc nghiệm 6 chế độ (Hán, Pinyin, Nghĩa, Nghe)
 │   ├── sentence.html           # 🧩 Ghép câu (Sắp xếp từ) & Hoàn thiện câu (Điền từ vào chỗ trống)
@@ -35,6 +36,7 @@ D:\hanyu\
 ├── js/                         # Logic điều khiển từng trang (Plain JS, không dùng bundler)
 │   ├── layout.js               # Inject Sidebar + Header + Nút gạt Sáng/Tối + Favicon động
 │   ├── shared.js               # State toàn cục (AppState), TTS phát âm, Tìm kiếm, Theme, Enrich câu
+│   ├── arena.js                # Game Engine Đấu Trường Hanyu, Web Audio SFX, 5-Phase Lifecycle
 │   ├── flash.js                # Logic trang Flashcard (pages/flash.html)
 │   ├── quiz.js                 # Logic trang Trắc nghiệm (pages/quiz.html)
 │   ├── sentence.js             # Logic trang Ghép câu & Điền từ + Tooltip từ vựng + Chấm xanh/đỏ từng từ
@@ -80,6 +82,9 @@ Mỗi trang trong `pages/*.html` (hoặc `index.html`) nạp các file script th
 | `wq_custom_sentences` | Từ điển câu ví dụ do người dùng tự thêm/nhập JSON (`{ "汉字": { ex, exp, exm, p, m } }`) |
 | `wq_pending_deck` | Bộ từ tạm thời khi chuyển hướng học giữa `custom.html` → `flash.html` / `quiz.html` / `sentence.html` |
 | `wq_pending_mode` | Chế độ học đang chờ (`'flashcard'`, `'quiz'`, `'sentence'`, hoặc `'both'` cho lộ trình 3 bước) |
+| `WQ_ARENA_HOST_ROOMS` | Danh sách metadata các phòng đấu do Host quản lý (`[{ pin, title, mode, qCount, ... }]`) |
+| `WQ_ARENA_ROOM_<PIN>` | Trạng thái chi tiết phòng đấu: danh sách câu hỏi, pha hiện tại, bảng điểm |
+| `WQ_ARENA_PLAYER_PROFILE` | Hồ sơ tạm của người chơi trong Đấu trường (`{ name, avatar }`) |
 
 ---
 
@@ -151,7 +156,32 @@ Form **📥 Nhập JSON** tại `pages/custom.html` (`js/custom.js`) tự độn
 
 ---
 
-## 🚀 6. Chạy thử nghiệm Local & Công cụ dữ liệu
+## 🏆 6. Đấu Trường Hanyu Arena (`pages/arena.html`, `js/arena.js`)
+
+Chế độ thi đấu đối kháng từ vựng tiếng Trung theo thời gian thực mô phỏng phong cách **Kahoot**:
+1. **Chu trình 5 Pha tự động (Autonomous 5-Phase Lifecycle):**
+   - **Phase 1 (Get Ready - 3s):** Hiện câu hỏi chữ Hán, phát âm TTS, ẩn 4 đáp án.
+   - **Phase 2 (Answering):** 4 đáp án màu sắc (Đỏ, Xanh dương, Vàng, Xanh lá) mở đồng thời, tính điểm tốc độ và chuỗi thắng (Streak).
+   - **Phase 3 (Smart Cut-off):** Tự động khóa câu trả lời khi người chơi nộp bài, tự ngắt giờ sớm khi 100% người chơi đã nộp bài.
+   - **Phase 4 (Reveal & Stats - 4s):** Bật sáng đáp án đúng, hiện biểu đồ thống kê A/B/C/D ở Host; đổi màu toàn màn hình ở Player.
+   - **Phase 5 (Full Leaderboard - 4s):** Hiện Bảng xếp hạng điểm số đầy đủ, tự động đếm lùi sang câu kế tiếp mà **không cần Admin bấm chuột thủ công**.
+2. **Cơ chế 2 Chế độ phòng:**
+   - **Công khai (Public):** Hiện danh sách phòng tại sảnh chờ. Người chơi có thể vào thi đấu tự do hoặc bấm **"Bắt đầu thi đấu ngay ➔" (Solo Play)** để tự luyện tập một mình mà không cần chờ Admin.
+   - **Riêng tư (Private):** Bảo vệ bằng mã PIN 6 số hoặc QR Code. Kiểm tra tính hợp lệ nghiêm ngặt, từ chối và báo lỗi nếu nhập bừa mã không tồn tại.
+3. **Đồng bộ Sẵn sàng & Đếm ngược 3-2-1:**
+   - Người chơi bấm **"Sẵn sàng thi đấu"** để báo hiệu cho Admin.
+   - Admin bấm **"Bắt đầu trận đấu"** kích hoạt đếm ngược `3... 2... 1...` hoàn toàn đồng bộ giữa Host và tất cả Player thông qua cơ chế bù lệch đồng hồ mạng (`clockSkewCompensation`).
+4. **Bảo lưu & Chống trùng lặp điểm:**
+   - Ràng buộc duy nhất 1 Nickname cho mỗi người chơi trong 1 phòng.
+   - Khi thoát ra và vào lại cùng một tên, hệ thống tự động nhận diện và cập nhật mốc điểm cao nhất (`Math.max(oldScore, newScore)`), không sinh ra nhiều dòng trùng tên.
+5. **Tiêu chuẩn tương phản cao (High-Contrast WCAG AA):**
+   - Đảm bảo hiển thị sắc nét trên cả Light Theme và Dark Theme, khắc phục triệt để tình trạng chữ trắng trên nền sáng hoặc chữ xanh tối trên nền đen.
+
+👉 *Xem chi tiết đầy đủ về kiến trúc, State Machine và Web Audio SFX tại tài liệu riêng: [ARENA.md](ARENA.md).*
+
+---
+
+## 🚀 7. Chạy thử nghiệm Local & Công cụ dữ liệu
 
 ```bash
 # Chạy máy chủ tĩnh tại thư mục gốc D:\hanyu
