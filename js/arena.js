@@ -2110,21 +2110,35 @@
     if (topCountEl) topCountEl.textContent = count;
     if (tabCountEl) tabCountEl.textContent = count;
 
+    var isPublic = (gameState.accessMode === 'public');
+    var pubNotice = document.getElementById('hostPublicLobbyNotice');
+    if (pubNotice) {
+      pubNotice.style.display = isPublic ? 'flex' : 'none';
+    }
+
     if (startBtn) {
-      startBtn.disabled = count === 0;
-      var readyLabel = count > 0 ? (' (' + readyCount + '/' + count + ' sẵn sàng)') : '';
-      startBtn.innerHTML = '<span>Bắt đầu trận đấu' + readyLabel + ' ➔</span>';
-      if (count > 0 && readyCount === count) {
-        startBtn.classList.add('all-ready');
-      } else {
+      if (isPublic) {
+        // PHÒNG CÔNG KHAI: Người chơi tự do thi đấu, Admin không bắt buộc phải bấm bắt đầu!
+        startBtn.disabled = false;
         startBtn.classList.remove('all-ready');
+        startBtn.innerHTML = '<span>Bắt đầu đồng loạt (Tùy chọn) ➔</span>';
+        startBtn.title = 'Phòng công khai: Người chơi tự bấm thi đấu trên máy của họ mà không cần Admin bắt đầu. Bấm nút này nếu bạn muốn khởi động trận đấu đồng loạt cho cả phòng.';
+      } else {
+        // PHÒNG RIÊNG TƯ: Chờ người chơi bấm sẵn sàng
+        startBtn.disabled = count === 0;
+        var readyLabel = count > 0 ? (' (' + readyCount + '/' + count + ' sẵn sàng)') : '';
+        startBtn.innerHTML = '<span>Bắt đầu trận đấu' + readyLabel + ' ➔</span>';
+        if (count > 0 && readyCount === count) {
+          startBtn.classList.add('all-ready');
+        } else {
+          startBtn.classList.remove('all-ready');
+        }
+        startBtn.title = '';
       }
     }
 
     saveHostRoomState();
     broadcastLobbyRoster();
-
-    var isPublic = (gameState.accessMode === 'public');
 
     if (isPublic) {
       // ===== PHÒNG CÔNG KHAI: HIỆN BẢNG XẾP HẠNG TRỰC TIẾP =====
@@ -2235,7 +2249,15 @@
   // ==================== BẮT ĐẦU TRẬN ĐẤU: ĐI QUA VÒNG ĐỜI 5 PHA ====================
   function startGame() {
     if (gameState.players.length === 0) {
-      if (typeof showToast === 'function') showToast('Cần ít nhất 1 người chơi (hoặc bạn học ảo) trong phòng để bắt đầu!', 'warning');
+      if (gameState.accessMode === 'public') {
+        if (typeof showToast === 'function') {
+          showToast('Phòng công khai đang mở! Người chơi có thể tự do vào thi đấu ngay mà không cần Admin bắt đầu. Bạn có thể bấm "+ Thêm đối thủ ảo" để chạy thử.', 'info');
+        }
+      } else {
+        if (typeof showToast === 'function') {
+          showToast('Cần ít nhất 1 người chơi (hoặc bạn học ảo) trong phòng để bắt đầu!', 'warning');
+        }
+      }
       return;
     }
 
@@ -3051,7 +3073,17 @@
     var btnText = document.getElementById('playerReadyBtnText');
     var statusText = document.getElementById('playerReadyStatusText');
     var indTag = document.getElementById('playerReadyIndicatorTag');
+    var readyActionBox = document.getElementById('playerReadyActionBox');
     var isReady = !!gameState.isReady;
+    var isPublic = (gameState.accessMode === 'public');
+
+    if (isPublic) {
+      if (indTag) indTag.style.display = 'none';
+      if (readyActionBox) readyActionBox.style.display = 'none';
+      return;
+    }
+
+    if (readyActionBox) readyActionBox.style.display = 'block';
 
     if (btn) {
       if (isReady) {
@@ -3072,6 +3104,7 @@
     }
 
     if (indTag) {
+      indTag.style.display = 'inline-block';
       if (isReady) {
         indTag.className = 'player-ready-indicator-tag is-ready';
         indTag.textContent = 'Đã sẵn sàng';
@@ -3120,12 +3153,17 @@
     var accessTag = document.getElementById('playerRoomAccessTag');
     var hintText = document.getElementById('playerWaitingHintText');
     var readyActionBox = document.getElementById('playerReadyActionBox');
+    var indTag = document.getElementById('playerReadyIndicatorTag');
 
     var isPublic = (gameState.accessMode === 'public');
 
     if (accessTag) {
       accessTag.textContent = isPublic ? 'Công khai' : 'Riêng tư';
       accessTag.className = 'player-room-access-tag ' + (isPublic ? 'is-public' : 'is-private');
+    }
+
+    if (indTag) {
+      indTag.style.display = isPublic ? 'none' : 'inline-block';
     }
 
     var list = Array.isArray(playersList) ? playersList.slice() : [];
@@ -3334,7 +3372,16 @@
     }
 
     // Cập nhật cấu hình phòng thi đấu chính xác từ Host
-    gameState.accessMode = targetRoom.accessMode || 'private';
+    var detectedAccessMode = targetRoom.accessMode;
+    if (!detectedAccessMode) {
+      var pubRoomsCheck = getSavedPublicRooms();
+      if (pubRoomsCheck.some(function (pr) { return normalizePin(pr.pin) === cleanPin; })) {
+        detectedAccessMode = 'public';
+      } else {
+        detectedAccessMode = 'private';
+      }
+    }
+    gameState.accessMode = detectedAccessMode;
     gameState.gameMode = targetRoom.gameMode || 'speed';
     gameState.deckName = targetRoom.deckName || 'HSK 1';
     gameState.timePerQuestion = targetRoom.timePerQuestion || 15;
@@ -3345,10 +3392,17 @@
       gameState.questions = targetRoom.questions;
       gameState.totalQuestions = targetRoom.questions.length;
     } else {
-      if (!gameState.deckWords || gameState.deckWords.length === 0) {
-        gameState.deckWords = getWordsFromDeckVal(gameState.deckName || 'HSK 1');
+      var pubRoomsQ = getSavedPublicRooms();
+      var matchPubQ = pubRoomsQ.find(function (pr) { return normalizePin(pr.pin) === cleanPin; });
+      if (matchPubQ && Array.isArray(matchPubQ.questions) && matchPubQ.questions.length > 0) {
+        gameState.questions = matchPubQ.questions;
+        gameState.totalQuestions = matchPubQ.questions.length;
+      } else {
+        if (!gameState.deckWords || gameState.deckWords.length === 0) {
+          gameState.deckWords = getWordsFromDeckVal(gameState.deckName || 'HSK 1');
+        }
+        generateQuestions(cleanPin);
       }
-      generateQuestions(cleanPin);
     }
     savePlayerProfile(cleanName, cleanAvatar);
 
@@ -4304,6 +4358,39 @@
           existingPS.lastPointsEarned = p.earned || 0;
         }
         renderPlayerList();
+      } else if (action === 'lobby_roster_sync') {
+        if (gameState.accessMode === 'public' && Array.isArray(p.players)) {
+          var updatedRoster = false;
+          p.players.forEach(function (rp) {
+            var ex = gameState.players.find(function (x) { return x.id === rp.id; });
+            if (ex) {
+              if ((rp.score || 0) > (ex.score || 0) || (rp.streak || 0) > (ex.streak || 0)) {
+                ex.score = Math.max(ex.score || 0, rp.score || 0);
+                ex.streak = Math.max(ex.streak || 0, rp.streak || 0);
+                updatedRoster = true;
+              }
+            } else {
+              gameState.players.push({
+                id: rp.id,
+                name: rp.name || 'Người chơi',
+                avatar: rp.avatar || '🐼',
+                score: rp.score || 0,
+                prevRank: gameState.players.length + 1,
+                streak: rp.streak || 0,
+                lives: 3,
+                lastAnswerIndex: -1,
+                answeredAt: Date.now(),
+                lastPointsEarned: 0,
+                isBot: !!rp.isBot,
+                isReady: true
+              });
+              updatedRoster = true;
+            }
+          });
+          if (updatedRoster && gameState.status === 'lobby') {
+            renderPlayerList();
+          }
+        }
       }
       return;
     }

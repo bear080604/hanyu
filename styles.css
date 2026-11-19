@@ -6392,6 +6392,41 @@ details[open] summary {
   color: var(--accent-red);
 }
 
+.host-public-lobby-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(38, 107, 77, 0.08);
+  border: 1px solid rgba(38, 107, 77, 0.25);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 18px;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  line-height: 1.45;
+}
+
+.host-pub-notice-icon {
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.host-pub-notice-body {
+  flex: 1;
+}
+
+.host-pub-notice-title {
+  font-weight: 700;
+  color: #266b4d;
+  margin-bottom: 2px;
+}
+
+.host-pub-notice-desc {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
 .lobby-footer {
   display: flex;
   justify-content: space-between;
