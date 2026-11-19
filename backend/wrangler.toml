@@ -1,8 +1,11 @@
-name = "apihanyu"
+name = "hanyu"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
 # D1 Database binding
+# Chú ý: Khi deploy trên tài khoản Cloudflare mới (nhannguyen2005111), hãy tạo D1:
+# npx wrangler d1 create weiquan_hsk
+# rồi cập nhật database_id bên dưới:
 [[d1_databases]]
 binding = "DB"
 database_name = "weiquan_hsk"

@@ -160,7 +160,7 @@ class WeiQuanAPI {
 }
 
 // Export API client
-const API_BASE_URL = 'https://apihanyu.phuonganhkhanh683.workers.dev'; // Production API
+const API_BASE_URL = 'https://hanyu.nhannguyen2005111.workers.dev'; // Production API
 const api = new WeiQuanAPI(API_BASE_URL);
 
 window.WeiQuanAPI = api;

@@ -12,7 +12,7 @@
 (function () {
   'use strict';
 
-  var CLOUD_API_BASE = 'https://apihanyu.phuonganhkhanh683.workers.dev';
+  var CLOUD_API_BASE = 'https://hanyu.nhannguyen2005111.workers.dev';
   var OPTION_LETTERS = ['A', 'B', 'C', 'D'];
 
   // ==================== WEB AUDIO SOUND EFFECTS ====================

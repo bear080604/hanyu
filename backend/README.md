@@ -76,14 +76,26 @@ Mở: http://localhost:8787
 ### 7. Deploy lên production
 
 ```bash
-npm run deploy
+# Login vào tài khoản Cloudflare
+npx wrangler login
+
+# Tạo database D1 (nếu tài khoản mới chưa có)
+npx wrangler d1 create weiquan_hsk
+# Copy database_id in ra vào backend/wrangler.toml
+
+# Khởi tạo bảng và seed dữ liệu
+npx wrangler d1 execute weiquan_hsk --remote --file=./schema.sql
+npx wrangler d1 execute weiquan_hsk --remote --file=./seed.sql
+
+# Deploy Worker lên Cloudflare
+npx wrangler deploy
 ```
 
 ## 📡 API Endpoints
 
 ### Base URL (sau khi deploy)
 ```
-https://weiquan-api.YOUR-SUBDOMAIN.workers.dev
+https://hanyu.nhannguyen2005111.workers.dev
 ```
 
 ### Vocabulary

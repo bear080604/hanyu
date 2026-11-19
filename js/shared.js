@@ -650,7 +650,7 @@ window.toggleAppTheme = toggleAppTheme;
 async function loadDataFromAPI() {
   try {
     console.log('📡 Loading all HSK data from API...');
-    const res = await fetch('https://apihanyu.phuonganhkhanh683.workers.dev/api/vocabulary/all');
+    const res = await fetch('https://hanyu.nhannguyen2005111.workers.dev/api/vocabulary/all');
     const json = await res.json();
     if (!json.success) throw new Error('API returned error');
 

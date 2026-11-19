@@ -8,7 +8,10 @@
     "deploy": "wrangler deploy",
     "db:create": "wrangler d1 create weiquan_hsk",
     "db:init": "wrangler d1 execute weiquan_hsk --file=./schema.sql",
-    "db:seed": "node scripts/seed.js"
+    "db:init:remote": "wrangler d1 execute weiquan_hsk --remote --file=./schema.sql",
+    "db:seed": "node scripts/seed.js",
+    "db:seed:remote": "wrangler d1 execute weiquan_hsk --remote --file=./seed.sql",
+    "db:seed:decks": "wrangler d1 execute weiquan_hsk --remote --file=./seed_custom_decks.sql"
   },
   "keywords": ["cloudflare", "workers", "d1", "hsk"],
   "author": "",
