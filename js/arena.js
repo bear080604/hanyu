@@ -212,7 +212,7 @@
       localStorage.setItem('wq_arena_sync', JSON.stringify(msg));
     } catch (e) { }
 
-    // 3. WebSocket Realtime qua PartyKit (<20ms, 0 request HTTP/D1)
+    // 3. WebSocket Realtime qua PartyKit / Cloudflare Durable Objects (<20ms, 0 request HTTP/D1)
     var sentViaWs = false;
     if (_partySocket && _partySocket.readyState === WebSocket.OPEN) {
       try {
@@ -221,6 +221,10 @@
       } catch (err) {
         sentViaWs = false;
       }
+    } else if (_partySocket && _partySocket.readyState === WebSocket.CONNECTING) {
+      // Đang kết nối (<50ms): Cho vào hàng đợi và gửi ngay khi socket mở
+      _wsSendQueue.push(JSON.stringify(msg));
+      sentViaWs = true;
     }
 
     // 4. Cloudflare Worker D1 Sync (Dự phòng khi chưa có WebSocket hoặc WebSocket bị ngắt)
@@ -246,6 +250,7 @@
   var _wsConnected = false;
   var _wsReconnectTimer = null;
   var _wsCurrentPin = null;
+  var _wsSendQueue = [];
 
   function updateRealtimeBadge(isWs) {
     var hostBadge = document.getElementById('arenaRealtimeStatusBadge');
@@ -285,10 +290,7 @@
       return;
     }
 
-    var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    if (host.includes('partykit.dev')) {
-      protocol = 'wss:';
-    }
+    var protocol = (window.location.protocol === 'https:' || host.includes('workers.dev') || host.includes('partykit.dev')) ? 'wss:' : 'ws:';
     var wsUrl = protocol + '//' + host + '/parties/main/' + encodeURIComponent(cleanPin);
 
     try {
@@ -301,6 +303,33 @@
         // Dừng HTTP polling khi WebSocket đang hoạt động để tiết kiệm 100% request!
         stopCloudPolling();
         updateRealtimeBadge(true);
+
+        // Xả toàn bộ hàng đợi tin nhắn đang chờ gửi
+        while (_wsSendQueue.length > 0) {
+          var queued = _wsSendQueue.shift();
+          try { _partySocket.send(queued); } catch (e) { }
+        }
+
+        // Tự động đồng bộ ngay trạng thái hiện tại qua WebSocket
+        if (gameState.role === 'player' && gameState.myPlayerId) {
+          var pJoinMsg = {
+            msgId: Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+            action: 'player_join',
+            payload: {
+              id: gameState.myPlayerId,
+              name: (gameState.playerProfile && gameState.playerProfile.name) || 'Người chơi',
+              avatar: (gameState.playerProfile && gameState.playerProfile.avatar) || '🐼',
+              pin: cleanPin,
+              score: gameState.playerLocalScore || 0,
+              streak: gameState.playerLocalStreak || 0,
+              isReady: !!gameState.playerIsReady
+            },
+            timestamp: Date.now()
+          };
+          try { _partySocket.send(JSON.stringify(pJoinMsg)); } catch (e) { }
+        } else if (gameState.role === 'host' && gameState.pin) {
+          broadcastLobbyRoster();
+        }
       };
 
       _partySocket.onmessage = function (event) {
@@ -346,6 +375,7 @@
   }
 
   function disconnectPartyKit() {
+    _wsSendQueue = [];
     if (_wsReconnectTimer) {
       clearTimeout(_wsReconnectTimer);
       _wsReconnectTimer = null;

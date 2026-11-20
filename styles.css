@@ -5326,26 +5326,87 @@ details[open] summary {
   box-shadow: var(--shadow-sm) !important;
 }
 
-:root.light-theme .btn {
-  background: #ffffff;
-  color: #1e293b;
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+:root.light-theme .btn:not(.btn-hero-primary):not(.btn-start-game):not(.btn-start-public-solo):not(.btn-player-ready):not(.btn-solo-next-q):not(.btn-pub-join):not(.start-learn-btn):not(.s-check-btn):not(.quiz-mode-btn):not(.btn-admin-switch-act):not(.btn-resume-room):not(.btn-writer) {
   background: var(--bg-raised);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
   box-shadow: var(--shadow-sm);
 }
 
-:root.light-theme .btn:hover {
-  background: #f5f3ff;
-  color: #6d28d9;
-  border-color: rgba(124, 58, 237, 0.35);
-  box-shadow: 0 6px 16px rgba(124, 58, 237, 0.12);
+:root.light-theme .btn:not(.btn-hero-primary):not(.btn-start-game):not(.btn-start-public-solo):not(.btn-player-ready):not(.btn-solo-next-q):not(.btn-pub-join):not(.start-learn-btn):not(.s-check-btn):not(.quiz-mode-btn):not(.btn-admin-switch-act):not(.btn-resume-room):not(.btn-writer):hover {
   background: var(--bg-card-hover);
   color: var(--text-primary);
   border-color: var(--border-medium);
   box-shadow: none;
+}
+
+/* Direct ID selectors ensuring 100% rock-solid contrast regardless of specificity */
+#btnStartGame,
+#btnCreateRoom,
+#btnGoPhase5Leaderboard,
+#btnContinueGame,
+#btnPlayAgain,
+#btnPlayerJoin,
+#btnPlayerStartPublicSolo,
+#btnPlayerToggleReady:not(.is-ready-active),
+#playerSoloNextBtn,
+#btnJoinFromPubModal {
+  background: var(--accent-red) !important;
+  color: #ffffff !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 4px 12px rgba(192, 57, 43, 0.22) !important;
+}
+
+#btnStartGame *,
+#btnCreateRoom *,
+#btnGoPhase5Leaderboard *,
+#btnContinueGame *,
+#btnPlayAgain *,
+#btnPlayerJoin *,
+#btnPlayerStartPublicSolo *,
+#btnPlayerToggleReady:not(.is-ready-active) *,
+#playerSoloNextBtn *,
+#btnJoinFromPubModal * {
+  color: #ffffff !important;
+}
+
+#btnStartGame:hover:not(:disabled),
+#btnCreateRoom:hover:not(:disabled),
+#btnGoPhase5Leaderboard:hover:not(:disabled),
+#btnContinueGame:hover:not(:disabled),
+#btnPlayAgain:hover:not(:disabled),
+#btnPlayerJoin:hover:not(:disabled),
+#btnPlayerStartPublicSolo:hover:not(:disabled),
+#btnPlayerToggleReady:not(.is-ready-active):hover:not(:disabled),
+#playerSoloNextBtn:hover:not(:disabled),
+#btnJoinFromPubModal:hover:not(:disabled) {
+  background: var(--accent-red-hover) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px rgba(192, 57, 43, 0.3) !important;
+}
+
+#btnStartGame:disabled,
+#btnCreateRoom:disabled,
+#btnGoPhase5Leaderboard:disabled,
+#btnContinueGame:disabled,
+#btnPlayAgain:disabled,
+#btnPlayerJoin:disabled,
+#btnPlayerStartPublicSolo:disabled,
+#btnPlayerToggleReady:disabled {
+  background: var(--bg-raised) !important;
+  color: #6b6459 !important;
+  border: 1px solid var(--border-subtle) !important;
+  opacity: 0.65 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+#btnStartGame:disabled *,
+#btnCreateRoom:disabled *,
+#btnPlayerJoin:disabled *,
+#btnPlayerToggleReady:disabled * {
+  color: #6b6459 !important;
 }
 
 /* Preserve white text on colored primary buttons and elements */
@@ -5368,6 +5429,14 @@ details[open] summary {
   color: #ffffff !important;
   border: 1px solid transparent !important;
   box-shadow: 0 4px 12px rgba(192, 57, 43, 0.22) !important;
+}
+
+:root.light-theme .btn-hero-primary *,
+:root.light-theme .btn.btn-hero-primary *,
+:root.light-theme .btn-start-game *,
+:root.light-theme .btn-pub-join *,
+:root.light-theme .btn-start-public-solo * {
+  color: #ffffff !important;
 }
 
 :root.light-theme .start-learn-btn:hover:not(:disabled),
@@ -5393,12 +5462,18 @@ details[open] summary {
 :root.light-theme .btn-player-ready:disabled,
 :root.light-theme .btn-start-public-solo:disabled {
   background: var(--bg-raised) !important;
-  color: var(--text-muted) !important;
+  color: #6b6459 !important;
   border: 1px solid var(--border-subtle) !important;
-  opacity: 0.6 !important;
+  opacity: 0.65 !important;
   box-shadow: none !important;
   cursor: not-allowed !important;
   transform: none !important;
+}
+
+:root.light-theme .btn-hero-primary:disabled *,
+:root.light-theme .btn.btn-hero-primary:disabled *,
+:root.light-theme .btn-start-game:disabled * {
+  color: #6b6459 !important;
 }
 
 /* Cards & Dashboard in White Tone */
@@ -7408,7 +7483,7 @@ details[open] summary {
 
 .arena-rt-badge-ws {
   background: rgba(16, 185, 129, 0.15);
-  color: #059669;
+  color: #047857;
   border: 1px solid rgba(16, 185, 129, 0.35);
 }
 
@@ -7420,7 +7495,7 @@ details[open] summary {
 
 .arena-rt-badge-http {
   background: rgba(245, 158, 11, 0.14);
-  color: #d97706;
+  color: #b45309;
   border: 1px solid rgba(245, 158, 11, 0.35);
 }
 
