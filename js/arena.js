@@ -446,11 +446,8 @@
       var cleanPin = normalizePin(gameState.pin);
       fetch(CLOUD_API_BASE + '/api/arena/sync?pin=' + encodeURIComponent(cleanPin), { method: 'DELETE' }).catch(function () { });
     }
-    var ids = _cloudRoomDeckIds.slice();
+    // Arena sync message ids are NOT custom_decks ids; deleting them via /api/decks wiped users' decks.
     _cloudRoomDeckIds = [];
-    ids.forEach(function (id) {
-      fetch(CLOUD_API_BASE + '/api/decks/' + id, { method: 'DELETE' }).catch(function () { });
-    });
   }
 
   // ==================== ROOM RETENTION / EXPIRATION PRESETS ====================

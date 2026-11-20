@@ -21,7 +21,8 @@
           bạn để tạo Flashcard học tập</p>
 
         <div class="custom-input-section">
-          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Thêm từ mới</h4>
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">Thêm từ mới
+          </h4>
           <div style="position: relative; margin-bottom: 16px;">
             <input type="text" id="customSearchInput"
               placeholder="🔍 Tìm từ: Hán tự hoặc nghĩa tiếng Việt (vd: 你好 hoặc xin chào)" class="auth-input"
@@ -43,7 +44,8 @@
               style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 16px; padding: 16px; margin-bottom: 16px;">
               <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                 <div>
-                  <div style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); font-family: 'PingFang SC', sans-serif;"
+                  <div
+                    style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary); font-family: 'PingFang SC', sans-serif;"
                     id="selectedHanzi"></div>
                   <div style="font-size: 1rem; color: var(--neon-cyan); font-weight: 600; margin-top: 4px;"
                     id="selectedPinyin"></div>
@@ -122,7 +124,8 @@
         <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 28px 0;">
 
         <div class="custom-history-section">
-          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">📚 Lịch sử bộ từ đã lưu</h4>
+          <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">📚 Lịch sử bộ
+            từ đã lưu</h4>
           <div id="customHistoryList" style="display: flex; flex-direction: column; gap: 10px;">
             <div style="text-align: center; padding: 40px; color: var(--text-muted);">Chưa có lịch sử</div>
           </div>
@@ -140,14 +143,17 @@
       </div>
       <div class="modal-body" style="padding: 24px;">
         <p style="color: var(--text-secondary); margin-bottom: 14px; font-size: 0.9rem;">
-          Tải file <code>.json</code> hoặc dán trực tiếp JSON (hỗ trợ cả JSON copy từ AI có <code>```json</code>, dấu phẩy thừa, hoặc chỉ có danh sách chữ Hán).
+          Tải file <code>.json</code> hoặc dán trực tiếp JSON (hỗ trợ cả JSON copy từ AI có <code>```json</code>, dấu
+          phẩy thừa, hoặc chỉ có danh sách chữ Hán).
         </p>
 
         <details
           style="margin-bottom: 16px; background: rgba(139, 92, 246, 0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid var(--glass-border);">
-          <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600; user-select: none;">📋 Xem các định dạng JSON được hỗ trợ</summary>
+          <summary style="cursor: pointer; color: var(--accent-purple); font-weight: 600; user-select: none;">📋 Xem các
+            định dạng JSON được hỗ trợ</summary>
           <div style="margin-top: 12px; font-size: 0.84rem; color: var(--text-secondary);">
-            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">1. Chuẩn đầy đủ (Flashcard + Trắc nghiệm + Ghép câu + Tooltip từng mảnh từ + Điền từ):</p>
+            <p style="font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">1. Chuẩn đầy đủ (Flashcard +
+              Trắc nghiệm + Ghép câu + Tooltip từng mảnh từ + Điền từ):</p>
             <pre
               style="background: rgba(139, 92, 246, 0.06); border: 1px solid var(--glass-border); padding: 10px 12px; border-radius: 8px; overflow-x: auto;"><code>[
   {
@@ -167,51 +173,71 @@
     "options": ["老师", "学生", "朋友", "医生"]
   }
 ]</code></pre>
-            <p style="font-weight: 600; color: var(--text-primary); margin: 10px 0 6px;">2. Dạng rút gọn (không cần ghi <code>tokens</code> / <code>options</code>, hệ thống tự tách câu hoặc tách theo dấu <code>/</code> trong <code>ex</code>):</p>
+            <p style="font-weight: 600; color: var(--text-primary); margin: 10px 0 6px;">2. Dạng rút gọn (không cần ghi
+              <code>tokens</code> / <code>options</code>, hệ thống tự tách câu hoặc tách theo dấu <code>/</code> trong
+              <code>ex</code>):</p>
             <pre
               style="background: rgba(139, 92, 246, 0.06); border: 1px solid var(--glass-border); padding: 10px 12px; border-radius: 8px; overflow-x: auto;"><code>{"name": "Bài 11", "words": [{"h": "老师", "p": "lǎoshī", "m": "Giáo viên", "ex": "王老师 / 教 / 我们 / 汉语。", "exm": "Thầy Vương dạy chúng tôi tiếng Trung."}]}</code></pre>
-            <p style="font-weight: 600; color: var(--text-primary); margin: 10px 0 6px;">3. Danh sách chữ Hán nhanh (tự động tra Pinyin, Nghĩa &amp; Câu ví dụ từ kho dữ liệu):</p>
+            <p style="font-weight: 600; color: var(--text-primary); margin: 10px 0 6px;">3. Danh sách chữ Hán nhanh (tự
+              động tra Pinyin, Nghĩa &amp; Câu ví dụ từ kho dữ liệu):</p>
             <pre
               style="background: rgba(139, 92, 246, 0.06); border: 1px solid var(--glass-border); padding: 10px 12px; border-radius: 8px; overflow-x: auto;"><code>["你好", "谢谢", "老师", "学习"]</code></pre>
           </div>
         </details>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 14px;">
+        <div
+          style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 14px;">
           <div>
-            <label style="display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; font-size: 0.88rem;">📁 Chọn file JSON từ máy</label>
+            <label
+              style="display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; font-size: 0.88rem;">📁
+              Chọn file JSON từ máy</label>
             <input type="file" id="jsonFileInput" accept=".json,application/json,.txt" class="auth-input"
               style="cursor: pointer; padding: 10px 12px;">
           </div>
           <div>
-            <label style="display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; font-size: 0.88rem;">🏷️ Tên bộ từ (nếu muốn lưu ngay)</label>
-            <input type="text" id="jsonDeckNameInput" placeholder="VD: Bài 11 (để trống nếu chỉ thêm vào bộ hiện tại)" class="auth-input"
-              style="padding: 10px 14px;">
+            <label
+              style="display: block; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; font-size: 0.88rem;">🏷️
+              Tên bộ từ (nếu muốn lưu ngay)</label>
+            <input type="text" id="jsonDeckNameInput" placeholder="VD: Bài 11 (để trống nếu chỉ thêm vào bộ hiện tại)"
+              class="auth-input" style="padding: 10px 14px;">
           </div>
         </div>
 
         <div style="margin-bottom: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px;">
             <label style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">📝 Nội dung JSON</label>
             <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              <button type="button" class="btn" id="insertSampleJsonBtn" style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;">📋 Chèn mẫu</button>
-              <button type="button" class="btn" id="formatJsonBtn" style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;">🪄 Tự sửa &amp; Format</button>
-              <button type="button" class="btn" id="copyAiPromptBtn" style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;" title="Copy câu lệnh để nhờ ChatGPT/Gemini tạo JSON từ vựng chuẩn">🤖 Copy Prompt AI</button>
-              <button type="button" class="btn" id="clearJsonBtn" style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;">🗑️ Xóa</button>
+              <button type="button" class="btn" id="insertSampleJsonBtn"
+                style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;">📋 Chèn mẫu</button>
+              <button type="button" class="btn" id="formatJsonBtn"
+                style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;">🪄 Tự sửa &amp; Format</button>
+              <button type="button" class="btn" id="copyAiPromptBtn"
+                style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;"
+                title="Copy câu lệnh để nhờ ChatGPT/Gemini tạo JSON từ vựng chuẩn">🤖 Copy Prompt AI</button>
+              <button type="button" class="btn" id="clearJsonBtn"
+                style="padding: 5px 10px; border-radius: 8px; font-size: 0.78rem;">🗑️ Xóa</button>
             </div>
           </div>
-          <textarea id="jsonTextInput" placeholder='Dán JSON vào đây... Ví dụ: [{"h":"你好","p":"nǐ hǎo","m":"Xin chào","ex":"你好，我是学生。","exm":"Xin chào, tôi là học sinh."}]' class="auth-input"
+          <textarea id="jsonTextInput"
+            placeholder='Dán JSON vào đây... Ví dụ: [{"h":"你好","p":"nǐ hǎo","m":"Xin chào","ex":"你好，我是学生。","exm":"Xin chào, tôi là học sinh."}]'
+            class="auth-input"
             style="width: 100%; min-height: 190px; resize: vertical; font-family: 'Courier New', monospace; font-size: 0.85rem; line-height: 1.5;"></textarea>
         </div>
 
         <!-- Khung trạng thái kiểm tra trực tiếp (Live Validation & Preview) -->
-        <div id="jsonLiveStatus" style="display: none; margin-bottom: 16px; padding: 12px 14px; border-radius: 12px; font-size: 0.86rem; border: 1px solid var(--glass-border);"></div>
+        <div id="jsonLiveStatus"
+          style="display: none; margin-bottom: 16px; padding: 12px 14px; border-radius: 12px; font-size: 0.86rem; border: 1px solid var(--glass-border);">
+        </div>
 
         <div style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
           <button class="btn" id="cancelImportJsonBtn" style="padding: 10px 18px; border-radius: 12px;">Hủy</button>
           <button class="btn" id="confirmImportJsonBtn"
-            style="padding: 10px 18px; border-radius: 12px; background: rgba(139, 92, 246, 0.14); border-color: rgba(139, 92, 246, 0.4); color: var(--accent-purple); font-weight: 700;">➕ Thêm vào danh sách</button>
+            style="padding: 10px 18px; border-radius: 12px; background: rgba(139, 92, 246, 0.14); border-color: rgba(139, 92, 246, 0.4); color: var(--accent-purple); font-weight: 700;">➕
+            Thêm vào danh sách</button>
           <button class="btn" id="importAndSaveDeckBtn"
-            style="padding: 10px 20px; border-radius: 12px; background: var(--accent-gradient); color: #fff; border: none; font-weight: 700;">💾 Nhập &amp; Lưu bộ từ ngay</button>
+            style="padding: 10px 20px; border-radius: 12px; background: var(--accent-gradient); color: #fff; border: none; font-weight: 700;">💾
+            Nhập &amp; Lưu bộ từ ngay</button>
         </div>
       </div>
     </div>
@@ -256,7 +282,8 @@
           <p id="studyModeDeckSubtitle" class="modal-subtitle">Bộ từ tùy chỉnh</p>
         </div>
         <button class="icon-btn close-btn" id="closeStudyModeBtn" aria-label="Đóng">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -266,7 +293,8 @@
         <div class="study-mode-list">
           <button class="study-mode-option" data-mode="flashcard">
             <div class="mode-icon-wrap">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
               </svg>
@@ -275,12 +303,16 @@
               <div class="mode-name">Flashcard</div>
               <div class="mode-desc">Lật thẻ ghi nhớ từ vựng</div>
             </div>
-            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
 
           <button class="study-mode-option" data-mode="quiz">
             <div class="mode-icon-wrap">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 11l3 3L22 4"></path>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
               </svg>
@@ -289,12 +321,16 @@
               <div class="mode-name">Trắc nghiệm</div>
               <div class="mode-desc">Phản xạ 4 đáp án nghĩa &amp; âm</div>
             </div>
-            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
 
           <button class="study-mode-option" data-mode="sentence">
             <div class="mode-icon-wrap">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round">
                 <line x1="8" y1="6" x2="21" y2="6"></line>
                 <line x1="8" y1="12" x2="21" y2="12"></line>
                 <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -307,12 +343,16 @@
               <div class="mode-name">Ghép câu &amp; Điền từ</div>
               <div class="mode-desc">Sắp xếp từ &amp; hoàn thiện câu</div>
             </div>
-            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
 
           <button class="study-mode-option" data-mode="write">
             <div class="mode-icon-wrap">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
                 <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
               </svg>
@@ -321,12 +361,16 @@
               <div class="mode-name">Luyện viết nét</div>
               <div class="mode-desc">Tập viết thứ tự nét chữ Hán</div>
             </div>
-            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
 
           <button class="study-mode-option" data-mode="arena">
             <div class="mode-icon-wrap">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                stroke-linecap="round" stroke-linejoin="round">
                 <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
                 <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
                 <path d="M4 22h16"></path>
@@ -339,13 +383,19 @@
               <div class="mode-name">Đấu trường Kahoot</div>
               <div class="mode-desc">Thi phản xạ tốc độ &amp; quét mã QR</div>
             </div>
-            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
 
           <button class="study-mode-option featured" data-mode="both">
             <div class="mode-icon-wrap featured">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 12 2"></polygon>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 12 2">
+                </polygon>
               </svg>
             </div>
             <div class="mode-text">
@@ -355,7 +405,10 @@
               </div>
               <div class="mode-desc">Flashcard → Trắc nghiệm → Ghép câu</div>
             </div>
-            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            <svg class="mode-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </button>
         </div>
       </div>
@@ -383,7 +436,12 @@
 
   <div id="wqPopupOverlay" class="wq-popup-overlay" style="display: none;">
     <div class="wq-popup-card">
-      <div id="wqPopupIcon" class="wq-popup-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div>
+      <div id="wqPopupIcon" class="wq-popup-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg></div>
       <h3 id="wqPopupTitle" class="wq-popup-title">Thông báo</h3>
       <div id="wqPopupMessage" class="wq-popup-message"></div>
       <input type="text" id="wqPopupInput" class="auth-input wq-popup-input" style="display: none;"
