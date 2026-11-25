@@ -82,24 +82,30 @@
     customHistory = localDecks.slice();
     renderCustomHistory();
 
-    // Sau đó sync từ Cloudflare API nhưng vẫn giữ lại words & các bộ từ local chưa lên cloud
+    // Sau đó sync từ Cloudflare API nhưng vẫn giữ lại words & tự động đẩy bù bộ từ local lên cloud
     if (window.WeiQuanAPI) {
       window.WeiQuanAPI.getDecks(USER_ID).then(function (res) {
-        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        if (res && res.success && Array.isArray(res.data)) {
           var cloudIds = {};
+          var decksToRepairOnCloud = [];
           var cloudDecks = res.data.map(function (d) {
             cloudIds[d.id] = true;
             var matchLocal = localDecks.find(function (ld) {
               return ld.cloudId === d.id || ld.id === d.id || (ld.name === d.name && Array.isArray(ld.words) && ld.words.length > 0);
             });
             var cachedWords = (matchLocal && Array.isArray(matchLocal.words)) ? matchLocal.words : [];
+            var cloudCount = Number(d.word_count) || 0;
+            // Nếu Cloud đang bị rỗng (0 từ) nhưng máy này (vd: điện thoại) đang giữ đủ từ -> tự động đẩy bù lên Cloud!
+            if (cloudCount === 0 && cachedWords.length > 0) {
+              decksToRepairOnCloud.push({ cloudId: d.id, name: d.name, words: cachedWords.slice() });
+            }
             return {
               id: d.id,
               cloudId: d.id,
               name: d.name,
               words: cachedWords,
-              wordCount: d.word_count || cachedWords.length || 0,
-              createdAt: (d.created_at || '').split('T')[0] || (matchLocal && matchLocal.createdAt) || new Date().toISOString().split('T')[0]
+              wordCount: cloudCount || cachedWords.length || 0,
+              createdAt: (d.created_at || '').split(' ')[0].split('T')[0] || (matchLocal && matchLocal.createdAt) || new Date().toISOString().split('T')[0]
             };
           });
 
@@ -111,6 +117,45 @@
           customHistory = unsyncedLocal.concat(cloudDecks);
           localStorage.setItem('wq_custom_decks', JSON.stringify(customHistory));
           renderCustomHistory();
+
+          // Tự động đẩy bù các bộ từ mà Cloud đang bị rỗng 0 từ nhưng local có dữ liệu
+          decksToRepairOnCloud.forEach(function (repair) {
+            window.WeiQuanAPI.updateDeck(repair.cloudId, {
+              name: repair.name,
+              words: repair.words
+            }).then(function (upRes) {
+              if (upRes && upRes.success) {
+                var target = customHistory.find(function (x) { return x.cloudId === repair.cloudId || x.id === repair.cloudId; });
+                if (target) {
+                  target.wordCount = repair.words.length;
+                  saveCustomHistory();
+                  renderCustomHistory();
+                }
+                if (window.showToast) {
+                  window.showToast('☁️ Đã đồng bộ "' + repair.name + '" (' + repair.words.length + ' từ) lên Cloud!', 'success');
+                }
+              }
+            }).catch(function (err) {
+              console.warn('⚠️ Đồng bộ bù bộ từ "' + repair.name + '" thất bại:', err);
+            });
+          });
+
+          // Tự động đẩy các bộ từ local chưa từng lên Cloud
+          unsyncedLocal.forEach(function (ld) {
+            if (Array.isArray(ld.words) && ld.words.length > 0) {
+              window.WeiQuanAPI.createDeck(USER_ID, ld.name, ld.words.slice()).then(function (cRes) {
+                if (cRes && cRes.success && cRes.deck_id) {
+                  ld.cloudId = cRes.deck_id;
+                  ld.id = cRes.deck_id;
+                  saveCustomHistory();
+                  renderCustomHistory();
+                  if (window.showToast) {
+                    window.showToast('☁️ Đã đồng bộ "' + ld.name + '" (' + ld.words.length + ' từ) lên Cloud!', 'success');
+                  }
+                }
+              }).catch(function () { });
+            }
+          });
 
           // Tự động tải ngầm từ vựng chi tiết cho các bộ từ trên Cloud chưa có words trong localStorage
           customHistory.forEach(function (deckItem) {

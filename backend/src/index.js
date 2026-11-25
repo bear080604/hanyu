@@ -56,6 +56,92 @@ const HOST_ONLY_ACTIONS = new Set([
   'join_rejected',
 ]);
 
+let _customDeckWordsSchemaReady = false;
+
+async function ensureCustomDeckWordsSchema(db) {
+  if (_customDeckWordsSchemaReady || !db) return;
+  try {
+    const { results } = await db.prepare('PRAGMA table_info(custom_deck_words)').all();
+    const existingCols = new Set((results || []).map(r => String(r.name || '').toLowerCase()));
+    const needed = ['example', 'example_pinyin', 'example_meaning'];
+    for (const col of needed) {
+      if (!existingCols.has(col)) {
+        try {
+          await db.prepare(`ALTER TABLE custom_deck_words ADD COLUMN ${col} TEXT`).run();
+        } catch (alterErr) {
+          // Ignore if another isolate added the column concurrently
+        }
+      }
+    }
+    _customDeckWordsSchemaReady = true;
+  } catch (e) {
+    // Let insertDeckWords handle fallback if PRAGMA/ALTER fails
+  }
+}
+
+async function insertDeckWords(db, deckId, words) {
+  if (!Array.isArray(words) || words.length === 0) return 0;
+  await ensureCustomDeckWordsSchema(db);
+
+  const cleanRows = [];
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    if (!word || typeof word !== 'object') continue;
+    const hanzi = String(word.h ?? word.hanzi ?? '').trim();
+    if (!hanzi) continue;
+    const pinyin = String(word.p ?? word.pinyin ?? '').trim();
+    const meaning = String(word.m ?? word.meaning ?? '').trim();
+    const rawEx = word.ex ?? word.e ?? word.example ?? '';
+    const rawExp = word.exp ?? word.example_pinyin ?? '';
+    const rawExm = word.exm ?? word.example_meaning ?? '';
+    cleanRows.push({
+      hanzi,
+      pinyin,
+      meaning,
+      example: rawEx !== '' && rawEx != null ? String(rawEx) : null,
+      examplePinyin: rawExp !== '' && rawExp != null ? String(rawExp) : null,
+      exampleMeaning: rawExm !== '' && rawExm != null ? String(rawExm) : null,
+      sortOrder: cleanRows.length,
+    });
+  }
+
+  if (cleanRows.length === 0) return 0;
+
+  const CHUNK_SIZE = 50;
+  try {
+    const stmt = db.prepare(
+      'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, example, example_pinyin, example_meaning, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    );
+    for (let start = 0; start < cleanRows.length; start += CHUNK_SIZE) {
+      const chunk = cleanRows.slice(start, start + CHUNK_SIZE);
+      await db.batch(
+        chunk.map(r =>
+          stmt.bind(deckId, r.hanzi, r.pinyin, r.meaning, r.example, r.examplePinyin, r.exampleMeaning, r.sortOrder)
+        )
+      );
+    }
+  } catch (fullInsertErr) {
+    // Fallback cho bảng cũ chưa có cột example* nếu ALTER TABLE không được phép
+    const msg = String(fullInsertErr && fullInsertErr.message || '');
+    if (msg.toLowerCase().includes('no such column') || msg.toLowerCase().includes('has no column')) {
+      _customDeckWordsSchemaReady = false;
+      const fallbackStmt = db.prepare(
+        'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, sort_order) VALUES (?, ?, ?, ?, ?)'
+      );
+      for (let start = 0; start < cleanRows.length; start += CHUNK_SIZE) {
+        const chunk = cleanRows.slice(start, start + CHUNK_SIZE);
+        await db.batch(
+          chunk.map(r => fallbackStmt.bind(deckId, r.hanzi, r.pinyin, r.meaning, r.sortOrder))
+        );
+      }
+    } else {
+      throw fullInsertErr;
+    }
+  }
+
+  return cleanRows.length;
+}
+
 export default {
   async fetch(request, env, ctx) {
     // Handle CORS preflight
@@ -703,21 +789,14 @@ export default {
 
         const deckId = deckResult.meta.last_row_id;
 
-        // Thêm từ vào deck
-        for (let i = 0; i < words.length; i++) {
-          const word = words[i];
-          await env.DB.prepare(
-            'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, example, example_pinyin, example_meaning, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-          ).bind(
-            deckId,
-            word.h || word.hanzi,
-            word.p || word.pinyin,
-            word.m || word.meaning,
-            word.ex || word.e || word.example || null,
-            word.exp || word.example_pinyin || null,
-            word.exm || word.example_meaning || null,
-            i
-          ).run();
+        // Thêm từ vào deck (batch + tự đảm bảo schema, nếu lỗi thì xóa deck rỗng tránh tạo vỏ 0 từ)
+        try {
+          await insertDeckWords(env.DB, deckId, words);
+        } catch (insertErr) {
+          try {
+            await env.DB.prepare('DELETE FROM custom_decks WHERE id = ?').bind(deckId).run();
+          } catch (cleanupErr) { }
+          throw insertErr;
         }
 
         return jsonResponse({
@@ -756,21 +835,7 @@ export default {
 
         if (Array.isArray(words)) {
           await env.DB.prepare('DELETE FROM custom_deck_words WHERE deck_id = ?').bind(deckId).run();
-          for (let i = 0; i < words.length; i++) {
-            const word = words[i];
-            await env.DB.prepare(
-              'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, example, example_pinyin, example_meaning, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-            ).bind(
-              deckId,
-              word.h || word.hanzi,
-              word.p || word.pinyin,
-              word.m || word.meaning,
-              word.ex || word.e || word.example || null,
-              word.exp || word.example_pinyin || null,
-              word.exm || word.example_meaning || null,
-              i
-            ).run();
-          }
+          await insertDeckWords(env.DB, deckId, words);
         }
 
         return jsonResponse({

@@ -293,17 +293,33 @@ async function renderQuizCustomDecks() {
   if (!_quizDecksSynced && window.WeiQuanAPI && window.WeiQuanAPI.getDecks) {
     _quizDecksSynced = true;
     try {
-      const cloudDecks = await window.WeiQuanAPI.getDecks('default_user');
-      if (Array.isArray(cloudDecks) && cloudDecks.length > 0) {
-        const localById = new Map(customDecks.map(function (d) { return [String(d.id), d]; }));
-        cloudDecks.forEach(function (cd) {
-          const existing = localById.get(String(cd.id));
-          localById.set(String(cd.id), {
-            ...cd,
-            words: (existing && existing.words && existing.words.length > 0) ? existing.words : []
-          });
+      const cloudRes = await window.WeiQuanAPI.getDecks('default_user');
+      const cloudDecks = Array.isArray(cloudRes)
+        ? cloudRes
+        : (cloudRes && cloudRes.success && Array.isArray(cloudRes.data) ? cloudRes.data : []);
+      if (cloudDecks.length > 0) {
+        const localById = new Map();
+        customDecks.forEach(function (d) {
+          localById.set(String(d.cloudId || d.id), d);
         });
-        customDecks = Array.from(localById.values());
+        const merged = cloudDecks.map(function (cd) {
+          const existing = localById.get(String(cd.id)) ||
+            customDecks.find(function (ld) { return ld.name === cd.name && Array.isArray(ld.words) && ld.words.length > 0; });
+          const cachedWords = (existing && Array.isArray(existing.words) && existing.words.length > 0) ? existing.words : [];
+          return {
+            id: cd.id,
+            cloudId: cd.id,
+            name: cd.name,
+            words: cachedWords,
+            wordCount: Number(cd.word_count || cd.wordCount) || cachedWords.length || 0,
+            createdAt: (cd.created_at || cd.createdAt || '').split(' ')[0].split('T')[0] || ''
+          };
+        });
+        const cloudIds = new Set(cloudDecks.map(function (cd) { return String(cd.id); }));
+        const unsynced = customDecks.filter(function (ld) {
+          return !ld.cloudId && !cloudIds.has(String(ld.id)) && !merged.some(function (m) { return m.name === ld.name; });
+        });
+        customDecks = unsynced.concat(merged);
         if (username && window.WQStorage && WQStorage.setUserDataField) {
           WQStorage.setUserDataField(username, 'customDecks', customDecks);
         } else {
@@ -345,10 +361,17 @@ async function renderQuizCustomDecks() {
         if (cloudId) {
           try {
             if (window.showToast) showToast('☁️ Đang tải từ vựng từ Cloud...', 'info');
-            const fullDeck = await window.WeiQuanAPI.getDeckById(cloudId);
-            if (fullDeck && Array.isArray(fullDeck.words)) {
-              words = fullDeck.words;
+            const fullDeckRes = await window.WeiQuanAPI.getDeckById(cloudId);
+            const loadedWords = (fullDeckRes && fullDeckRes.data && Array.isArray(fullDeckRes.data.words))
+              ? fullDeckRes.data.words
+              : (fullDeckRes && Array.isArray(fullDeckRes.words) ? fullDeckRes.words : []);
+            if (loadedWords.length > 0) {
+              words = loadedWords;
               d.words = words;
+              d.wordCount = words.length;
+              try {
+                localStorage.setItem('wq_custom_decks', JSON.stringify(customDecks));
+              } catch (e) { }
             }
           } catch (err) {
             console.warn('Error loading cloud deck in quiz:', err);
