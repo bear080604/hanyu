@@ -1,42 +1,50 @@
 // Service Worker — WenQing Chinese
-const CACHE_NAME = 'wenqing-v40';
-const STATIC_ASSETS = [
-  '/hanyu/',
-  '/hanyu/index.html',
-  '/hanyu/styles.css',
-  '/hanyu/profile.js',
-  '/hanyu/logo.png',
-  '/hanyu/logo-light.png',
-  '/hanyu/logo-dark.png',
-  '/hanyu/manifest.json',
-  '/hanyu/data/data.js',
-  '/hanyu/js/layout.js',
-  '/hanyu/js/shared.js',
-  '/hanyu/js/flash.js',
-  '/hanyu/js/quiz.js',
-  '/hanyu/js/sentence.js',
-  '/hanyu/js/write.js',
-  '/hanyu/js/arena.js',
-  '/hanyu/js/stats.js',
-  '/hanyu/js/favorites.js',
-  '/hanyu/js/custom.js',
-  '/hanyu/js/settings.js',
-  '/hanyu/pages/flash.html',
-  '/hanyu/pages/quiz.html',
-  '/hanyu/pages/sentence.html',
-  '/hanyu/pages/write.html',
-  '/hanyu/pages/arena.html',
-  '/hanyu/pages/stats.html',
-  '/hanyu/pages/favorites.html',
-  '/hanyu/pages/custom.html',
-  '/hanyu/pages/settings.html',
+const CACHE_NAME = 'wenqing-v41';
+const RELATIVE_ASSETS = [
+  './',
+  './index.html',
+  './styles.css',
+  './storage.js',
+  './api-client.js',
+  './profile.js',
+  './logo-light.png',
+  './logo-dark.png',
+  './manifest.json',
+  './data/data.js',
+  './js/layout.js',
+  './js/shared.js',
+  './js/flash.js',
+  './js/quiz.js',
+  './js/sentence.js',
+  './js/write.js',
+  './js/arena.js',
+  './js/stats.js',
+  './js/favorites.js',
+  './js/custom.js',
+  './js/settings.js',
+  './pages/flash.html',
+  './pages/quiz.html',
+  './pages/sentence.html',
+  './pages/write.html',
+  './pages/arena.html',
+  './pages/stats.html',
+  './pages/favorites.html',
+  './pages/custom.html',
+  './pages/settings.html',
 ];
+
+function getStaticAssetUrls() {
+  var scope = (self.registration && self.registration.scope) || self.location.href;
+  return RELATIVE_ASSETS.map(function (rel) {
+    return new URL(rel, scope).toString();
+  });
+}
 
 // Install — cache static assets
 self.addEventListener('install', function (e) {
   e.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(getStaticAssetUrls());
     })
   );
   self.skipWaiting();
@@ -57,7 +65,6 @@ self.addEventListener('activate', function (e) {
 
 // Fetch — network first (always fresh), fallback to cache when offline
 self.addEventListener('fetch', function (e) {
-  // Skip non-GET and API/CDN calls
   if (e.request.method !== 'GET' || e.request.url.includes('workers.dev') || e.request.url.includes('cdn.jsdelivr')) {
     return;
   }
@@ -71,10 +78,11 @@ self.addEventListener('fetch', function (e) {
       }
       return networkRes;
     }).catch(function () {
-      return caches.match(e.request).then(function (cached) {
+      return caches.match(e.request, { ignoreSearch: true }).then(function (cached) {
         if (cached) return cached;
         if (e.request.mode === 'navigate') {
-          return caches.match('/hanyu/index.html');
+          var scope = (self.registration && self.registration.scope) || self.location.href;
+          return caches.match(new URL('./index.html', scope).toString());
         }
       });
     })

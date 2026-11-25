@@ -13,15 +13,6 @@
     document.documentElement.classList.remove('light-theme');
   }
 
-  // Clear legacy service worker caches so updates take effect immediately
-  if (typeof caches !== 'undefined' && caches.keys) {
-    caches.keys().then(function (keys) {
-      keys.forEach(function (k) {
-        if (k !== 'wenqing-v38') caches.delete(k);
-      });
-    }).catch(function () { });
-  }
-
   // Detect if we're at root or inside pages/
   var isInPages = location.pathname.indexOf('/pages/') !== -1;
   var root = isInPages ? '../' : '';
@@ -169,15 +160,6 @@
       '</button>' +
       '</div>' +
       '</header>' +
-
-      '<!-- Legacy stubs for app.js compatibility -->' +
-      '<button id="favListBtn" style="display:none !important;"></button>' +
-      '<div class="tabs" style="display:none !important;">' +
-      '<div class="tab-indicator" id="tabIndicator"></div>' +
-      '<div class="tab active" data-p="flash">Flashcard</div>' +
-      '<div class="tab" data-p="quiz">Trắc nghiệm</div>' +
-      '<div class="tab" data-p="write">Nét chữ</div>' +
-      '</div>' +
 
       '<main class="app-content" id="page-main">' +
       '</main>' +

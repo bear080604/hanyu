@@ -112,7 +112,12 @@ function newQuiz() {
   });
 
   const qLevelEl = document.getElementById('qLevel');
-  if (qLevelEl) qLevelEl.textContent = (level === 'favorites') ? 'Yêu thích' : level;
+  if (qLevelEl) {
+    const displayLvl = (level === 'favorites')
+      ? 'Yêu thích'
+      : (level === 'custom' ? ((window.AppState && window.AppState.level) || 'Bộ từ tự tạo') : level);
+    qLevelEl.textContent = displayLvl;
+  }
 }
 
 // ==================== RECORD SRS ====================
@@ -217,7 +222,10 @@ function answer(idx) {
         })
         : confirm('🎉 Bạn đã hoàn thành Trắc nghiệm (' + qScore + '/' + qTotal + ')!\nBạn có muốn chuyển sang phần 🧩 Ghép câu & Hoàn thiện câu không?');
       if (goSentence) {
-        localStorage.setItem('wq_pending_deck', JSON.stringify({ name: level || 'Custom', words: deck }));
+        const deckTitle = (level === 'custom' && window.AppState && window.AppState.level)
+          ? window.AppState.level
+          : (level || 'Custom');
+        localStorage.setItem('wq_pending_deck', JSON.stringify({ name: deckTitle, words: deck }));
         localStorage.setItem('wq_pending_mode', 'both');
         window.location.href = '../pages/sentence.html';
       } else {
@@ -242,7 +250,11 @@ function renderQuizHskGrid() {
     'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
   ];
 
-  Object.keys(DATA).forEach(function (lvl, index) {
+  const esc = window.escapeHtml || function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+
+  Object.keys(DATA).filter(function (lvl) { return lvl !== 'custom'; }).forEach(function (lvl, index) {
     const words = DATA[lvl];
     if (!words || words.length === 0) return;
     const total = words.length;
@@ -253,7 +265,7 @@ function renderQuizHskGrid() {
     card.style.setProperty('--card-color', color);
     card.innerHTML =
       '<div class="hsk-card-header">' +
-      '<h4>' + lvl + '</h4>' +
+      '<h4>' + esc(lvl) + '</h4>' +
       '<span class="word-count">' + total + ' từ</span>' +
       '</div>' +
       '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.9rem;">' +
@@ -276,18 +288,11 @@ async function renderQuizCustomDecks() {
   const list = document.getElementById('quizCustomDecksList');
   if (!list) return;
 
-  const currentUser = window.WQAuth && window.WQAuth.getCurrentUser ? window.WQAuth.getCurrentUser() : null;
-  const username = currentUser ? currentUser.username : null;
   let customDecks = [];
-
-  if (username && window.WQStorage && WQStorage.getUserDataField) {
-    customDecks = WQStorage.getUserDataField(username, 'customDecks', '') || [];
-  } else {
-    try {
-      customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
-    } catch (e) {
-      customDecks = [];
-    }
+  try {
+    customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || [];
+  } catch (e) {
+    customDecks = [];
   }
 
   if (!_quizDecksSynced && window.WeiQuanAPI && window.WeiQuanAPI.getDecks) {
@@ -320,11 +325,7 @@ async function renderQuizCustomDecks() {
           return !ld.cloudId && !cloudIds.has(String(ld.id)) && !merged.some(function (m) { return m.name === ld.name; });
         });
         customDecks = unsynced.concat(merged);
-        if (username && window.WQStorage && WQStorage.setUserDataField) {
-          WQStorage.setUserDataField(username, 'customDecks', customDecks);
-        } else {
-          localStorage.setItem('wq_custom_decks', JSON.stringify(customDecks));
-        }
+        localStorage.setItem('wq_custom_decks', JSON.stringify(customDecks));
       }
     } catch (err) {
       console.warn('Could not sync cloud decks in quiz:', err);
@@ -339,6 +340,10 @@ async function renderQuizCustomDecks() {
     return;
   }
 
+  const esc = window.escapeHtml || function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+
   list.innerHTML = '';
   customDecks.forEach(function (d) {
     const card = document.createElement('div');
@@ -346,11 +351,11 @@ async function renderQuizCustomDecks() {
     card.style.setProperty('--card-color', 'var(--accent-gradient)');
     card.innerHTML =
       '<div class="hsk-card-header">' +
-      '<h4>📚 ' + d.name + '</h4>' +
+      '<h4>📚 ' + esc(d.name) + '</h4>' +
       '<span class="word-count">' + (d.wordCount || (d.words && d.words.length) || 0) + ' từ</span>' +
       '</div>' +
       '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.85rem;">' +
-      '📅 ' + (d.createdAt || '') +
+      '📅 ' + esc(d.createdAt || '') +
       '</div>' +
       '<button class="btn start-learn-btn" style="background: var(--accent-gradient); border: none; color: #fff;">✏️ Bắt đầu Quiz</button>';
 
@@ -533,8 +538,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // shared.js skips applyRange when wq_pending_deck is present, so deck won't be overwritten
   initQuizPage();
 
-  // Also re-render grid when DATA becomes available via WQSyncData
-  document.addEventListener('wq:data-loaded', function () {
+  // Also re-render grid when DATA becomes available via shared.js initUIWithData
+  document.addEventListener('wq:data-ready', function () {
     var sel = document.getElementById('quizDeckSelection');
     if (sel && sel.style.display !== 'none') {
       renderQuizHskGrid();

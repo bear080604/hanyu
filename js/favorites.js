@@ -28,13 +28,16 @@ function renderFavModalList() {
     card.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; margin-bottom: 10px; gap: 12px;';
 
     // Left: word info
+    var esc = window.escapeHtml || function (s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
     var infoDiv = document.createElement('div');
     infoDiv.style.cssText = 'flex: 1; min-width: 0;';
     infoDiv.innerHTML =
-      '<span style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-right: 10px;">' + w.h + '</span>' +
-      '<span style="font-size: 0.9rem; color: var(--accent-purple);">' + (w.p || '') + '</span>' +
-      '<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + (w.m || '') + '</div>' +
-      (w.levelGoc ? '<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">' + w.levelGoc + '</div>' : '');
+      '<span style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-right: 10px;">' + esc(w.h) + '</span>' +
+      '<span style="font-size: 0.9rem; color: var(--accent-purple);">' + esc(w.p || '') + '</span>' +
+      '<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">' + esc(w.m || '') + '</div>' +
+      (w.levelGoc ? '<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">' + esc(w.levelGoc) + '</div>' : '');
 
     // Right: action buttons
     var actionsDiv = document.createElement('div');

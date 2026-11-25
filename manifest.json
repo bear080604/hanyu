@@ -2,7 +2,7 @@
   "name": "WenQing 文卿",
   "short_name": "WenQing",
   "description": "Ứng dụng học tiếng Trung HSK",
-  "start_url": "/hanyu/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#0f0f1a",
   "theme_color": "#8B5CF6",

@@ -213,6 +213,7 @@ function runAutoplayCycle() {
       }
 
       window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
+      if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
       renderFlash();
       if (typeof saveProgress === 'function') saveProgress();
       _apTimer = setTimeout(runAutoplayCycle, 300);
@@ -247,6 +248,7 @@ async function promptFlashcardComplete() {
   } else {
     // Người dùng chọn ôn lại: đưa về từ đầu tiên, KHÔNG xóa wq_pending_mode để học xong vẫn chuyển tiếp được!
     window.AppState.fcIdx = 0;
+    if (typeof fcIdx !== 'undefined') fcIdx = 0;
     renderFlash();
     if (typeof saveProgress === 'function') saveProgress();
   }
@@ -279,33 +281,62 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   }
 
-  // 2. Read wq_pending_level — navigate here from home "Học ngay"
-  var pendingLevel = localStorage.getItem('wq_pending_level');
-  if (pendingLevel) {
-    localStorage.removeItem('wq_pending_level');
-    window.AppState.level = pendingLevel;
-    // levelSel may not exist yet or shared.js initUIWithData will set it; sync here too
-    var lvlSelEl = document.getElementById('levelSel');
-    if (lvlSelEl) lvlSelEl.value = pendingLevel;
+  // 2 & 3. Handle wq_pending_level ("Học ngay" from Home) and wq_navigate_word (Global Search)
+  // Must wait until DATA is loaded so items are not consumed before deck exists.
+  function applyPendingFlashNavigation() {
+    if (typeof DATA === 'undefined' || Object.keys(DATA).length === 0) return false;
+
+    var pendingLevel = localStorage.getItem('wq_pending_level');
+    if (pendingLevel && DATA[pendingLevel]) {
+      localStorage.removeItem('wq_pending_level');
+      localStorage.removeItem('wq_pending_deck');
+      localStorage.removeItem('wq_pending_mode');
+      if (typeof level !== 'undefined') level = pendingLevel;
+      window.AppState.level = pendingLevel;
+      var lvlSelEl = document.getElementById('levelSel');
+      if (lvlSelEl) lvlSelEl.value = pendingLevel;
+      if (typeof buildRanges === 'function') buildRanges(pendingLevel);
+      if (typeof applyRange === 'function') applyRange();
+      if (typeof saveProgress === 'function') saveProgress();
+    }
+
+    var navigateWordStr = localStorage.getItem('wq_navigate_word');
+    if (navigateWordStr) {
+      localStorage.removeItem('wq_navigate_word');
+      try {
+        var navWord = JSON.parse(navigateWordStr);
+        if (navWord && navWord.level && DATA[navWord.level]) {
+          localStorage.removeItem('wq_pending_deck');
+          localStorage.removeItem('wq_pending_mode');
+          if (typeof level !== 'undefined') level = navWord.level;
+          window.AppState.level = navWord.level;
+          var lvlSelNav = document.getElementById('levelSel');
+          if (lvlSelNav) lvlSelNav.value = navWord.level;
+          if (typeof buildRanges === 'function') buildRanges(navWord.level);
+          var rangeSelNav = document.getElementById('rangeSel');
+          if (rangeSelNav) rangeSelNav.value = 'all';
+          if (typeof applyRange === 'function') applyRange();
+        }
+        var curDeck = window.AppState.deck;
+        if (curDeck && curDeck.length && navWord && navWord.h) {
+          var navIdx = curDeck.findIndex(function (w) { return w.h === navWord.h; });
+          if (navIdx !== -1) {
+            window.AppState.fcIdx = navIdx;
+            if (typeof fcIdx !== 'undefined') fcIdx = navIdx;
+            renderFlash();
+            renderFavIcon();
+          }
+        }
+      } catch (e) {
+        console.error('wq_navigate_word parse error:', e);
+      }
+    }
+    return true;
   }
 
-  // 3. Read wq_navigate_word — search navigation
-  var navigateWordStr = localStorage.getItem('wq_navigate_word');
-  if (navigateWordStr) {
-    localStorage.removeItem('wq_navigate_word');
-    try {
-      var navWord = JSON.parse(navigateWordStr);
-      // Find the word in current deck and jump to it
-      var curDeck = window.AppState.deck;
-      if (curDeck && curDeck.length) {
-        var navIdx = curDeck.findIndex(function (w) { return w.h === navWord.h; });
-        if (navIdx !== -1) {
-          window.AppState.fcIdx = navIdx;
-        }
-      }
-    } catch (e) {
-      console.error('wq_navigate_word parse error:', e);
-    }
+  document.addEventListener('wq:data-ready', applyPendingFlashNavigation);
+  if (window._wqDataReady) {
+    applyPendingFlashNavigation();
   }
 
   // 4. Read wq_autoplay_speed from localStorage; set #autoplaySpeed select
@@ -394,6 +425,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
+      if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
       renderFlash();
       if (typeof saveProgress === 'function') saveProgress();
     });
@@ -407,6 +439,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var deck = window.AppState.deck;
       if (!deck || !deck.length) return;
       window.AppState.fcIdx = (window.AppState.fcIdx - 1 + deck.length) % deck.length;
+      if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
       renderFlash();
       if (typeof saveProgress === 'function') saveProgress();
     });
@@ -458,7 +491,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ---------- Keyboard handler ----------
   document.addEventListener('keydown', function (e) {
-    // On the flash page the whole page is the flashcard — no section guard needed
+    // Ignore shortcuts when typing inside inputs, textareas, selects, or editable fields
+    var activeEl = e.target || document.activeElement;
+    if (activeEl && (
+      activeEl.tagName === 'INPUT' ||
+      activeEl.tagName === 'TEXTAREA' ||
+      activeEl.tagName === 'SELECT' ||
+      activeEl.isContentEditable
+    )) {
+      return;
+    }
     if (e.key === 'ArrowRight') {
       var fcNextEl = document.getElementById('fcNext');
       if (fcNextEl) fcNextEl.click();

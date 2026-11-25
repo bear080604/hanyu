@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS custom_deck_words (
   example TEXT,
   example_pinyin TEXT,
   example_meaning TEXT,
+  meta_json TEXT,
   sort_order INTEGER DEFAULT 0,
   FOREIGN KEY (deck_id) REFERENCES custom_decks(id) ON DELETE CASCADE
 );

@@ -1,36 +1,66 @@
 // ---------- WQProfile & Admin Authentication Module ----------
 (function () {
   var profileModal = null;
-  var statsModal = null;
 
-  var ADMIN_ACCOUNTS = {
-    admin: '123456',
-    teacher: '123456',
-    wenqing: 'admin123'
-  };
+  function escHtml(str) {
+    if (typeof window.escapeHtml === 'function') return window.escapeHtml(str);
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   function isAdminLoggedIn() {
-    return sessionStorage.getItem('wq_arena_admin_logged') === '1' ||
-      localStorage.getItem('wq_arena_admin_logged') === '1';
+    var hasToken = Boolean(sessionStorage.getItem('wq_arena_admin_token') || localStorage.getItem('wq_arena_admin_token'));
+    return hasToken && (
+      sessionStorage.getItem('wq_arena_admin_logged') === '1' ||
+      localStorage.getItem('wq_arena_admin_logged') === '1'
+    );
   }
 
   function getAdminUsername() {
     return localStorage.getItem('wq_arena_admin_user') || 'admin';
   }
 
-  function loginAdmin(username, password) {
-    var u = String(username || '').trim().toLowerCase();
+  function getAdminToken() {
+    return sessionStorage.getItem('wq_arena_admin_token') || localStorage.getItem('wq_arena_admin_token') || '';
+  }
+
+  async function loginAdmin(username, password) {
+    var u = String(username || '').trim();
     var p = String(password || '').trim();
-    if ((u === 'admin' && (p === '123456' || p === 'admin123' || p === 'admin')) ||
-      (ADMIN_ACCOUNTS[u] && ADMIN_ACCOUNTS[u] === p)) {
-      sessionStorage.setItem('wq_arena_admin_logged', '1');
-      localStorage.setItem('wq_arena_admin_logged', '1');
-      localStorage.setItem('wq_arena_admin_user', username.trim() || 'admin');
-      syncHeaderProfileButton();
-      window.dispatchEvent(new CustomEvent('wq-admin-auth-changed', {
-        detail: { loggedIn: true, username: getAdminUsername() }
-      }));
-      return true;
+    if (!u || !p) return false;
+
+    try {
+      var res;
+      if (window.WeiQuanAPI && typeof window.WeiQuanAPI.adminLogin === 'function') {
+        res = await window.WeiQuanAPI.adminLogin(u, p);
+      } else {
+        var r = await fetch('https://hanyu.phuonganhkhanh683.workers.dev/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        res = await r.json();
+        if (!r.ok) return false;
+      }
+
+      if (res && res.success && res.token) {
+        sessionStorage.setItem('wq_arena_admin_logged', '1');
+        localStorage.setItem('wq_arena_admin_logged', '1');
+        sessionStorage.setItem('wq_arena_admin_token', res.token);
+        localStorage.setItem('wq_arena_admin_token', res.token);
+        localStorage.setItem('wq_arena_admin_user', res.username || u);
+        syncHeaderProfileButton();
+        window.dispatchEvent(new CustomEvent('wq-admin-auth-changed', {
+          detail: { loggedIn: true, username: getAdminUsername() }
+        }));
+        return true;
+      }
+    } catch (e) {
+      console.warn('Admin login request failed:', e);
     }
     return false;
   }
@@ -38,6 +68,8 @@
   function logoutAdmin() {
     sessionStorage.removeItem('wq_arena_admin_logged');
     localStorage.removeItem('wq_arena_admin_logged');
+    sessionStorage.removeItem('wq_arena_admin_token');
+    localStorage.removeItem('wq_arena_admin_token');
     syncHeaderProfileButton();
     window.dispatchEvent(new CustomEvent('wq-admin-auth-changed', {
       detail: { loggedIn: false }
@@ -67,6 +99,7 @@
   var WQProfile = {
     isAdminLoggedIn: isAdminLoggedIn,
     getAdminUsername: getAdminUsername,
+    getAdminToken: getAdminToken,
     loginAdmin: loginAdmin,
     logoutAdmin: logoutAdmin,
     syncHeaderProfileButton: syncHeaderProfileButton,
@@ -76,7 +109,6 @@
       var modalBody = document.getElementById('profileModalBody');
       if (!modalBody) return;
 
-      // Update modal title
       var modalTitle = profileModal ? profileModal.querySelector('h2') : null;
 
       if (isAdminLoggedIn()) {
@@ -94,7 +126,7 @@
           '<div class="profile-admin-avatar">👑</div>' +
           '<div class="profile-admin-meta">' +
           '<div class="profile-admin-role-badge">Quản trị viên hệ thống</div>' +
-          '<h3 class="profile-admin-name">' + adminUser + '</h3>' +
+          '<h3 class="profile-admin-name">' + escHtml(adminUser) + '</h3>' +
           '<p class="profile-admin-sub">Đã cấp quyền Tạo phòng &amp; Điều khiển Đấu trường Kahoot</p>' +
           '</div>' +
           '</div>' +
@@ -159,7 +191,7 @@
 
           '<div id="profLoginError" class="profile-login-error" style="display:none;">Sai tài khoản hoặc mật khẩu!</div>' +
 
-          '<button type="submit" class="btn btn-hero-primary" style="width:100%; margin-top:4px;">' +
+          '<button type="submit" class="btn btn-hero-primary" id="profLoginSubmitBtn" style="width:100%; margin-top:4px;">' +
           '<span>Đăng nhập</span>' +
           '</button>' +
           '</form>';
@@ -168,17 +200,21 @@
         var uInput = document.getElementById('profAdminUser');
         var pInput = document.getElementById('profAdminPass');
         var errBox = document.getElementById('profLoginError');
+        var submitBtn = document.getElementById('profLoginSubmitBtn');
 
         if (uInput) {
           setTimeout(function () { uInput.focus(); }, 60);
         }
 
         if (form) {
-          form.onsubmit = function (e) {
+          form.onsubmit = async function (e) {
             e.preventDefault();
             var u = uInput ? uInput.value : '';
             var p = pInput ? pInput.value : '';
-            if (loginAdmin(u, p)) {
+            if (submitBtn) submitBtn.disabled = true;
+            var ok = await loginAdmin(u, p);
+            if (submitBtn) submitBtn.disabled = false;
+            if (ok) {
               if (errBox) errBox.style.display = 'none';
               if (profileModal) profileModal.classList.remove('active');
               if (typeof window.showToast === 'function') {
@@ -194,65 +230,11 @@
       }
 
       if (profileModal) profileModal.classList.add('active');
-    },
-
-    openStatsModal: function () {
-      var progress = (window.WQStorage && WQStorage.getProgress()) || {};
-      var learnedList = progress.learned || [];
-
-      var statsModalBody = document.getElementById('statsModalBody');
-      if (!statsModalBody || typeof DATA === 'undefined') return;
-
-      statsModalBody.innerHTML = '';
-
-      var container = document.createElement('div');
-      container.style.cssText = 'display:flex; flex-direction:column; gap:20px;';
-
-      var title = document.createElement('h3');
-      title.textContent = 'Tiến trình hoàn thành HSK';
-      title.style.cssText = "font-family:'Plus Jakarta Sans', sans-serif; font-size:1.25rem; font-weight:700; color:var(--text-primary); border-bottom:1px solid var(--glass-border); padding-bottom:10px;";
-      container.appendChild(title);
-
-      Object.keys(DATA).forEach(function (lvl) {
-        var words = DATA[lvl];
-        if (!Array.isArray(words)) return;
-        var totalWords = words.length;
-        var learnedInLevel = words.filter(function (w) { return learnedList.includes(w.h); }).length;
-        var percent = totalWords > 0 ? Math.round((learnedInLevel / totalWords) * 100) : 0;
-
-        var levelRow = document.createElement('div');
-        levelRow.style.cssText = 'display:flex; flex-direction:column; gap:6px;';
-        var labelRow = document.createElement('div');
-        labelRow.style.cssText = 'display:flex; justify-content:space-between; font-size:0.9rem; font-weight:600;';
-        var spanLvl = document.createElement('span');
-        spanLvl.style.color = 'var(--text-primary)';
-        spanLvl.textContent = lvl;
-        var spanCount = document.createElement('span');
-        spanCount.style.color = 'var(--text-secondary)';
-        spanCount.textContent = learnedInLevel + ' / ' + totalWords + ' từ (' + percent + '%)';
-        labelRow.appendChild(spanLvl);
-        labelRow.appendChild(spanCount);
-
-        var barBg = document.createElement('div');
-        barBg.style.cssText = 'width:100%; height:10px; background:rgba(139,92,246,0.1); border-radius:5px; border:1px solid var(--glass-border); overflow:hidden;';
-        var barFill = document.createElement('div');
-        barFill.style.cssText = 'width:' + percent + '%; height:100%; background:var(--accent-gradient); border-radius:5px; transition:width 0.5s ease;';
-
-        barBg.appendChild(barFill);
-        levelRow.appendChild(labelRow);
-        levelRow.appendChild(barBg);
-        container.appendChild(levelRow);
-      });
-
-      statsModalBody.appendChild(container);
-      if (statsModal) statsModal.classList.add('active');
     }
   };
 
   document.addEventListener('DOMContentLoaded', function () {
     profileModal = document.getElementById('profileModal');
-    statsModal = document.getElementById('statsModal');
-
     syncHeaderProfileButton();
 
     var closeProfile = document.getElementById('closeProfileModalBtn');
@@ -260,14 +242,8 @@
       closeProfile.onclick = function () { profileModal.classList.remove('active'); };
     }
 
-    var closeStats = document.getElementById('closeStatsModalBtn');
-    if (closeStats && statsModal) {
-      closeStats.onclick = function () { statsModal.classList.remove('active'); };
-    }
-
     window.addEventListener('click', function (e) {
       if (profileModal && e.target === profileModal) profileModal.classList.remove('active');
-      if (statsModal && e.target === statsModal) statsModal.classList.remove('active');
     });
   });
 

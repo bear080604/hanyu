@@ -431,7 +431,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof showToast === 'function') showToast('Đã bỏ yêu thích "' + word.h + '"', 'info');
       }
 
-      localStorage.setItem('wq_favorites', JSON.stringify(favs));
+      if (window.WQStorage && WQStorage.saveFavorites) {
+        WQStorage.saveFavorites(favs);
+      } else {
+        localStorage.setItem('wq_favorites', JSON.stringify(favs));
+      }
+      if (typeof favorites !== 'undefined') favorites = favs;
+      if (window.AppState) window.AppState.favorites = favs;
+      if (typeof updateFavOptionText === 'function') updateFavOptionText();
       renderWriterFavState(word);
     };
   }

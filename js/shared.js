@@ -4,6 +4,17 @@
 // ---------- $ helper ----------
 const $ = id => document.getElementById(id);
 
+// ---------- HTML escape helper (XSS protection) ----------
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.escapeHtml = escapeHtml;
+
 // ---------- DATA fallback ----------
 if (typeof DATA === 'undefined') {
   window.DATA = {};
@@ -57,7 +68,7 @@ function showToast(message, type = 'success') {
   else if (type === 'info') icon = 'ℹ';
   else if (type === 'warning') icon = '⚠';
 
-  toast.innerHTML = `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.2);font-weight:900;font-size:0.8rem;">${icon}</span> <span>${message}</span>`;
+  toast.innerHTML = `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.2);font-weight:900;font-size:0.8rem;">${icon}</span> <span>${escapeHtml(message)}</span>`;
   container.appendChild(toast);
 
   requestAnimationFrame(() => {
@@ -672,9 +683,14 @@ async function loadDataFromAPI() {
 let lvlSel = null;
 
 function initUIWithData() {
-  lvlSel = lvlSel || document.getElementById('levelSel');
-  if (!lvlSel) return;
   if (!DATA || Object.keys(DATA).length === 0) return;
+  window._wqDataReady = true;
+  lvlSel = lvlSel || document.getElementById('levelSel');
+  if (!lvlSel) {
+    if (document.getElementById('homeHskGrid')) updateHomeDashboard();
+    document.dispatchEvent(new CustomEvent('wq:data-ready'));
+    return;
+  }
 
   // 1. Kiểm tra xem có pending custom deck đang chờ học không
   let pendingDeck = null;
@@ -744,6 +760,7 @@ function initUIWithData() {
     loadProgress();
   }
   applyRange();
+  document.dispatchEvent(new CustomEvent('wq:data-ready'));
 }
 
 function updateFavOptionText() {
@@ -849,6 +866,10 @@ function applyRange() {
 // ==================== PROGRESS SAVE / LOAD ====================
 function saveProgress() {
   const rangeSel = document.getElementById('rangeSel');
+  if (window.AppState) {
+    if (typeof window.AppState.fcIdx === 'number') fcIdx = window.AppState.fcIdx;
+    if (typeof window.AppState.wIdx === 'number') wIdx = window.AppState.wIdx;
+  }
   const progressData = {
     level,
     rangeVal: rangeSel ? rangeSel.value : 'all',
@@ -980,7 +1001,7 @@ function renderHomeHskGrid() {
     'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
   ];
 
-  Object.keys(DATA).forEach((lvl, index) => {
+  Object.keys(DATA).filter(lvl => lvl !== 'custom').forEach((lvl, index) => {
     const words = DATA[lvl];
     const total = words ? words.length : 0;
     let learnedCount = 0;
@@ -995,7 +1016,7 @@ function renderHomeHskGrid() {
     card.style.setProperty('--card-color', color);
     card.innerHTML = `
       <div class="hsk-card-header">
-        <h4>${lvl}</h4>
+        <h4>${escapeHtml(lvl)}</h4>
         <span class="word-count">${total} từ</span>
       </div>
       <div class="progress-wrapper">
@@ -1011,6 +1032,8 @@ function renderHomeHskGrid() {
     `;
 
     card.querySelector('.start-learn-btn').onclick = () => {
+      localStorage.removeItem('wq_pending_deck');
+      localStorage.removeItem('wq_pending_mode');
       localStorage.setItem('wq_pending_level', lvl);
       window.location.href = getPageHref('flash.html');
     };
@@ -1021,9 +1044,6 @@ function renderHomeHskGrid() {
 
 // ==================== SIDEBAR NAVIGATION ====================
 function initSidebarNavigation() {
-  const sidebar = document.getElementById('sidebar');
-  const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
-
   // Set active menu item by matching location.pathname to href filename
   const currentPage = location.pathname.split('/').pop() || 'index.html';
   const menuItems = document.querySelectorAll('.sidebar-menu .menu-item');
@@ -1036,23 +1056,7 @@ function initSidebarNavigation() {
       item.classList.remove('active');
     }
   });
-
-  // Sidebar toggle (hamburger #menuBtn or #sidebarToggleBtn)
-  const menuBtn = document.getElementById('menuBtn') || sidebarToggleBtn;
-  if (menuBtn && sidebar) {
-    menuBtn.onclick = (e) => {
-      e.stopPropagation();
-      sidebar.classList.toggle('active');
-    };
-
-    document.addEventListener('click', (e) => {
-      if (sidebar.classList.contains('active') &&
-        !sidebar.contains(e.target) &&
-        e.target !== menuBtn) {
-        sidebar.classList.remove('active');
-      }
-    });
-  }
+  // Sidebar open/close toggle is handled by js/layout.js using .open + backdrop
 }
 
 // ==================== HEADER TITLE UPDATE ====================
@@ -1116,8 +1120,16 @@ document.addEventListener('DOMContentLoaded', () => {
     shuffleBtn.onclick = () => {
       shuffle(deck);
       fcIdx = 0;
+      wIdx = 0;
       quizPool = [];
       quizAskedWords = [];
+      if (window.AppState) {
+        window.AppState.deck = deck;
+        window.AppState.fcIdx = 0;
+        window.AppState.wIdx = 0;
+        window.AppState.quizPool = quizPool;
+        window.AppState.quizAskedWords = quizAskedWords;
+      }
       if (typeof renderFlash === 'function') renderFlash();
       if (typeof newQuiz === 'function') newQuiz();
       if (typeof newSentenceQuestion === 'function') {
@@ -1188,11 +1200,11 @@ document.addEventListener('DOMContentLoaded', () => {
           div.className = 'suggestion-item';
           div.innerHTML = `
             <div class="suggestion-header">
-              <span class="suggestion-hanzi">${w.h}</span>
-              <span class="suggestion-level">${w.level}</span>
+              <span class="suggestion-hanzi">${escapeHtml(w.h)}</span>
+              <span class="suggestion-level">${escapeHtml(w.level)}</span>
             </div>
-            <span class="suggestion-pinyin">${w.p}</span>
-            <span class="suggestion-mean">${w.m}</span>
+            <span class="suggestion-pinyin">${escapeHtml(w.p)}</span>
+            <span class="suggestion-mean">${escapeHtml(w.m)}</span>
           `;
           div.onclick = () => {
             navigateToWord(w);

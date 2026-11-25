@@ -9,26 +9,81 @@ import { VOCAB_DATA } from './vocabData.js';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Arena-Host-Token',
 };
 
-// In-memory fallback buffers for Arena (ensures 100% uptime even when D1 daily limits are exceeded)
-const MEMORY_ARENA_MESSAGES = new Map(); // pin -> Array<{ id, msg, timestamp }>
-const MEMORY_ARENA_ROOMS = new Map();    // pin -> { pin, name, is_public, meta_json, updated_at }
-let _memMsgIdCounter = 1;
-
-function jsonResponse(data, status = 200) {
+function jsonResponse(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       'Content-Type': 'application/json',
       ...corsHeaders,
+      ...extraHeaders,
     },
   });
 }
 
 function errorResponse(message, status = 400) {
   return jsonResponse({ error: message }, status);
+}
+
+async function signAdminToken(username, secret) {
+  const payload = btoa(JSON.stringify({ u: username, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 }));
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+  const sigHex = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return `${payload}.${sigHex}`;
+}
+
+async function verifyAdminToken(request, env) {
+  const auth = request.headers.get('Authorization') || '';
+  const token = auth.replace(/^Bearer\s+/i, '').trim();
+  if (!token) return null;
+  if (env && env.ADMIN_API_TOKEN && token === env.ADMIN_API_TOKEN) {
+    return 'admin';
+  }
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payload, sigHex] = parts;
+  const secret = (env && (env.ADMIN_JWT_SECRET || env.ADMIN_PASSWORD)) || 'wenqing-server-secret-2026';
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const sigBuf = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+    const expectedHex = Array.from(new Uint8Array(sigBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    if (sigHex !== expectedHex) return null;
+    const parsed = JSON.parse(atob(payload));
+    if (!parsed || !parsed.u || (parsed.exp && Date.now() > parsed.exp)) return null;
+    return String(parsed.u);
+  } catch (e) {
+    return null;
+  }
+}
+
+async function checkRoomHostAuth(env, pin, hostToken) {
+  const roomObj = getArenaRoomStub(env, pin);
+  if (!roomObj) return true;
+  try {
+    const res = await roomObj.fetch('https://arena-do/verify-host', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hostToken: String(hostToken || '') }),
+    });
+    return res.ok;
+  } catch (e) {
+    return true;
+  }
 }
 
 function normalizeArenaPin(rawPin) {
@@ -63,7 +118,7 @@ async function ensureCustomDeckWordsSchema(db) {
   try {
     const { results } = await db.prepare('PRAGMA table_info(custom_deck_words)').all();
     const existingCols = new Set((results || []).map(r => String(r.name || '').toLowerCase()));
-    const needed = ['example', 'example_pinyin', 'example_meaning'];
+    const needed = ['example', 'example_pinyin', 'example_meaning', 'meta_json'];
     for (const col of needed) {
       if (!existingCols.has(col)) {
         try {
@@ -94,6 +149,13 @@ async function insertDeckWords(db, deckId, words) {
     const rawEx = word.ex ?? word.e ?? word.example ?? '';
     const rawExp = word.exp ?? word.example_pinyin ?? '';
     const rawExm = word.exm ?? word.example_meaning ?? '';
+    const meta = {};
+    if (Array.isArray(word.examples) && word.examples.length > 0) meta.examples = word.examples;
+    if (Array.isArray(word.tokens) && word.tokens.length > 0) meta.tokens = word.tokens;
+    if (word.blank) meta.blank = String(word.blank);
+    if (Array.isArray(word.options) && word.options.length > 0) meta.options = word.options;
+    const metaJson = Object.keys(meta).length > 0 ? JSON.stringify(meta) : null;
+
     cleanRows.push({
       hanzi,
       pinyin,
@@ -101,6 +163,7 @@ async function insertDeckWords(db, deckId, words) {
       example: rawEx !== '' && rawEx != null ? String(rawEx) : null,
       examplePinyin: rawExp !== '' && rawExp != null ? String(rawExp) : null,
       exampleMeaning: rawExm !== '' && rawExm != null ? String(rawExm) : null,
+      metaJson,
       sortOrder: cleanRows.length,
     });
   }
@@ -110,20 +173,19 @@ async function insertDeckWords(db, deckId, words) {
   const CHUNK_SIZE = 50;
   try {
     const stmt = db.prepare(
-      'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, example, example_pinyin, example_meaning, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, example, example_pinyin, example_meaning, meta_json, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     for (let start = 0; start < cleanRows.length; start += CHUNK_SIZE) {
       const chunk = cleanRows.slice(start, start + CHUNK_SIZE);
       await db.batch(
         chunk.map(r =>
-          stmt.bind(deckId, r.hanzi, r.pinyin, r.meaning, r.example, r.examplePinyin, r.exampleMeaning, r.sortOrder)
+          stmt.bind(deckId, r.hanzi, r.pinyin, r.meaning, r.example, r.examplePinyin, r.exampleMeaning, r.metaJson, r.sortOrder)
         )
       );
     }
   } catch (fullInsertErr) {
-    // Fallback cho bảng cũ chưa có cột example* nếu ALTER TABLE không được phép
-    const msg = String(fullInsertErr && fullInsertErr.message || '');
-    if (msg.toLowerCase().includes('no such column') || msg.toLowerCase().includes('has no column')) {
+    const msg = String(fullInsertErr && fullInsertErr.message || '').toLowerCase();
+    if (msg.includes('no such column') || msg.includes('has no column')) {
       _customDeckWordsSchemaReady = false;
       const fallbackStmt = db.prepare(
         'INSERT INTO custom_deck_words (deck_id, hanzi, pinyin, meaning, sort_order) VALUES (?, ?, ?, ?, ?)'
@@ -182,13 +244,30 @@ export default {
     }
 
     try {
+      // ==================== ADMIN AUTH ENDPOINT ====================
+      if (path === '/api/admin/login' && method === 'POST') {
+        const body = await request.json().catch(() => ({}));
+        const u = String(body.username || '').trim().toLowerCase();
+        const p = String(body.password || '').trim();
+        let accounts = { admin: (env && env.ADMIN_PASSWORD) || '123456', teacher: (env && env.ADMIN_PASSWORD) || '123456', wenqing: (env && env.ADMIN_PASSWORD) || 'admin123' };
+        if (env && env.ADMIN_ACCOUNTS_JSON) {
+          try { accounts = JSON.parse(env.ADMIN_ACCOUNTS_JSON); } catch (e) { }
+        }
+        const ok = Boolean(u && p && accounts[u] && accounts[u] === p);
+        if (!ok) {
+          return errorResponse('Invalid username or password', 401);
+        }
+        const secret = (env && (env.ADMIN_JWT_SECRET || env.ADMIN_PASSWORD)) || 'wenqing-server-secret-2026';
+        const token = await signAdminToken(u, secret);
+        return jsonResponse({ success: true, username: String(body.username || u).trim(), token });
+      }
+
       // ==================== VOCABULARY ENDPOINTS ====================
 
-      // GET /api/vocabulary/all - Lấy toàn bộ từ vựng theo từng level (cho frontend DATA object)
-      // Optimized: returns in-memory VOCAB_DATA directly (0 D1 row reads, immune to daily read quotas)
+      // GET /api/vocabulary/all - Lấy toàn bộ từ vựng theo từng level (0 D1 row reads mặc định, chỉ đọc D1 nếu ?source=db)
       if (path === '/api/vocabulary/all' && method === 'GET') {
         let data = VOCAB_DATA;
-        if (env && env.DB) {
+        if (url.searchParams.get('source') === 'db' && env && env.DB) {
           try {
             const { results } = await env.DB.prepare(`
               SELECT hanzi, pinyin, meaning, example, example_pinyin, example_meaning, pos, level
@@ -199,7 +278,7 @@ export default {
             if (results && results.length > 0) {
               const dbData = {};
               for (const row of results) {
-                const lvl = (row.level || '').replace('HSK', 'HSK '); // HSK1 -> HSK 1
+                const lvl = (row.level || '').replace('HSK', 'HSK ');
                 if (!dbData[lvl]) dbData[lvl] = [];
                 dbData[lvl].push({
                   h: row.hanzi,
@@ -218,7 +297,7 @@ export default {
           }
         }
 
-        return jsonResponse({ success: true, data });
+        return jsonResponse({ success: true, data }, 200, { 'Cache-Control': 'public, max-age=3600' });
       }
 
       // GET /api/vocabulary - Lấy tất cả từ vựng hoặc theo level
@@ -314,8 +393,12 @@ export default {
         return errorResponse('Vocabulary not found', 404);
       }
 
-      // POST /api/vocabulary - Thêm từ vựng mới (admin)
+      // POST /api/vocabulary - Thêm từ vựng mới (admin only)
       if (path === '/api/vocabulary' && method === 'POST') {
+        const adminUser = await verifyAdminToken(request, env);
+        if (!adminUser) {
+          return errorResponse('Unauthorized: Admin token required', 401);
+        }
         if (!env || !env.DB) {
           return errorResponse('D1 Database not configured for write operations', 503);
         }
@@ -428,37 +511,23 @@ export default {
         const msgObj = typeof body.msg === 'string'
           ? (() => { try { return JSON.parse(body.msg); } catch (e) { return {}; } })()
           : (body.msg || body.name || {});
-        const hostToken = String(body.hostToken || '');
+        const hostToken = String(body.hostToken || request.headers.get('X-Arena-Host-Token') || '');
 
         if (!pin) {
           return errorResponse('Missing pin', 400);
         }
 
         const roomObj = getArenaRoomStub(env, pin);
-        if (roomObj) {
-          const doRes = await roomObj.fetch('https://arena-do/push', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin, msg: msgObj, hostToken }),
-          });
-          const data = await doRes.json();
-          return jsonResponse(data, doRes.status);
+        if (!roomObj) {
+          return errorResponse('Durable Object ARENA_ROOM not bound', 503);
         }
-
-        // Fallback RAM khi local không có DO binding
-        if (HOST_ONLY_ACTIONS.has(msgObj.action) && !hostToken) {
-          return errorResponse('Forbidden: host action requires hostToken', 403);
-        }
-        const msgId = ++_memMsgIdCounter;
-        const msgStr = JSON.stringify(msgObj);
-        if (!MEMORY_ARENA_MESSAGES.has(pin)) {
-          MEMORY_ARENA_MESSAGES.set(pin, []);
-        }
-        const roomMsgs = MEMORY_ARENA_MESSAGES.get(pin);
-        roomMsgs.push({ id: msgId, seq: msgId, msg: msgStr, timestamp: Date.now() });
-        if (roomMsgs.length > 200) roomMsgs.shift();
-
-        return jsonResponse({ success: true, id: msgId, seq: msgId, deck_id: msgId }, 201);
+        const doRes = await roomObj.fetch('https://arena-do/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin, msg: msgObj, hostToken }),
+        });
+        const data = await doRes.json();
+        return jsonResponse(data, doRes.status);
       }
 
       // GET /api/arena/sync?pin=...&since=... - Lấy tin nhắn mới của phòng từ Durable Object
@@ -472,40 +541,30 @@ export default {
         }
 
         const roomObj = getArenaRoomStub(env, pin);
-        if (roomObj) {
-          const doRes = await roomObj.fetch(
-            `https://arena-do/since?pin=${encodeURIComponent(pin)}&since=${sinceId}${latestOnly ? '&latest=1' : ''}`
-          );
-          const data = await doRes.json();
-          return jsonResponse(data, doRes.status);
+        if (!roomObj) {
+          return errorResponse('Durable Object ARENA_ROOM not bound', 503);
         }
-
-        // Fallback RAM
-        const roomMsgs = MEMORY_ARENA_MESSAGES.get(pin) || [];
-        const latestSeq = roomMsgs.length > 0 ? roomMsgs[roomMsgs.length - 1].id : 0;
-        if (latestOnly) {
-          return jsonResponse({ success: true, seq: latestSeq, count: 0, data: [] });
-        }
-        const formatted = roomMsgs.filter(m => m.id > sinceId).map(m => ({
-          id: m.id,
-          seq: m.id,
-          msg: m.msg,
-          name: m.msg,
-          timestamp: m.timestamp,
-        }));
-        return jsonResponse({ success: true, seq: latestSeq, count: formatted.length, data: formatted });
+        const doRes = await roomObj.fetch(
+          `https://arena-do/since?pin=${encodeURIComponent(pin)}&since=${sinceId}${latestOnly ? '&latest=1' : ''}`
+        );
+        const data = await doRes.json();
+        return jsonResponse(data, doRes.status);
       }
 
-      // DELETE /api/arena/sync?pin=... - Dọn dẹp tin nhắn khi kết thúc phòng
+      // DELETE /api/arena/sync?pin=... - Dọn dẹp tin nhắn khi kết thúc phòng (yêu cầu hostToken hợp lệ hoặc phòng đã hết hạn)
       if (path === '/api/arena/sync' && method === 'DELETE') {
         const pin = normalizeArenaPin(url.searchParams.get('pin'));
+        const hostToken = String(request.headers.get('X-Arena-Host-Token') || url.searchParams.get('token') || '');
         if (pin) {
-          MEMORY_ARENA_MESSAGES.delete(pin);
           const roomObj = getArenaRoomStub(env, pin);
           if (roomObj) {
-            try {
-              await roomObj.fetch(`https://arena-do/delete?pin=${encodeURIComponent(pin)}`, { method: 'DELETE' });
-            } catch (e) { }
+            const doRes = await roomObj.fetch(`https://arena-do/delete?pin=${encodeURIComponent(pin)}`, {
+              method: 'DELETE',
+              headers: hostToken ? { 'X-Arena-Host-Token': hostToken } : {},
+            });
+            if (doRes.status === 403) {
+              return errorResponse('Forbidden: invalid hostToken', 403);
+            }
           }
           if (env && env.DB) {
             try {
@@ -523,10 +582,11 @@ export default {
         const name = String(body.name || '').trim();
         const isPublic = body.is_public ? 1 : 0;
         const metaJson = typeof body.meta === 'string' ? body.meta : JSON.stringify(body.meta || body);
+        const hostToken = String(body.hostToken || request.headers.get('X-Arena-Host-Token') || '');
 
         if (!pin) return errorResponse('Missing pin', 400);
-
-        MEMORY_ARENA_ROOMS.set(pin, { pin, name, is_public: isPublic, meta_json: metaJson, updated_at: Date.now() });
+        const authorized = await checkRoomHostAuth(env, pin, hostToken);
+        if (!authorized) return errorResponse('Forbidden: invalid hostToken', 403);
 
         if (env && env.DB) {
           try {
@@ -555,9 +615,6 @@ export default {
               }
             } catch (e) { }
           }
-          if (MEMORY_ARENA_ROOMS.has(pin)) {
-            return jsonResponse({ success: true, data: MEMORY_ARENA_ROOMS.get(pin) });
-          }
           return errorResponse('Room not found', 404);
         }
 
@@ -583,32 +640,23 @@ export default {
           } catch (e) { }
         }
 
-        if (rooms.length === 0) {
-          for (const [p, r] of MEMORY_ARENA_ROOMS.entries()) {
-            if (r.is_public) {
-              try {
-                rooms.push(JSON.parse(r.meta_json));
-              } catch (e) {
-                rooms.push({ pin: r.pin, name: r.name });
-              }
-            }
-          }
-        }
-
         return jsonResponse({ success: true, count: rooms.length, data: rooms });
       }
 
-      // DELETE /api/arena/rooms/:pin - Xóa phòng
+      // DELETE /api/arena/rooms/:pin - Xóa phòng (yêu cầu hostToken hợp lệ hoặc phòng đã hết hạn)
       if (path.startsWith('/api/arena/rooms/') && method === 'DELETE') {
         const pin = normalizeArenaPin(path.split('/').pop());
+        const hostToken = String(request.headers.get('X-Arena-Host-Token') || url.searchParams.get('token') || '');
         if (pin) {
-          MEMORY_ARENA_ROOMS.delete(pin);
-          MEMORY_ARENA_MESSAGES.delete(pin);
           const roomObj = getArenaRoomStub(env, pin);
           if (roomObj) {
-            try {
-              await roomObj.fetch(`https://arena-do/delete?pin=${encodeURIComponent(pin)}`, { method: 'DELETE' });
-            } catch (e) { }
+            const doRes = await roomObj.fetch(`https://arena-do/delete?pin=${encodeURIComponent(pin)}`, {
+              method: 'DELETE',
+              headers: hostToken ? { 'X-Arena-Host-Token': hostToken } : {},
+            });
+            if (doRes.status === 403) {
+              return errorResponse('Forbidden: invalid hostToken', 403);
+            }
           }
           if (env && env.DB) {
             try {
@@ -723,13 +771,15 @@ export default {
 
         if (user_id && user_id.startsWith('arena_meta_')) {
           const pin = normalizeArenaPin(user_id);
+          const hostToken = String(body.hostToken || request.headers.get('X-Arena-Host-Token') || '');
+          const authorized = await checkRoomHostAuth(env, pin, hostToken);
+          if (!authorized) return errorResponse('Forbidden: invalid hostToken', 403);
           const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
           let isPub = 0;
           try {
             const parsed = typeof name === 'string' ? JSON.parse(name) : name;
             if (parsed && parsed.accessMode === 'public') isPub = 1;
           } catch (e) { }
-          MEMORY_ARENA_ROOMS.set(pin, { pin, name: pin, is_public: isPub, meta_json: metaStr, updated_at: Date.now() });
           if (env && env.DB) {
             try {
               await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, ?, ?)').bind(pin, pin, isPub, metaStr).run();
@@ -744,10 +794,12 @@ export default {
             const parsed = typeof name === 'string' ? JSON.parse(name) : name;
             pin = normalizeArenaPin(parsed.pin || '');
           } catch (e) { }
-          const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
+          const hostToken = String(body.hostToken || request.headers.get('X-Arena-Host-Token') || '');
           if (pin) {
-            MEMORY_ARENA_ROOMS.set(pin, { pin, name: pin, is_public: 1, meta_json: metaStr, updated_at: Date.now() });
+            const authorized = await checkRoomHostAuth(env, pin, hostToken);
+            if (!authorized) return errorResponse('Forbidden: invalid hostToken', 403);
           }
+          const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
           if (pin && env && env.DB) {
             try {
               await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, 1, ?)').bind(pin, pin, metaStr).run();
@@ -868,14 +920,24 @@ export default {
           success: true,
           data: {
             ...deck[0],
-            words: words.map(w => ({
-              h: w.hanzi,
-              p: w.pinyin,
-              m: w.meaning,
-              ex: w.example || '',
-              exp: w.example_pinyin || '',
-              exm: w.example_meaning || '',
-            })),
+            words: words.map(w => {
+              let extra = {};
+              if (w.meta_json) {
+                try {
+                  const parsedMeta = JSON.parse(w.meta_json);
+                  if (parsedMeta && typeof parsedMeta === 'object') extra = parsedMeta;
+                } catch (e) { }
+              }
+              return {
+                ...extra,
+                h: w.hanzi,
+                p: w.pinyin,
+                m: w.meaning,
+                ex: w.example || '',
+                exp: w.example_pinyin || '',
+                exm: w.example_meaning || '',
+              };
+            }),
           },
         });
       }
@@ -1160,8 +1222,28 @@ export class ArenaRoom {
       });
     }
 
-    // 5. HTTP DELETE / hoặc /delete - Xóa phòng & đóng toàn bộ kết nối
+    // 5. HTTP POST /verify-host - Kiểm tra hostToken của phòng
+    if (path === '/verify-host' && method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const isExpired = this.expiresAt && this.expiresAt > 0 && Date.now() >= this.expiresAt;
+      if (!this.hostToken || isExpired) {
+        if (body.hostToken && !this.hostToken) {
+          this.hostToken = String(body.hostToken).trim();
+          await this._saveState();
+        }
+        return jsonResponse({ success: true, authorized: true });
+      }
+      const ok = Boolean(body.hostToken && String(body.hostToken).trim() === this.hostToken);
+      return jsonResponse({ success: ok, authorized: ok }, ok ? 200 : 403);
+    }
+
+    // 6. HTTP DELETE / hoặc /delete - Xóa phòng & đóng toàn bộ kết nối (chặn xóa trái phép phòng đang hoạt động)
     if (method === 'DELETE') {
+      const tokenHeader = String(request.headers.get('X-Arena-Host-Token') || url.searchParams.get('token') || '').trim();
+      const isExpired = this.expiresAt && this.expiresAt > 0 && Date.now() >= this.expiresAt;
+      if (this.hostToken && !isExpired && tokenHeader !== this.hostToken) {
+        return jsonResponse({ error: 'Forbidden: invalid hostToken' }, 403);
+      }
       await this._cleanupRoom();
       return jsonResponse({ success: true, message: 'Room deleted' });
     }

@@ -38,11 +38,16 @@ function renderStatsSection() {
   var customDecks = [];
   try { customDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || []; } catch(e) {}
 
+  var esc = window.escapeHtml || function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+
   // ---------- Compute per-level progress ----------
   var levelStats = {};
   var totalWordsGlobal = 0;
   if (typeof DATA !== 'undefined') {
     Object.keys(DATA).forEach(function(lvl) {
+      if (lvl === 'custom') return;
       var words = DATA[lvl];
       if (!words || !words.length) return;
       var count = 0;
@@ -90,7 +95,7 @@ function renderStatsSection() {
       var pct = s.total > 0 ? Math.round((s.learned / s.total) * 100) : 0;
       html += '<div class="glass-card" style="padding: 16px 20px;">';
       html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">';
-      html += '<span style="font-weight: 600; color: var(--text-primary);">' + lvl + '</span>';
+      html += '<span style="font-weight: 600; color: var(--text-primary);">' + esc(lvl) + '</span>';
       html += '<span style="font-size: 0.85rem; color: var(--text-secondary);">' + s.learned + ' / ' + s.total + ' từ (' + pct + '%)</span>';
       html += '</div>';
       html += '<div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ' + pct + '%;"></div></div>';
@@ -121,9 +126,9 @@ function renderStatsSection() {
     topWords.forEach(function(h) {
       var item = srsData[h];
       html += '<tr style="border-top: 1px solid var(--glass-border);">';
-      html += '<td style="padding: 8px 10px; font-size: 1.1rem; color: var(--text-primary);">' + h + '</td>';
+      html += '<td style="padding: 8px 10px; font-size: 1.1rem; color: var(--text-primary);">' + esc(h) + '</td>';
       html += '<td style="padding: 8px 10px; color: var(--text-secondary);">' + (item.reviewCount || 0) + '</td>';
-      html += '<td style="padding: 8px 10px; color: var(--text-secondary);">' + (item.nextReview || '—') + '</td>';
+      html += '<td style="padding: 8px 10px; color: var(--text-secondary);">' + esc(item.nextReview || '—') + '</td>';
       html += '</tr>';
     });
 
@@ -143,7 +148,7 @@ function renderStatsSection() {
     html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
 
     dueWords.forEach(function(h) {
-      html += '<span style="background: rgba(139,92,246,0.15); border: 1px solid var(--accent-purple); border-radius: 8px; padding: 6px 12px; font-size: 1rem; color: var(--text-primary);">' + h + '</span>';
+      html += '<span style="background: rgba(139,92,246,0.15); border: 1px solid var(--accent-purple); border-radius: 8px; padding: 6px 12px; font-size: 1rem; color: var(--text-primary);">' + esc(h) + '</span>';
     });
 
     if (dueToday > 20) {
@@ -159,7 +164,7 @@ function renderStatsSection() {
     html += '<div class="glass-card" style="padding: 16px 20px;">';
     html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
     favList.slice(0, 30).forEach(function(w) {
-      html += '<span title="' + (w.p || '') + ' — ' + (w.m || '') + '" style="background: rgba(236,72,153,0.12); border: 1px solid #ec4899; border-radius: 8px; padding: 6px 12px; font-size: 1rem; color: var(--text-primary); cursor: default;">' + w.h + '</span>';
+      html += '<span title="' + esc(w.p || '') + ' — ' + esc(w.m || '') + '" style="background: rgba(236,72,153,0.12); border: 1px solid #ec4899; border-radius: 8px; padding: 6px 12px; font-size: 1rem; color: var(--text-primary); cursor: default;">' + esc(w.h) + '</span>';
     });
     if (favList.length > 30) {
       html += '<span style="color: var(--text-muted); font-size: 0.85rem; align-self: center;">…và ' + (favList.length - 30) + ' từ khác</span>';
@@ -179,12 +184,44 @@ function _statCard(icon, label, value, color) {
     '</div>';
 }
 
+// ==================== CLOUD SYNC FOR CUSTOM DECK COUNT ====================
+function syncCloudCustomDecksForStats() {
+  if (!window.WeiQuanAPI || !window.WeiQuanAPI.getDecks) return;
+  window.WeiQuanAPI.getDecks('default_user').then(function(res) {
+    if (!res || !res.success || !Array.isArray(res.data)) return;
+    var localDecks = [];
+    try { localDecks = JSON.parse(localStorage.getItem('wq_custom_decks')) || []; } catch(e) {}
+    var localById = {};
+    localDecks.forEach(function(d) {
+      var key = String(d.cloudId || d.id);
+      localById[key] = d;
+    });
+    var merged = res.data.map(function(cd) {
+      var existing = localById[String(cd.id)] || localDecks.find(function(ld) { return ld.name === cd.name; });
+      var words = (existing && Array.isArray(existing.words) && existing.words.length > 0) ? existing.words : [];
+      return {
+        id: cd.id,
+        cloudId: cd.id,
+        name: cd.name,
+        words: words,
+        wordCount: Number(cd.word_count) || words.length || 0,
+        createdAt: (cd.created_at || '').split(' ')[0].split('T')[0] || ''
+      };
+    });
+    var cloudIds = new Set(res.data.map(function(cd) { return String(cd.id); }));
+    var unsynced = localDecks.filter(function(ld) {
+      return !ld.cloudId && !cloudIds.has(String(ld.id)) && !merged.some(function(m) { return m.name === ld.name; });
+    });
+    localStorage.setItem('wq_custom_decks', JSON.stringify(unsynced.concat(merged)));
+    renderStatsSection();
+  }).catch(function() {});
+}
+
 // ==================== DOM CONTENT LOADED ====================
 document.addEventListener('DOMContentLoaded', function() {
-  // Render immediately — DATA may still be loading; shared.js DOMContentLoaded
-  // calls initUIWithData which fires synchronously when DATA is embedded.
-  // A short defer ensures DATA is populated before we compute per-level stats.
-  setTimeout(function() {
+  renderStatsSection();
+  syncCloudCustomDecksForStats();
+  document.addEventListener('wq:data-ready', function() {
     renderStatsSection();
-  }, 200);
+  });
 });

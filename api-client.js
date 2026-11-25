@@ -89,12 +89,11 @@ class WeiQuanAPI {
     return w;
   }
 
-  async createDeck(userId, name, words) {
-    // Save any custom sentences (including examples, tokens, blank, options) to localStorage as well
+  _persistCustomSentencesLocal(words) {
     try {
       const savedSentences = JSON.parse(localStorage.getItem('wq_custom_sentences') || '{}');
       (words || []).forEach(w => {
-        if (w && w.h && (w.ex || w.e || w.exm || w.exp || (Array.isArray(w.examples) && w.examples.length))) {
+        if (w && w.h && (w.ex || w.e || w.exm || w.exp || (Array.isArray(w.examples) && w.examples.length) || (Array.isArray(w.tokens) && w.tokens.length))) {
           const entry = {
             ex: w.ex || w.e || '',
             exp: w.exp || '',
@@ -109,7 +108,10 @@ class WeiQuanAPI {
       });
       localStorage.setItem('wq_custom_sentences', JSON.stringify(savedSentences));
     } catch (e) { }
+  }
 
+  async createDeck(userId, name, words) {
+    this._persistCustomSentencesLocal(words);
     const cloudWords = (words || []).map(w => this._serializeWordForCloud(w));
     return this.request('/api/decks', {
       method: 'POST',
@@ -138,11 +140,19 @@ class WeiQuanAPI {
   async updateDeck(deckId, data) {
     const payload = { ...data };
     if (Array.isArray(payload.words)) {
+      this._persistCustomSentencesLocal(payload.words);
       payload.words = payload.words.map(w => this._serializeWordForCloud(w));
     }
     return this.request(`/api/decks/${deckId}`, {
       method: 'PUT',
       body: JSON.stringify(payload),
+    });
+  }
+
+  async adminLogin(username, password) {
+    return this.request('/api/admin/login', {
+      method: 'POST',
+      body: JSON.stringify({ username, password }),
     });
   }
 

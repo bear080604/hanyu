@@ -679,12 +679,15 @@ function showWordTooltip(targetEl, info, modeOpts) {
   var tip = ensureTooltipEl();
   var hideMeaning = modeOpts && modeOpts.hideMeaning;
 
-  var html = '<div class="s-tip-hanzi">' + (info.h || '') + '</div>';
+  var esc = window.escapeHtml || function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+  var html = '<div class="s-tip-hanzi">' + esc(info.h || '') + '</div>';
   if (info.p) {
-    html += '<div class="s-tip-pinyin">' + info.p + '</div>';
+    html += '<div class="s-tip-pinyin">' + esc(info.p) + '</div>';
   }
   if (!hideMeaning && info.m) {
-    html += '<div class="s-tip-meaning">' + info.m + '</div>';
+    html += '<div class="s-tip-meaning">' + esc(info.m) + '</div>';
   }
   tip.innerHTML = html;
   tip.style.display = 'block';
@@ -1039,9 +1042,12 @@ function renderCurrentQuestionUI(validDeck) {
   }
 
   if (wordHintEl) {
+    var escHint = window.escapeHtml || function (s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
     var baseHint = sActiveSubMode === 'arrange'
-      ? '💡 Từ vựng trọng tâm: <strong>' + getCleanHanzi(sCur.h) + '</strong> (' + (sCur.p || '') + ') — ' + (sCur.m || '')
-      : '💡 Gợi ý nghĩa từ cần điền: <strong>' + (sCur.m || '') + '</strong>';
+      ? '💡 Từ vựng trọng tâm: <strong>' + escHint(getCleanHanzi(sCur.h)) + '</strong> (' + escHint(sCur.p || '') + ') — ' + escHint(sCur.m || '')
+      : '💡 Gợi ý nghĩa từ cần điền: <strong>' + escHint(sCur.m || '') + '</strong>';
     var extraBadges = '';
     if (sCur._isRetry) {
       extraBadges += ' <span style="display:inline-flex; align-items:center; gap:4px; margin-left:8px; padding:2px 8px; border-radius:999px; font-size:0.75rem; font-weight:700; background:rgba(245,158,11,0.14); color:#d97706; border:1px solid rgba(245,158,11,0.35);">🔄 Ôn lại từ sai</span>';
@@ -1452,8 +1458,11 @@ function setupFillQuestion(wordObj, validDeck) {
     var btn = document.createElement('div');
     btn.className = 'q-opt s-fill-opt';
     var cleanH = getCleanHanzi(opt.h);
+    var escOpt = window.escapeHtml || function (s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
     btn.innerHTML =
-      '<div class="s-opt-hanzi">' + cleanH + '</div>' +
+      '<div class="s-opt-hanzi">' + escOpt(cleanH) + '</div>' +
       '<div class="s-opt-hint-label">Trỏ vào để xem Pinyin</div>';
     bindTooltipEvents(btn, function () {
       var fallback = lookupWordInfo(cleanH) || {};
@@ -1564,8 +1573,9 @@ function useSentenceHint() {
       pinyinEl.style.display = 'block';
     }
     var optEls = document.querySelectorAll('#sFillOpts .q-opt');
+    var expectedClean = getCleanHanzi(sTargetMatch || sCur.h);
     for (var i = 0; i < sFillOptions.length; i++) {
-      if (getCleanHanzi(sFillOptions[i].h) !== getCleanHanzi(sCur.h) &&
+      if (getCleanHanzi(sFillOptions[i].h) !== expectedClean &&
         optEls[i] && !optEls[i].classList.contains('disabled')) {
         optEls[i].classList.add('disabled');
         break;
@@ -1685,7 +1695,11 @@ function renderSentenceHskGrid() {
     'linear-gradient(135deg, #EF4444 0%, #DC2626 100%)'
   ];
 
-  Object.keys(DATA).forEach(function (lvl, index) {
+  var esc = window.escapeHtml || function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+
+  Object.keys(DATA).filter(function (lvl) { return lvl !== 'custom'; }).forEach(function (lvl, index) {
     var words = DATA[lvl];
     if (!words || words.length === 0) return;
     var sentenceCount = words.filter(function (w) {
@@ -1700,7 +1714,7 @@ function renderSentenceHskGrid() {
     card.style.setProperty('--card-color', color);
     card.innerHTML =
       '<div class="hsk-card-header">' +
-      '<h4>' + lvl + '</h4>' +
+      '<h4>' + esc(lvl) + '</h4>' +
       '<span class="word-count">' + sentenceCount + ' câu</span>' +
       '</div>' +
       '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.9rem;">' +
@@ -1726,28 +1740,35 @@ function renderSentenceCustomDecks() {
     customDecks = [];
   }
 
-  // Also sync from Cloudflare API so all cloud decks (Bài 4..9, 9) appear even on fresh visit
+  // Also sync from Cloudflare API so all cloud decks appear even on fresh visit
   if (window.WeiQuanAPI) {
     window.WeiQuanAPI.getDecks('default_user').then(function (res) {
       if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
         var localMap = {};
         customDecks.forEach(function (d) {
-          if (d.cloudId) localMap[d.cloudId] = d;
-          else if (d.id) localMap[d.id] = d;
+          if (d.cloudId) localMap[String(d.cloudId)] = d;
+          else if (d.id) localMap[String(d.id)] = d;
         });
-        var merged = res.data.map(function (d) {
-          var existing = localMap[d.id];
+        var mergedCloud = res.data.map(function (d) {
+          var existing = localMap[String(d.id)] ||
+            customDecks.find(function (ld) { return ld.name === d.name && Array.isArray(ld.words) && ld.words.length > 0; });
+          var cachedWords = (existing && Array.isArray(existing.words) && existing.words.length > 0) ? existing.words : [];
           return {
             id: d.id,
             cloudId: d.id,
             name: d.name,
-            words: (existing && existing.words && existing.words.length) ? existing.words : [],
-            wordCount: d.word_count || 0,
+            words: cachedWords,
+            wordCount: Number(d.word_count) || cachedWords.length || 0,
             createdAt: (d.created_at || '').split(' ')[0].split('T')[0] || ''
           };
         });
-        localStorage.setItem('wq_custom_decks', JSON.stringify(merged));
-        _renderCustomDeckCards(list, merged);
+        var cloudIds = new Set(res.data.map(function (d) { return String(d.id); }));
+        var unsyncedLocal = customDecks.filter(function (ld) {
+          return !ld.cloudId && !cloudIds.has(String(ld.id)) && !mergedCloud.some(function (m) { return m.name === ld.name; });
+        });
+        var combined = unsyncedLocal.concat(mergedCloud);
+        localStorage.setItem('wq_custom_decks', JSON.stringify(combined));
+        _renderCustomDeckCards(list, combined);
       } else {
         _renderCustomDeckCards(list, customDecks);
       }
@@ -1768,6 +1789,10 @@ function _renderCustomDeckCards(list, customDecks) {
     return;
   }
 
+  var esc = window.escapeHtml || function (s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  };
+
   list.innerHTML = '';
   customDecks.forEach(function (d) {
     var count = d.wordCount || (d.words && d.words.length) || 0;
@@ -1776,11 +1801,11 @@ function _renderCustomDeckCards(list, customDecks) {
     card.style.setProperty('--card-color', 'var(--accent-gradient)');
     card.innerHTML =
       '<div class="hsk-card-header">' +
-      '<h4>📚 ' + d.name + '</h4>' +
+      '<h4>📚 ' + esc(d.name) + '</h4>' +
       '<span class="word-count">' + count + ' câu</span>' +
       '</div>' +
       '<div style="margin: 16px 0; color: var(--text-secondary); font-size: 0.85rem;">' +
-      '📅 ' + (d.createdAt || 'Đã đồng bộ Cloud') +
+      '📅 ' + esc(d.createdAt || 'Đã đồng bộ Cloud') +
       '</div>' +
       '<button class="btn start-learn-btn" style="background: var(--accent-gradient); border: none; color: #fff;">🧩 Luyện câu ngay</button>';
 
@@ -1791,6 +1816,10 @@ function _renderCustomDeckCards(list, customDecks) {
         window.WeiQuanAPI.getDeckById(cloudId).then(function (res) {
           if (res && res.success && res.data && res.data.words) {
             d.words = res.data.words.map(enrichWord);
+            d.wordCount = d.words.length;
+            try {
+              localStorage.setItem('wq_custom_decks', JSON.stringify(customDecks));
+            } catch (e) { }
             startSentenceWithDeck({ name: d.name, words: d.words });
           }
         }).catch(function () {

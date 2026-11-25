@@ -187,6 +187,9 @@
   function renderCustomHistory() {
     var list = document.getElementById('customHistoryList');
     if (!list) return;
+    var esc = window.escapeHtml || function (s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
 
     if (customHistory.length === 0) {
       list.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Chưa có lịch sử</div>';
@@ -200,11 +203,11 @@
       item.innerHTML =
         '<div class="custom-deck-info">' +
         '<div class="custom-deck-title">' +
-        '<span class="deck-name">' + deckObj.name + '</span>' +
+        '<span class="deck-name">' + esc(deckObj.name) + '</span>' +
         '<span class="custom-deck-badge">' + (deckObj.wordCount || (deckObj.words ? deckObj.words.length : 0)) + ' từ</span>' +
         '</div>' +
         '<div class="custom-deck-meta">' +
-        '<span>' + deckObj.createdAt + '</span>' +
+        '<span>' + esc(deckObj.createdAt) + '</span>' +
         '</div>' +
         '</div>' +
         '<div class="custom-deck-actions">' +
@@ -323,6 +326,9 @@
     }
 
     list.innerHTML = '';
+    var esc = window.escapeHtml || function (s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
     currentCustomWords.forEach(function (word, index) {
       var ew = typeof window.enrichWordWithSentence === 'function' ? window.enrichWordWithSentence(word) : word;
       currentCustomWords[index] = ew;
@@ -333,13 +339,13 @@
           '<div style="font-size: 0.74rem; font-weight: 700; color: var(--accent-purple);">🎲 ' + exList.length + ' câu ví dụ (sẽ random câu khi học):</div>' +
           exList.map(function (exObj, idxEx) {
             return '<div style="font-size: 0.79rem; color: var(--text-muted); font-style: italic; padding-left: 6px; border-left: 2px solid rgba(139,92,246,0.3);">' +
-              (idxEx + 1) + '. ' + exObj.ex + (exObj.exm ? ' — <span style="color: var(--text-secondary);">' + exObj.exm + '</span>' : '') +
+              (idxEx + 1) + '. ' + esc(exObj.ex) + (exObj.exm ? ' — <span style="color: var(--text-secondary);">' + esc(exObj.exm) + '</span>' : '') +
               '</div>';
           }).join('') +
           '</div>';
       } else if (exList.length === 1) {
         exHtml = '<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-style: italic;">' +
-          '💬 ' + exList[0].ex + (exList[0].exm ? ' — <span style="color: var(--text-secondary);">' + exList[0].exm + '</span>' : '') +
+          '💬 ' + esc(exList[0].ex) + (exList[0].exm ? ' — <span style="color: var(--text-secondary);">' + esc(exList[0].exm) + '</span>' : '') +
           '</div>';
       } else {
         exHtml = '<div style="font-size: 0.78rem; color: #f59e0b; margin-top: 4px;">⚠️ Chưa có câu ví dụ (bấm ✏️ để thêm)</div>';
@@ -350,10 +356,10 @@
       item.innerHTML =
         '<div class="custom-word-info">' +
         '<div class="custom-word-main">' +
-        '<span class="custom-word-hanzi">' + ew.h + '</span>' +
-        '<span class="custom-word-pinyin">' + ew.p + '</span>' +
+        '<span class="custom-word-hanzi">' + esc(ew.h) + '</span>' +
+        '<span class="custom-word-pinyin">' + esc(ew.p) + '</span>' +
         '</div>' +
-        '<span class="custom-word-meaning">' + ew.m + '</span>' +
+        '<span class="custom-word-meaning">' + esc(ew.m) + '</span>' +
         exHtml +
         '</div>' +
         '<div class="custom-word-actions">' +
@@ -619,74 +625,74 @@
   }
 
   function clearManualForm() {
-      ['customHanzi', 'customPinyin', 'customMeaning', 'customExample', 'customExampleMeaning'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-    }
+    ['customHanzi', 'customPinyin', 'customMeaning', 'customExample', 'customExampleMeaning'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
 
   // ==================== SAVE DECK ====================
 
   async function saveCustomDeck() {
-        if (currentCustomWords.length === 0) {
-          if (window.showToast) {
-            window.showToast('Bộ từ đang trống! Hãy thêm từ trước khi lưu.', 'error');
-          }
-          return;
-        }
-
-        var defaultName = 'Bộ từ ' + (customHistory.length + 1);
-        var deckName;
-
-        if (window.wqPopup) {
-          deckName = await window.wqPopup.prompt('Đặt tên cho bộ từ này:', {
-            title: 'Lưu bộ từ',
-            icon: '💾',
-            placeholder: defaultName,
-            defaultValue: defaultName
-          });
-        } else {
-          deckName = prompt('Đặt tên cho bộ từ này:', defaultName);
-        }
-
-        if (!deckName) return;
-        deckName = deckName.trim();
-        if (!deckName) return;
-
-        var newDeck = {
-          id: Date.now(),
-          name: deckName,
-          words: currentCustomWords.slice(),
-          createdAt: new Date().toISOString().split('T')[0],
-          wordCount: currentCustomWords.length
-        };
-
-        customHistory.unshift(newDeck);
-        saveCustomHistory();
-        renderCustomHistory();
-
-        // Sync lên Cloudflare
-        if (window.WeiQuanAPI) {
-          window.WeiQuanAPI.createDeck(USER_ID, deckName, currentCustomWords.slice()).then(function (res) {
-            if (res && res.success && res.deck_id) {
-              newDeck.cloudId = res.deck_id;
-              saveCustomHistory();
-              if (window.showToast) {
-                window.showToast('☁️ Đã lưu "' + deckName + '" lên cloud!', 'success');
-              }
-            }
-          }).catch(function (err) {
-            console.warn('⚠️ Lưu cloud thất bại, đã lưu local:', err);
-            if (window.showToast) {
-              window.showToast('💾 Đã lưu local (cloud lỗi)', 'info');
-            }
-          });
-        }
-
-        if (window.showToast) {
-          window.showToast('Đã lưu bộ từ "' + deckName + '" (' + newDeck.wordCount + ' từ)', 'success');
-        }
+    if (currentCustomWords.length === 0) {
+      if (window.showToast) {
+        window.showToast('Bộ từ đang trống! Hãy thêm từ trước khi lưu.', 'error');
       }
+      return;
+    }
+
+    var defaultName = 'Bộ từ ' + (customHistory.length + 1);
+    var deckName;
+
+    if (window.wqPopup) {
+      deckName = await window.wqPopup.prompt('Đặt tên cho bộ từ này:', {
+        title: 'Lưu bộ từ',
+        icon: '💾',
+        placeholder: defaultName,
+        defaultValue: defaultName
+      });
+    } else {
+      deckName = prompt('Đặt tên cho bộ từ này:', defaultName);
+    }
+
+    if (!deckName) return;
+    deckName = deckName.trim();
+    if (!deckName) return;
+
+    var newDeck = {
+      id: Date.now(),
+      name: deckName,
+      words: currentCustomWords.slice(),
+      createdAt: new Date().toISOString().split('T')[0],
+      wordCount: currentCustomWords.length
+    };
+
+    customHistory.unshift(newDeck);
+    saveCustomHistory();
+    renderCustomHistory();
+
+    // Sync lên Cloudflare
+    if (window.WeiQuanAPI) {
+      window.WeiQuanAPI.createDeck(USER_ID, deckName, currentCustomWords.slice()).then(function (res) {
+        if (res && res.success && res.deck_id) {
+          newDeck.cloudId = res.deck_id;
+          saveCustomHistory();
+          if (window.showToast) {
+            window.showToast('☁️ Đã lưu "' + deckName + '" lên cloud!', 'success');
+          }
+        }
+      }).catch(function (err) {
+        console.warn('⚠️ Lưu cloud thất bại, đã lưu local:', err);
+        if (window.showToast) {
+          window.showToast('💾 Đã lưu local (cloud lỗi)', 'info');
+        }
+      });
+    }
+
+    if (window.showToast) {
+      window.showToast('Đã lưu bộ từ "' + deckName + '" (' + newDeck.wordCount + ' từ)', 'success');
+    }
+  }
 
   // ==================== STUDY ====================
 
@@ -979,13 +985,16 @@
     }
 
     var res = parseImportedJson(raw);
+    var esc = window.escapeHtml || function (s) {
+      return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
     liveStatus.style.display = 'block';
 
     if (!res.success) {
       liveStatus.style.background = 'rgba(239, 68, 68, 0.08)';
       liveStatus.style.borderColor = 'rgba(239, 68, 68, 0.35)';
       liveStatus.innerHTML =
-        '<div style="color: var(--neon-red); font-weight: 700; margin-bottom: 4px;">❌ Lỗi cú pháp JSON: ' + res.error + '</div>' +
+        '<div style="color: var(--neon-red); font-weight: 700; margin-bottom: 4px;">❌ Lỗi cú pháp JSON: ' + esc(res.error) + '</div>' +
         '<div style="color: var(--text-secondary); font-size: 0.8rem;">💡 Mẹo: Bấm nút <b>"🪄 Tự sửa &amp; Format"</b> ở góc phải trên để tự động làm sạch lỗi dấu phẩy hoặc markdown.</div>';
       return;
     }
@@ -1007,8 +1016,8 @@
         ? ' <span style="font-size:0.72rem; color:var(--accent-purple); font-weight:700;">🎲' + w.examples.length + ' câu</span>'
         : '';
       return '<span style="display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:8px; background:rgba(139,92,246,0.1); border:1px solid var(--glass-border); font-size:0.8rem; color:var(--text-primary);">' +
-        '<b>' + w.h + '</b>' +
-        (w.p ? ' <span style="color:var(--neon-cyan);">(' + w.p + ')</span>' : '') +
+        '<b>' + esc(w.h) + '</b>' +
+        (w.p ? ' <span style="color:var(--neon-cyan);">(' + esc(w.p) + ')</span>' : '') +
         sentBadge +
         '</span>';
     }).join(' ');
@@ -1166,425 +1175,428 @@
   // ==================== DUPLICATE HANDLING ====================
 
   function showDuplicateConfirmDialog(newWords, duplicateWords) {
-        var modal = document.getElementById('duplicateConfirmModal');
-        if (!modal) return;
+    var modal = document.getElementById('duplicateConfirmModal');
+    if (!modal) return;
 
-        window._importData = { newWords: newWords, duplicateWords: duplicateWords };
+    window._importData = { newWords: newWords, duplicateWords: duplicateWords };
 
-        var summary = document.getElementById('duplicateSummary');
-        if (summary) {
-          summary.innerHTML =
-            '<div style="display: flex; justify-content: space-around; text-align: center;">' +
-            '<div>' +
-            '<div style="font-size: 2rem; font-weight: 800; color: var(--neon-green);">' + newWords.length + '</div>' +
-            '<div style="font-size: 0.85rem; color: var(--text-secondary);">Từ mới</div>' +
-            '</div>' +
-            '<div>' +
-            '<div style="font-size: 2rem; font-weight: 800; color: #F59E0B;">' + duplicateWords.length + '</div>' +
-            '<div style="font-size: 0.85rem; color: var(--text-secondary);">Từ trùng</div>' +
-            '</div>' +
-            '</div>';
-        }
+    var summary = document.getElementById('duplicateSummary');
+    if (summary) {
+      summary.innerHTML =
+        '<div style="display: flex; justify-content: space-around; text-align: center;">' +
+        '<div>' +
+        '<div style="font-size: 2rem; font-weight: 800; color: var(--neon-green);">' + newWords.length + '</div>' +
+        '<div style="font-size: 0.85rem; color: var(--text-secondary);">Từ mới</div>' +
+        '</div>' +
+        '<div>' +
+        '<div style="font-size: 2rem; font-weight: 800; color: #F59E0B;">' + duplicateWords.length + '</div>' +
+        '<div style="font-size: 0.85rem; color: var(--text-secondary);">Từ trùng</div>' +
+        '</div>' +
+        '</div>';
+    }
 
-        var newWordsCount = document.getElementById('newWordsCount');
-        var duplicateWordsCount = document.getElementById('duplicateWordsCount');
-        if (newWordsCount) newWordsCount.textContent = newWords.length;
-        if (duplicateWordsCount) duplicateWordsCount.textContent = duplicateWords.length;
+    var newWordsCount = document.getElementById('newWordsCount');
+    var duplicateWordsCount = document.getElementById('duplicateWordsCount');
+    if (newWordsCount) newWordsCount.textContent = newWords.length;
+    if (duplicateWordsCount) duplicateWordsCount.textContent = duplicateWords.length;
 
-        var list = document.getElementById('duplicateList');
-        if (list) {
-          list.innerHTML = '';
-          var shown = duplicateWords.slice(0, 10);
-          shown.forEach(function (d) {
-            var item = document.createElement('div');
-            item.style.cssText = 'padding: 10px; margin-bottom: 8px; background: rgba(139, 92, 246, 0.04); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.25);';
-            item.innerHTML =
-              '<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">' +
-              '<span style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">' + d.word.h + '</span>' +
-              '<span style="font-size: 0.85rem; color: var(--neon-cyan);">' + d.word.p + '</span>' +
-              '</div>' +
-              '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem;">' +
-              '<div>' +
-              '<div style="color: var(--text-muted); font-size: 0.75rem;">Hiện tại:</div>' +
-              '<div style="color: var(--text-secondary);">' + d.existing.m + '</div>' +
-              '</div>' +
-              '<div>' +
-              '<div style="color: var(--text-muted); font-size: 0.75rem;">Mới:</div>' +
-              '<div style="color: #F97316;">' + d.word.m + '</div>' +
-              '</div>' +
-              '</div>';
-            list.appendChild(item);
-          });
+    var list = document.getElementById('duplicateList');
+    if (list) {
+      list.innerHTML = '';
+      var esc = window.escapeHtml || function (s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      };
+      var shown = duplicateWords.slice(0, 10);
+      shown.forEach(function (d) {
+        var item = document.createElement('div');
+        item.style.cssText = 'padding: 10px; margin-bottom: 8px; background: rgba(139, 92, 246, 0.04); border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.25);';
+        item.innerHTML =
+          '<div style="display: flex; justify-content: space-between; margin-bottom: 4px;">' +
+          '<span style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">' + esc(d.word.h) + '</span>' +
+          '<span style="font-size: 0.85rem; color: var(--neon-cyan);">' + esc(d.word.p) + '</span>' +
+          '</div>' +
+          '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.85rem;">' +
+          '<div>' +
+          '<div style="color: var(--text-muted); font-size: 0.75rem;">Hiện tại:</div>' +
+          '<div style="color: var(--text-secondary);">' + esc(d.existing.m) + '</div>' +
+          '</div>' +
+          '<div>' +
+          '<div style="color: var(--text-muted); font-size: 0.75rem;">Mới:</div>' +
+          '<div style="color: #F97316;">' + esc(d.word.m) + '</div>' +
+          '</div>' +
+          '</div>';
+        list.appendChild(item);
+      });
 
-          if (duplicateWords.length > 10) {
-            var more = document.createElement('div');
-            more.style.cssText = 'padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.85rem;';
-            more.textContent = '... và ' + (duplicateWords.length - 10) + ' từ khác';
-            list.appendChild(more);
-          }
-        }
-
-        closeImportJsonModal();
-        modal.classList.add('active');
+      if (duplicateWords.length > 10) {
+        var more = document.createElement('div');
+        more.style.cssText = 'padding: 10px; text-align: center; color: var(--text-muted); font-size: 0.85rem;';
+        more.textContent = '... và ' + (duplicateWords.length - 10) + ' từ khác';
+        list.appendChild(more);
       }
+    }
+
+    closeImportJsonModal();
+    modal.classList.add('active');
+  }
 
   function handleSkipDuplicates() {
-        var data = window._importData || {};
-        var newWords = data.newWords;
-        if (!newWords) return;
+    var data = window._importData || {};
+    var newWords = data.newWords;
+    if (!newWords) return;
 
-        currentCustomWords.push.apply(currentCustomWords, newWords);
-        closeDuplicateModal();
-        renderCustomWordsList();
-        if (window.showToast) {
-          window.showToast('✅ Đã thêm ' + newWords.length + ' từ mới!', 'success');
-        }
-        delete window._importData;
-      }
+    currentCustomWords.push.apply(currentCustomWords, newWords);
+    closeDuplicateModal();
+    renderCustomWordsList();
+    if (window.showToast) {
+      window.showToast('✅ Đã thêm ' + newWords.length + ' từ mới!', 'success');
+    }
+    delete window._importData;
+  }
 
   function handleOverwriteDuplicates() {
-        var data = window._importData || {};
-        var newWords = data.newWords;
-        var duplicateWords = data.duplicateWords;
-        if (!newWords || !duplicateWords) return;
+    var data = window._importData || {};
+    var newWords = data.newWords;
+    var duplicateWords = data.duplicateWords;
+    if (!newWords || !duplicateWords) return;
 
-        currentCustomWords.push.apply(currentCustomWords, newWords);
-        duplicateWords.forEach(function (d) {
-          var mergedWord = typeof window.mergeWordExamples === 'function'
-            ? window.mergeWordExamples(d.existing, d.word)
-            : d.word;
-          if (d.word.p) mergedWord.p = d.word.p;
-          if (d.word.m && d.word.m !== 'Chưa có nghĩa') mergedWord.m = d.word.m;
-          currentCustomWords[d.index] = mergedWord;
-        });
+    currentCustomWords.push.apply(currentCustomWords, newWords);
+    duplicateWords.forEach(function (d) {
+      var mergedWord = typeof window.mergeWordExamples === 'function'
+        ? window.mergeWordExamples(d.existing, d.word)
+        : d.word;
+      if (d.word.p) mergedWord.p = d.word.p;
+      if (d.word.m && d.word.m !== 'Chưa có nghĩa') mergedWord.m = d.word.m;
+      currentCustomWords[d.index] = mergedWord;
+    });
 
-        persistWordsSentences(currentCustomWords);
-        closeDuplicateModal();
-        renderCustomWordsList();
-        if (window.showToast) {
-          window.showToast('✅ Đã thêm ' + newWords.length + ' từ mới + gộp câu ví dụ cho ' + duplicateWords.length + ' từ trùng!', 'success');
-        }
-        delete window._importData;
-      }
+    persistWordsSentences(currentCustomWords);
+    closeDuplicateModal();
+    renderCustomWordsList();
+    if (window.showToast) {
+      window.showToast('✅ Đã thêm ' + newWords.length + ' từ mới + gộp câu ví dụ cho ' + duplicateWords.length + ' từ trùng!', 'success');
+    }
+    delete window._importData;
+  }
 
   function closeDuplicateModal() {
-        var modal = document.getElementById('duplicateConfirmModal');
-        if (modal) modal.classList.remove('active');
-      }
+    var modal = document.getElementById('duplicateConfirmModal');
+    if (modal) modal.classList.remove('active');
+  }
 
   // ==================== EVENT BINDING ====================
 
   function initCustomDeckEvents() {
-        var searchInput = document.getElementById('customSearchInput');
-        var searchClearBtn = document.getElementById('customSearchClearBtn');
-        var suggestionsBox = document.getElementById('customSearchSuggestions');
-        var deselectBtn = document.getElementById('deselectWordBtn');
-        var addSelectedBtn = document.getElementById('addSelectedWordBtn');
-        var addManualBtn = document.getElementById('addManualWordBtn');
-        var saveBtn = document.getElementById('saveCustomDeckBtn');
-        var studyBtn = document.getElementById('studyCustomDeckBtn');
-        var importJsonBtn = document.getElementById('importJsonBtn');
-        var studyModeModal = document.getElementById('studyModeModal');
-        var closeStudyModeBtn = document.getElementById('closeStudyModeBtn');
+    var searchInput = document.getElementById('customSearchInput');
+    var searchClearBtn = document.getElementById('customSearchClearBtn');
+    var suggestionsBox = document.getElementById('customSearchSuggestions');
+    var deselectBtn = document.getElementById('deselectWordBtn');
+    var addSelectedBtn = document.getElementById('addSelectedWordBtn');
+    var addManualBtn = document.getElementById('addManualWordBtn');
+    var saveBtn = document.getElementById('saveCustomDeckBtn');
+    var studyBtn = document.getElementById('studyCustomDeckBtn');
+    var importJsonBtn = document.getElementById('importJsonBtn');
+    var studyModeModal = document.getElementById('studyModeModal');
+    var closeStudyModeBtn = document.getElementById('closeStudyModeBtn');
 
-        // Import JSON modal
-        var closeImportBtn = document.getElementById('closeImportJsonBtn');
-        var cancelImportBtn = document.getElementById('cancelImportJsonBtn');
-        var confirmImportBtn = document.getElementById('confirmImportJsonBtn');
-        var importAndSaveBtn = document.getElementById('importAndSaveDeckBtn');
-        var importModal = document.getElementById('importJsonModal');
-        var jsonFileInput = document.getElementById('jsonFileInput');
-        var jsonTextInput = document.getElementById('jsonTextInput');
-        var jsonDeckNameInput = document.getElementById('jsonDeckNameInput');
-        var insertSampleBtn = document.getElementById('insertSampleJsonBtn');
-        var formatJsonBtn = document.getElementById('formatJsonBtn');
-        var copyAiPromptBtn = document.getElementById('copyAiPromptBtn');
-        var clearJsonBtn = document.getElementById('clearJsonBtn');
+    // Import JSON modal
+    var closeImportBtn = document.getElementById('closeImportJsonBtn');
+    var cancelImportBtn = document.getElementById('cancelImportJsonBtn');
+    var confirmImportBtn = document.getElementById('confirmImportJsonBtn');
+    var importAndSaveBtn = document.getElementById('importAndSaveDeckBtn');
+    var importModal = document.getElementById('importJsonModal');
+    var jsonFileInput = document.getElementById('jsonFileInput');
+    var jsonTextInput = document.getElementById('jsonTextInput');
+    var jsonDeckNameInput = document.getElementById('jsonDeckNameInput');
+    var insertSampleBtn = document.getElementById('insertSampleJsonBtn');
+    var formatJsonBtn = document.getElementById('formatJsonBtn');
+    var copyAiPromptBtn = document.getElementById('copyAiPromptBtn');
+    var clearJsonBtn = document.getElementById('clearJsonBtn');
 
-        // Duplicate modal
-        var closeDupBtn = document.getElementById('closeDuplicateModalBtn');
-        var cancelDupBtn = document.getElementById('cancelDuplicateBtn');
-        var skipBtn = document.getElementById('skipDuplicatesBtn');
-        var overwriteBtn = document.getElementById('overwriteDuplicatesBtn');
-        var dupModal = document.getElementById('duplicateConfirmModal');
+    // Duplicate modal
+    var closeDupBtn = document.getElementById('closeDuplicateModalBtn');
+    var cancelDupBtn = document.getElementById('cancelDuplicateBtn');
+    var skipBtn = document.getElementById('skipDuplicatesBtn');
+    var overwriteBtn = document.getElementById('overwriteDuplicatesBtn');
+    var dupModal = document.getElementById('duplicateConfirmModal');
 
-        // Search
-        if (searchInput) {
-          searchInput.addEventListener('input', function (e) {
-            renderCustomSearchSuggestions(e.target.value);
-          });
+    // Search
+    if (searchInput) {
+      searchInput.addEventListener('input', function (e) {
+        renderCustomSearchSuggestions(e.target.value);
+      });
+    }
+
+    if (searchClearBtn) {
+      searchClearBtn.onclick = function () {
+        if (searchInput) searchInput.value = '';
+        if (suggestionsBox) suggestionsBox.style.display = 'none';
+        searchClearBtn.style.display = 'none';
+        if (searchInput) searchInput.focus();
+      };
+    }
+
+    document.addEventListener('click', function (e) {
+      if (suggestionsBox &&
+        !e.target.closest('#customSearchInput') &&
+        !e.target.closest('#customSearchSuggestions')) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+
+    if (deselectBtn) deselectBtn.onclick = deselectWord;
+    if (addSelectedBtn) addSelectedBtn.onclick = addSelectedWord;
+    if (addManualBtn) addManualBtn.onclick = addManualWord;
+    if (saveBtn) saveBtn.onclick = saveCustomDeck;
+    if (studyBtn) studyBtn.onclick = studyCustomDeck;
+    if (importJsonBtn) importJsonBtn.onclick = openImportJsonModal;
+
+    if (closeImportBtn) closeImportBtn.onclick = closeImportJsonModal;
+    if (cancelImportBtn) cancelImportBtn.onclick = closeImportJsonModal;
+    if (confirmImportBtn) {
+      confirmImportBtn.onclick = function () { importJsonWords(false); };
+    }
+    if (importAndSaveBtn) {
+      importAndSaveBtn.onclick = function () { importJsonWords(true); };
+    }
+
+    if (jsonTextInput) {
+      jsonTextInput.addEventListener('input', updateJsonLiveStatus);
+    }
+
+    if (jsonFileInput) {
+      jsonFileInput.addEventListener('change', function () {
+        if (!jsonFileInput.files || jsonFileInput.files.length === 0) return;
+        var file = jsonFileInput.files[0];
+        if (jsonDeckNameInput && !jsonDeckNameInput.value.trim() && file.name) {
+          jsonDeckNameInput.value = file.name.replace(/\.(json|txt)$/i, '');
         }
-
-        if (searchClearBtn) {
-          searchClearBtn.onclick = function () {
-            if (searchInput) searchInput.value = '';
-            if (suggestionsBox) suggestionsBox.style.display = 'none';
-            searchClearBtn.style.display = 'none';
-            if (searchInput) searchInput.focus();
-          };
-        }
-
-        document.addEventListener('click', function (e) {
-          if (suggestionsBox &&
-            !e.target.closest('#customSearchInput') &&
-            !e.target.closest('#customSearchSuggestions')) {
-            suggestionsBox.style.display = 'none';
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          if (jsonTextInput) {
+            jsonTextInput.value = e.target.result || '';
+            updateJsonLiveStatus();
           }
-        });
+        };
+        reader.onerror = function () {
+          if (window.showToast) window.showToast('❌ Không thể đọc file JSON!', 'error');
+        };
+        reader.readAsText(file);
+      });
+    }
 
-        if (deselectBtn) deselectBtn.onclick = deselectWord;
-        if (addSelectedBtn) addSelectedBtn.onclick = addSelectedWord;
-        if (addManualBtn) addManualBtn.onclick = addManualWord;
-        if (saveBtn) saveBtn.onclick = saveCustomDeck;
-        if (studyBtn) studyBtn.onclick = studyCustomDeck;
-        if (importJsonBtn) importJsonBtn.onclick = openImportJsonModal;
-
-        if (closeImportBtn) closeImportBtn.onclick = closeImportJsonModal;
-        if (cancelImportBtn) cancelImportBtn.onclick = closeImportJsonModal;
-        if (confirmImportBtn) {
-          confirmImportBtn.onclick = function () { importJsonWords(false); };
-        }
-        if (importAndSaveBtn) {
-          importAndSaveBtn.onclick = function () { importJsonWords(true); };
-        }
-
-        if (jsonTextInput) {
-          jsonTextInput.addEventListener('input', updateJsonLiveStatus);
-        }
-
-        if (jsonFileInput) {
-          jsonFileInput.addEventListener('change', function () {
-            if (!jsonFileInput.files || jsonFileInput.files.length === 0) return;
-            var file = jsonFileInput.files[0];
-            if (jsonDeckNameInput && !jsonDeckNameInput.value.trim() && file.name) {
-              jsonDeckNameInput.value = file.name.replace(/\.(json|txt)$/i, '');
-            }
-            var reader = new FileReader();
-            reader.onload = function (e) {
-              if (jsonTextInput) {
-                jsonTextInput.value = e.target.result || '';
-                updateJsonLiveStatus();
-              }
-            };
-            reader.onerror = function () {
-              if (window.showToast) window.showToast('❌ Không thể đọc file JSON!', 'error');
-            };
-            reader.readAsText(file);
-          });
-        }
-
-        if (insertSampleBtn && jsonTextInput) {
-          insertSampleBtn.onclick = function () {
-            var sample = [
+    if (insertSampleBtn && jsonTextInput) {
+      insertSampleBtn.onclick = function () {
+        var sample = [
+          {
+            h: '老师',
+            p: 'lǎoshī',
+            m: 'Giáo viên, thầy/cô giáo',
+            examples: [
               {
-                h: '老师',
-                p: 'lǎoshī',
-                m: 'Giáo viên, thầy/cô giáo',
-                examples: [
-                  {
-                    ex: '王老师教我们汉语。',
-                    exp: 'Wáng lǎoshī jiāo wǒmen Hànyǔ.',
-                    exm: 'Thầy Vương dạy chúng tôi tiếng Trung.',
-                    tokens: [
-                      { h: '王老师', p: 'Wáng lǎoshī', m: 'Thầy Vương' },
-                      { h: '教', p: 'jiāo', m: 'dạy' },
-                      { h: '我们', p: 'wǒmen', m: 'chúng tôi' },
-                      { h: '汉语', p: 'Hànyǔ', m: 'tiếng Trung' }
-                    ],
-                    blank: '老师',
-                    options: ['老师', '学生', '朋友', '医生']
-                  },
-                  {
-                    ex: '她是我的汉语老师。',
-                    exp: 'Tā shì wǒ de Hànyǔ lǎoshī.',
-                    exm: 'Cô ấy là giáo viên tiếng Trung của tôi.',
-                    tokens: [
-                      { h: '她', p: 'tā', m: 'cô ấy' },
-                      { h: '是', p: 'shì', m: 'là' },
-                      { h: '我的', p: 'wǒ de', m: 'của tôi' },
-                      { h: '汉语', p: 'Hànyǔ', m: 'tiếng Trung' },
-                      { h: '老师', p: 'lǎoshī', m: 'giáo viên' }
-                    ],
-                    blank: '老师',
-                    options: ['老师', '同学', '经理', '大夫']
-                  }
-                ]
+                ex: '王老师教我们汉语。',
+                exp: 'Wáng lǎoshī jiāo wǒmen Hànyǔ.',
+                exm: 'Thầy Vương dạy chúng tôi tiếng Trung.',
+                tokens: [
+                  { h: '王老师', p: 'Wáng lǎoshī', m: 'Thầy Vương' },
+                  { h: '教', p: 'jiāo', m: 'dạy' },
+                  { h: '我们', p: 'wǒmen', m: 'chúng tôi' },
+                  { h: '汉语', p: 'Hànyǔ', m: 'tiếng Trung' }
+                ],
+                blank: '老师',
+                options: ['老师', '学生', '朋友', '医生']
               },
               {
-                h: '你好',
-                p: 'nǐ hǎo',
-                m: 'Xin chào',
-                ex: '你好，我是越南学生。',
-                exp: 'Nǐ hǎo, wǒ shì Yuènán xuéshēng.',
-                exm: 'Xin chào, tôi là lưu học sinh Việt Nam.',
+                ex: '她是我的汉语老师。',
+                exp: 'Tā shì wǒ de Hànyǔ lǎoshī.',
+                exm: 'Cô ấy là giáo viên tiếng Trung của tôi.',
                 tokens: [
-                  { h: '你好', p: 'nǐ hǎo', m: 'xin chào' },
-                  { h: '我是', p: 'wǒ shì', m: 'tôi là' },
-                  { h: '越南', p: 'Yuènán', m: 'Việt Nam' },
-                  { h: '学生', p: 'xuéshēng', m: 'học sinh' }
+                  { h: '她', p: 'tā', m: 'cô ấy' },
+                  { h: '是', p: 'shì', m: 'là' },
+                  { h: '我的', p: 'wǒ de', m: 'của tôi' },
+                  { h: '汉语', p: 'Hànyǔ', m: 'tiếng Trung' },
+                  { h: '老师', p: 'lǎoshī', m: 'giáo viên' }
                 ],
-                blank: '你好',
-                options: ['你好', '谢谢', '再见', '老师']
+                blank: '老师',
+                options: ['老师', '同学', '经理', '大夫']
               }
-            ];
-            jsonTextInput.value = JSON.stringify(sample, null, 2);
-            updateJsonLiveStatus();
-            if (window.showToast) window.showToast('📋 Đã chèn mẫu JSON (gồm cả từ có nhiều câu ví dụ random)!', 'info');
-          };
+            ]
+          },
+          {
+            h: '你好',
+            p: 'nǐ hǎo',
+            m: 'Xin chào',
+            ex: '你好，我是越南学生。',
+            exp: 'Nǐ hǎo, wǒ shì Yuènán xuéshēng.',
+            exm: 'Xin chào, tôi là lưu học sinh Việt Nam.',
+            tokens: [
+              { h: '你好', p: 'nǐ hǎo', m: 'xin chào' },
+              { h: '我是', p: 'wǒ shì', m: 'tôi là' },
+              { h: '越南', p: 'Yuènán', m: 'Việt Nam' },
+              { h: '学生', p: 'xuéshēng', m: 'học sinh' }
+            ],
+            blank: '你好',
+            options: ['你好', '谢谢', '再见', '老师']
+          }
+        ];
+        jsonTextInput.value = JSON.stringify(sample, null, 2);
+        updateJsonLiveStatus();
+        if (window.showToast) window.showToast('📋 Đã chèn mẫu JSON (gồm cả từ có nhiều câu ví dụ random)!', 'info');
+      };
+    }
+
+    if (formatJsonBtn && jsonTextInput) {
+      formatJsonBtn.onclick = function () {
+        var raw = jsonTextInput.value.trim();
+        if (!raw) {
+          if (window.showToast) window.showToast('⚠️ Ô nhập JSON đang trống!', 'warning');
+          return;
         }
-
-        if (formatJsonBtn && jsonTextInput) {
-          formatJsonBtn.onclick = function () {
-            var raw = jsonTextInput.value.trim();
-            if (!raw) {
-              if (window.showToast) window.showToast('⚠️ Ô nhập JSON đang trống!', 'warning');
-              return;
-            }
-            var res = parseImportedJson(raw);
-            if (res.success && res.words.length > 0) {
-              jsonTextInput.value = JSON.stringify(res.words, null, 2);
-              updateJsonLiveStatus();
-              if (window.showToast) window.showToast('🪄 Đã chuẩn hóa & căn lề ' + res.words.length + ' từ!', 'success');
-            } else {
-              updateJsonLiveStatus();
-              if (window.showToast) window.showToast('❌ Không thể tự sửa: ' + (res.error || 'Dữ liệu trống'), 'error');
-            }
-          };
+        var res = parseImportedJson(raw);
+        if (res.success && res.words.length > 0) {
+          jsonTextInput.value = JSON.stringify(res.words, null, 2);
+          updateJsonLiveStatus();
+          if (window.showToast) window.showToast('🪄 Đã chuẩn hóa & căn lề ' + res.words.length + ' từ!', 'success');
+        } else {
+          updateJsonLiveStatus();
+          if (window.showToast) window.showToast('❌ Không thể tự sửa: ' + (res.error || 'Dữ liệu trống'), 'error');
         }
+      };
+    }
 
-        if (copyAiPromptBtn) {
-          copyAiPromptBtn.onclick = function () {
-            var promptText =
-              'Hãy chuyển danh sách từ vựng tiếng Trung sau đây thành định dạng JSON chuẩn (chỉ trả về JSON thuần túy) để nhập vào web học tiếng Trung (gồm Flashcard, Trắc nghiệm, Sắp xếp câu, Điền từ và Tooltip dịch từng từ).\n' +
-              'Mỗi từ gồm các trường:\n' +
-              '- "h": Chữ Hán (bắt buộc)\n' +
-              '- "p": Pinyin có dấu thanh điệu\n' +
-              '- "m": Nghĩa tiếng Việt ngắn gọn, rõ ràng\n' +
-              '- "examples": Mảng từ 2 đến 3 câu ví dụ khác nhau chứa từ đó (để mỗi lần gặp lại từ trong lượt học, web tự động random câu khác nhau). Mỗi câu trong mảng "examples" gồm:\n' +
-              '   + "ex": Câu ví dụ tiếng Trung (khoảng 5-10 chữ, có dấu chấm câu)\n' +
-              '   + "exp": Pinyin của cả câu ví dụ\n' +
-              '   + "exm": Nghĩa tiếng Việt của cả câu ví dụ\n' +
-              '   + "tokens": Mảng tách câu "ex" thành 3-6 mảnh từ để người học xếp câu, mỗi mảnh gồm {"h": "mảnh chữ Hán", "p": "pinyin mảnh đó", "m": "nghĩa tiếng Việt mảnh đó"}\n' +
-              '   + "blank": Từ cần đục lỗ trong câu "ex" cho bài Điền từ\n' +
-              '   + "options": Mảng 4 phương án chữ Hán cho bài Điền từ (1 đáp án đúng + 3 từ gây nhiễu)\n\n' +
-              'Ví dụ kết quả:\n' +
-              '{\n' +
-              '  "name": "Bài 11",\n' +
-              '  "words": [\n' +
-              '    {\n' +
-              '      "h": "老师",\n' +
-              '      "p": "lǎoshī",\n' +
-              '      "m": "Giáo viên",\n' +
-              '      "examples": [\n' +
-              '        {\n' +
-              '          "ex": "王老师教我们汉语。",\n' +
-              '          "exp": "Wáng lǎoshī jiāo wǒmen Hànyǔ.",\n' +
-              '          "exm": "Thầy Vương dạy chúng tôi tiếng Trung.",\n' +
-              '          "tokens": [\n' +
-              '            { "h": "王老师", "p": "Wáng lǎoshī", "m": "Thầy Vương" },\n' +
-              '            { "h": "教", "p": "jiāo", "m": "dạy" },\n' +
-              '            { "h": "我们", "p": "wǒmen", "m": "chúng tôi" },\n' +
-              '            { "h": "汉语", "p": "Hànyǔ", "m": "tiếng Trung" }\n' +
-              '          ],\n' +
-              '          "blank": "老师",\n' +
-              '          "options": ["老师", "学生", "朋友", "医生"]\n' +
-              '        },\n' +
-              '        {\n' +
-              '          "ex": "她是我的汉语老师。",\n' +
-              '          "exp": "Tā shì wǒ de Hànyǔ lǎoshī.",\n' +
-              '          "exm": "Cô ấy là giáo viên tiếng Trung của tôi.",\n' +
-              '          "tokens": [\n' +
-              '            { "h": "她", "p": "tā", "m": "cô ấy" },\n' +
-              '            { "h": "是", "p": "shì", "m": "là" },\n' +
-              '            { "h": "我的", "p": "wǒ de", "m": "của tôi" },\n' +
-              '            { "h": "汉语", "p": "Hànyǔ", "m": "tiếng Trung" },\n' +
-              '            { "h": "老师", "p": "lǎoshī", "m": "giáo viên" }\n' +
-              '          ],\n' +
-              '          "blank": "老师",\n' +
-              '          "options": ["老师", "同学", "经理", "大夫"]\n' +
-              '        }\n' +
-              '      ]\n' +
-              '    }\n' +
-              '  ]\n' +
-              '}\n\n' +
-              'Danh sách từ vựng cần tạo:\n';
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(promptText).then(function () {
-                if (window.showToast) window.showToast('🤖 Đã copy Prompt AI! Hãy dán vào ChatGPT/Gemini kèm danh sách từ.', 'success');
-              }).catch(function () {
-                if (jsonTextInput) jsonTextInput.value = promptText;
-              });
-            } else if (jsonTextInput) {
-              jsonTextInput.value = promptText;
-              if (window.showToast) window.showToast('🤖 Đã điền Prompt AI vào ô!', 'info');
-            }
-          };
-        }
-
-        if (clearJsonBtn) {
-          clearJsonBtn.onclick = function () {
-            if (jsonFileInput) jsonFileInput.value = '';
-            if (jsonTextInput) jsonTextInput.value = '';
-            if (jsonDeckNameInput) jsonDeckNameInput.value = '';
-            updateJsonLiveStatus();
-          };
-        }
-
-        if (closeDupBtn) {
-          closeDupBtn.onclick = function () {
-            closeDuplicateModal();
-            delete window._importData;
-          };
-        }
-
-        if (cancelDupBtn) {
-          cancelDupBtn.onclick = function () {
-            closeDuplicateModal();
-            delete window._importData;
-            if (window.showToast) window.showToast('❌ Đã hủy import', 'info');
-          };
-        }
-
-        if (skipBtn) skipBtn.onclick = handleSkipDuplicates;
-        if (overwriteBtn) overwriteBtn.onclick = handleOverwriteDuplicates;
-
-        if (closeStudyModeBtn && studyModeModal) {
-          closeStudyModeBtn.onclick = function () {
-            studyModeModal.classList.remove('active');
-          };
-        }
-
-        if (studyModeModal) {
-          window.addEventListener('click', function (e) {
-            if (e.target === studyModeModal) {
-              studyModeModal.classList.remove('active');
-            }
+    if (copyAiPromptBtn) {
+      copyAiPromptBtn.onclick = function () {
+        var promptText =
+          'Hãy chuyển danh sách từ vựng tiếng Trung sau đây thành định dạng JSON chuẩn (chỉ trả về JSON thuần túy) để nhập vào web học tiếng Trung (gồm Flashcard, Trắc nghiệm, Sắp xếp câu, Điền từ và Tooltip dịch từng từ).\n' +
+          'Mỗi từ gồm các trường:\n' +
+          '- "h": Chữ Hán (bắt buộc)\n' +
+          '- "p": Pinyin có dấu thanh điệu\n' +
+          '- "m": Nghĩa tiếng Việt ngắn gọn, rõ ràng\n' +
+          '- "examples": Mảng từ 2 đến 3 câu ví dụ khác nhau chứa từ đó (để mỗi lần gặp lại từ trong lượt học, web tự động random câu khác nhau). Mỗi câu trong mảng "examples" gồm:\n' +
+          '   + "ex": Câu ví dụ tiếng Trung (khoảng 5-10 chữ, có dấu chấm câu)\n' +
+          '   + "exp": Pinyin của cả câu ví dụ\n' +
+          '   + "exm": Nghĩa tiếng Việt của cả câu ví dụ\n' +
+          '   + "tokens": Mảng tách câu "ex" thành 3-6 mảnh từ để người học xếp câu, mỗi mảnh gồm {"h": "mảnh chữ Hán", "p": "pinyin mảnh đó", "m": "nghĩa tiếng Việt mảnh đó"}\n' +
+          '   + "blank": Từ cần đục lỗ trong câu "ex" cho bài Điền từ\n' +
+          '   + "options": Mảng 4 phương án chữ Hán cho bài Điền từ (1 đáp án đúng + 3 từ gây nhiễu)\n\n' +
+          'Ví dụ kết quả:\n' +
+          '{\n' +
+          '  "name": "Bài 11",\n' +
+          '  "words": [\n' +
+          '    {\n' +
+          '      "h": "老师",\n' +
+          '      "p": "lǎoshī",\n' +
+          '      "m": "Giáo viên",\n' +
+          '      "examples": [\n' +
+          '        {\n' +
+          '          "ex": "王老师教我们汉语。",\n' +
+          '          "exp": "Wáng lǎoshī jiāo wǒmen Hànyǔ.",\n' +
+          '          "exm": "Thầy Vương dạy chúng tôi tiếng Trung.",\n' +
+          '          "tokens": [\n' +
+          '            { "h": "王老师", "p": "Wáng lǎoshī", "m": "Thầy Vương" },\n' +
+          '            { "h": "教", "p": "jiāo", "m": "dạy" },\n' +
+          '            { "h": "我们", "p": "wǒmen", "m": "chúng tôi" },\n' +
+          '            { "h": "汉语", "p": "Hànyǔ", "m": "tiếng Trung" }\n' +
+          '          ],\n' +
+          '          "blank": "老师",\n' +
+          '          "options": ["老师", "学生", "朋友", "医生"]\n' +
+          '        },\n' +
+          '        {\n' +
+          '          "ex": "她是我的汉语老师。",\n' +
+          '          "exp": "Tā shì wǒ de Hànyǔ lǎoshī.",\n' +
+          '          "exm": "Cô ấy là giáo viên tiếng Trung của tôi.",\n' +
+          '          "tokens": [\n' +
+          '            { "h": "她", "p": "tā", "m": "cô ấy" },\n' +
+          '            { "h": "是", "p": "shì", "m": "là" },\n' +
+          '            { "h": "我的", "p": "wǒ de", "m": "của tôi" },\n' +
+          '            { "h": "汉语", "p": "Hànyǔ", "m": "tiếng Trung" },\n' +
+          '            { "h": "老师", "p": "lǎoshī", "m": "giáo viên" }\n' +
+          '          ],\n' +
+          '          "blank": "老师",\n' +
+          '          "options": ["老师", "同学", "经理", "大夫"]\n' +
+          '        }\n' +
+          '      ]\n' +
+          '    }\n' +
+          '  ]\n' +
+          '}\n\n' +
+          'Danh sách từ vựng cần tạo:\n';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(promptText).then(function () {
+            if (window.showToast) window.showToast('🤖 Đã copy Prompt AI! Hãy dán vào ChatGPT/Gemini kèm danh sách từ.', 'success');
+          }).catch(function () {
+            if (jsonTextInput) jsonTextInput.value = promptText;
           });
+        } else if (jsonTextInput) {
+          jsonTextInput.value = promptText;
+          if (window.showToast) window.showToast('🤖 Đã điền Prompt AI vào ô!', 'info');
         }
+      };
+    }
 
-        if (importModal) {
-          window.addEventListener('click', function (e) {
-            if (e.target === importModal) closeImportJsonModal();
-          });
-        }
+    if (clearJsonBtn) {
+      clearJsonBtn.onclick = function () {
+        if (jsonFileInput) jsonFileInput.value = '';
+        if (jsonTextInput) jsonTextInput.value = '';
+        if (jsonDeckNameInput) jsonDeckNameInput.value = '';
+        updateJsonLiveStatus();
+      };
+    }
 
-        if (dupModal) {
-          window.addEventListener('click', function (e) {
-            if (e.target === dupModal) {
-              closeDuplicateModal();
-              delete window._importData;
-            }
-          });
+    if (closeDupBtn) {
+      closeDupBtn.onclick = function () {
+        closeDuplicateModal();
+        delete window._importData;
+      };
+    }
+
+    if (cancelDupBtn) {
+      cancelDupBtn.onclick = function () {
+        closeDuplicateModal();
+        delete window._importData;
+        if (window.showToast) window.showToast('❌ Đã hủy import', 'info');
+      };
+    }
+
+    if (skipBtn) skipBtn.onclick = handleSkipDuplicates;
+    if (overwriteBtn) overwriteBtn.onclick = handleOverwriteDuplicates;
+
+    if (closeStudyModeBtn && studyModeModal) {
+      closeStudyModeBtn.onclick = function () {
+        studyModeModal.classList.remove('active');
+      };
+    }
+
+    if (studyModeModal) {
+      window.addEventListener('click', function (e) {
+        if (e.target === studyModeModal) {
+          studyModeModal.classList.remove('active');
         }
-      }
+      });
+    }
+
+    if (importModal) {
+      window.addEventListener('click', function (e) {
+        if (e.target === importModal) closeImportJsonModal();
+      });
+    }
+
+    if (dupModal) {
+      window.addEventListener('click', function (e) {
+        if (e.target === dupModal) {
+          closeDuplicateModal();
+          delete window._importData;
+        }
+      });
+    }
+  }
 
   // ==================== INIT ====================
 
   document.addEventListener('DOMContentLoaded', function () {
-        initCustomDeckEvents();
-        loadCustomHistory();
-        renderCustomHistory();
-        renderCustomWordsList();
-      });
+    initCustomDeckEvents();
+    loadCustomHistory();
+    renderCustomHistory();
+    renderCustomWordsList();
+  });
 
-  }) ();
+})();
