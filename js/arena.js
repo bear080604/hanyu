@@ -181,10 +181,40 @@
   }
 
   // ==================== DUAL REAL-TIME SYNC (LOCAL + CLOUDFLARE D1) ====================
+  // ==================== DUAL REAL-TIME SYNC (LOCAL + CLOUDFLARE DURABLE OBJECTS) ====================
   var _arenaChannel = null;
   var _processedMsgIds = {};
+  var _processedMsgIdOrder = [];
+  var MAX_PROCESSED_MSG_IDS = 500;
   var _cloudPollInterval = null;
   var _cloudRoomDeckIds = [];
+
+  function markMsgProcessed(msgId) {
+    if (!msgId) return false;
+    if (_processedMsgIds[msgId]) return true;
+    _processedMsgIds[msgId] = true;
+    _processedMsgIdOrder.push(msgId);
+    while (_processedMsgIdOrder.length > MAX_PROCESSED_MSG_IDS) {
+      var oldest = _processedMsgIdOrder.shift();
+      if (oldest) delete _processedMsgIds[oldest];
+    }
+    return false;
+  }
+
+  function getOrCreateHostToken(pin) {
+    var cleanP = normalizePin(pin);
+    if (!cleanP) return '';
+    try {
+      var key = 'wq_arena_host_token_' + cleanP;
+      var existing = localStorage.getItem(key);
+      if (existing && existing.trim()) return existing.trim();
+      var created = 'ht_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10) + Math.random().toString(36).slice(2, 10);
+      localStorage.setItem(key, created);
+      return created;
+    } catch (e) {
+      return 'ht_' + cleanP;
+    }
+  }
 
   if (typeof BroadcastChannel !== 'undefined') {
     try {
@@ -192,15 +222,56 @@
     } catch (e) { }
   }
 
+  function sendHttpSyncMessage(cleanPin, msg) {
+    if (!cleanPin || !msg) return;
+    var bodyObj = {
+      pin: cleanPin,
+      msg: msg
+    };
+    if (gameState.role === 'host') {
+      bodyObj.hostToken = gameState.hostToken || getOrCreateHostToken(cleanPin);
+    }
+    fetch(CLOUD_API_BASE + '/api/arena/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(bodyObj)
+    }).then(function (r) { return r.json(); }).then(function (res) {
+      var seq = Number((res && (res.seq || res.id)) || 0);
+      if (seq > _lastSyncMsgId && _lastSyncPin === cleanPin) {
+        _lastSyncMsgId = seq;
+        _hasInitialPollSynced = true;
+      }
+    }).catch(function () { });
+  }
+
+  function flushWsQueueOverHttp(pin) {
+    if (!_wsSendQueue || _wsSendQueue.length === 0) return;
+    var cleanPin = normalizePin(pin || _wsCurrentPin || gameState.pin);
+    var leftover = _wsSendQueue.slice();
+    _wsSendQueue = [];
+    if (!cleanPin) return;
+    leftover.forEach(function (rawStr) {
+      try {
+        var parsed = typeof rawStr === 'string' ? JSON.parse(rawStr) : rawStr;
+        if (parsed && parsed.hostToken) delete parsed.hostToken;
+        sendHttpSyncMessage(cleanPin, parsed);
+      } catch (e) { }
+    });
+  }
+
   function broadcastMsg(action, payload, syncToCloud) {
     var msgId = Date.now() + '_' + Math.random().toString(36).slice(2, 8);
     _processedMsgIds[msgId] = true;
+    markMsgProcessed(msgId);
     var msg = {
       msgId: msgId,
       action: action,
       payload: payload || {},
       timestamp: Date.now()
     };
+    if (payload && payload.targetId) {
+      msg.targetId = payload.targetId;
+    }
 
     // 1. Local BroadcastChannel (0ms giữa các tab cùng trình duyệt)
     if (_arenaChannel) {
@@ -213,10 +284,18 @@
     } catch (e) { }
 
     // 3. WebSocket Realtime qua PartyKit / Cloudflare Durable Objects (<20ms, 0 request HTTP/D1)
+    // 3. WebSocket Realtime qua Cloudflare Durable Objects (<20ms, 0 request HTTP/D1)
+    var wsPayloadObj = msg;
+    if (gameState.role === 'host' && gameState.pin) {
+      wsPayloadObj = Object.assign({}, msg, {
+        hostToken: gameState.hostToken || getOrCreateHostToken(gameState.pin)
+      });
+    }
     var sentViaWs = false;
     if (_partySocket && _partySocket.readyState === WebSocket.OPEN) {
       try {
         _partySocket.send(JSON.stringify(msg));
+        _partySocket.send(JSON.stringify(wsPayloadObj));
         sentViaWs = true;
       } catch (err) {
         sentViaWs = false;
@@ -224,10 +303,12 @@
     } else if (_partySocket && _partySocket.readyState === WebSocket.CONNECTING) {
       // Đang kết nối (<50ms): Cho vào hàng đợi và gửi ngay khi socket mở
       _wsSendQueue.push(JSON.stringify(msg));
+      _wsSendQueue.push(JSON.stringify(wsPayloadObj));
       sentViaWs = true;
     }
 
     // 4. Cloudflare Worker D1 Sync (Dự phòng khi chưa có WebSocket hoặc WebSocket bị ngắt)
+    // 4. Cloudflare Worker DO HTTP Sync (Dự phòng khi chưa có WebSocket hoặc WebSocket bị ngắt)
     if (!sentViaWs && syncToCloud !== false && payload && payload.pin) {
       var cleanPin = normalizePin(payload.pin);
       fetch(CLOUD_API_BASE + '/api/arena/sync', {
@@ -242,15 +323,30 @@
           _cloudRoomDeckIds.push(res.id);
         }
       }).catch(function () { });
+      sendHttpSyncMessage(cleanPin, msg);
     }
   }
 
   // ==================== PARTYKIT REAL-TIME WEBSOCKET (DUAL-MODE) ====================
+  // ==================== PARTYKIT / DURABLE OBJECT REAL-TIME WEBSOCKET (DUAL-MODE) ====================
   var _partySocket = null;
   var _wsConnected = false;
   var _wsReconnectTimer = null;
+  var _wsReconnectDelay = 1000;
   var _wsCurrentPin = null;
   var _wsSendQueue = [];
+  var _lastSyncMsgId = 0;
+  var _lastSyncPin = '';
+  var _hasInitialPollSynced = false;
+
+  function ensureSyncPinTracker(cleanPin) {
+    if (!cleanPin) return;
+    if (_lastSyncPin !== cleanPin) {
+      _lastSyncPin = cleanPin;
+      _lastSyncMsgId = 0;
+      _hasInitialPollSynced = false;
+    }
+  }
 
   function updateRealtimeBadge(isWs) {
     var hostBadge = document.getElementById('arenaRealtimeStatusBadge');
@@ -280,8 +376,10 @@
 
   function connectPartyKit(pin) {
     disconnectPartyKit();
+    disconnectPartyKit(false);
     var cleanPin = normalizePin(pin);
     if (!cleanPin) return;
+    ensureSyncPinTracker(cleanPin);
     _wsCurrentPin = cleanPin;
 
     var host = getPartyKitHost();
@@ -292,14 +390,59 @@
 
     var protocol = (window.location.protocol === 'https:' || host.includes('workers.dev') || host.includes('partykit.dev')) ? 'wss:' : 'ws:';
     var wsUrl = protocol + '//' + host + '/parties/main/' + encodeURIComponent(cleanPin);
+    var queryParams = ['since=' + encodeURIComponent(String(_lastSyncMsgId || 0))];
+    if (gameState.role === 'host') {
+      var hToken = gameState.hostToken || getOrCreateHostToken(cleanPin);
+      gameState.hostToken = hToken;
+      queryParams.push('role=host');
+      queryParams.push('token=' + encodeURIComponent(hToken));
+    } else {
+      queryParams.push('role=player');
+      if (gameState.myPlayerId) {
+        queryParams.push('playerId=' + encodeURIComponent(gameState.myPlayerId));
+      }
+    }
+    var wsUrl = protocol + '//' + host + '/parties/main/' + encodeURIComponent(cleanPin) + '?' + queryParams.join('&');
 
     try {
       console.log('⚡ [WebSocket] Connecting to:', wsUrl);
       _partySocket = new WebSocket(wsUrl);
+      var sock = new WebSocket(wsUrl);
+      _partySocket = sock;
+      var disconnectHandled = false;
 
       _partySocket.onopen = function () {
+      function onSocketLost(reasonLabel) {
+        if (disconnectHandled) return;
+        disconnectHandled = true;
+        if (_partySocket === sock) {
+          _partySocket = null;
+        }
+        console.warn('🔌 [WebSocket] ' + reasonLabel + ', fallback to HTTP Smart Polling');
+        _wsConnected = false;
+        updateRealtimeBadge(false);
+        flushWsQueueOverHttp(cleanPin);
+
+        if (gameState.pin && normalizePin(gameState.pin) === cleanPin) {
+          startCloudPolling(cleanPin);
+          if (!_wsReconnectTimer) {
+            var delay = _wsReconnectDelay;
+            _wsReconnectDelay = Math.min(30000, _wsReconnectDelay * 2);
+            _wsReconnectTimer = setTimeout(function () {
+              _wsReconnectTimer = null;
+              if (gameState.pin && normalizePin(gameState.pin) === cleanPin) {
+                connectPartyKit(cleanPin);
+              }
+            }, delay);
+          }
+        }
+      }
+
+      sock.onopen = function () {
+        if (_partySocket !== sock) return;
         console.log('✅ [WebSocket] Connected to room:', cleanPin);
         _wsConnected = true;
+        _wsReconnectDelay = 1000;
         // Dừng HTTP polling khi WebSocket đang hoạt động để tiết kiệm 100% request!
         stopCloudPolling();
         updateRealtimeBadge(true);
@@ -308,6 +451,7 @@
         while (_wsSendQueue.length > 0) {
           var queued = _wsSendQueue.shift();
           try { _partySocket.send(queued); } catch (e) { }
+          try { sock.send(queued); } catch (e) { }
         }
 
         // Tự động đồng bộ ngay trạng thái hiện tại qua WebSocket
@@ -323,20 +467,42 @@
               score: gameState.playerLocalScore || 0,
               streak: gameState.playerLocalStreak || 0,
               isReady: !!gameState.playerIsReady
+              isReady: !!gameState.isReady,
+              isReconnect: true
             },
             timestamp: Date.now()
           };
           try { _partySocket.send(JSON.stringify(pJoinMsg)); } catch (e) { }
+          markMsgProcessed(pJoinMsg.msgId);
+          try { sock.send(JSON.stringify(pJoinMsg)); } catch (e) { }
         } else if (gameState.role === 'host' && gameState.pin) {
           broadcastLobbyRoster();
         }
       };
 
       _partySocket.onmessage = function (event) {
+      sock.onmessage = function (event) {
         try {
           var msg = JSON.parse(event.data);
           if (msg && msg.type === 'pk_ack') return;
           if (msg && msg.msgId && !_processedMsgIds[msg.msgId]) {
+          var packet = JSON.parse(event.data);
+          if (!packet) return;
+          if (packet.type === 'pk_ack') {
+            var ackSeq = Number(packet.seq) || 0;
+            if (ackSeq > _lastSyncMsgId) {
+              _lastSyncMsgId = ackSeq;
+            }
+            _hasInitialPollSynced = true;
+            return;
+          }
+          var seq = Number(packet.seq || packet.id) || 0;
+          if (seq > _lastSyncMsgId) {
+            _lastSyncMsgId = seq;
+            _hasInitialPollSynced = true;
+          }
+          var msg = (packet.msg && typeof packet.msg === 'object' && packet.msg.action) ? packet.msg : packet;
+          if (msg && msg.action) {
             handleIncomingSyncMessage(msg);
           }
         } catch (err) {
@@ -349,6 +515,8 @@
         _wsConnected = false;
         updateRealtimeBadge(false);
         startCloudPolling(cleanPin);
+      sock.onerror = function () {
+        onSocketLost('Connection error');
       };
 
       _partySocket.onclose = function () {
@@ -366,16 +534,26 @@
             }, 3000);
           }
         }
+      sock.onclose = function () {
+        onSocketLost('Disconnected');
       };
     } catch (e) {
       console.warn('⚠️ [WebSocket] Init failed, fallback to polling:', e);
       _wsConnected = false;
+      flushWsQueueOverHttp(cleanPin);
       startCloudPolling(cleanPin);
     }
   }
 
   function disconnectPartyKit() {
     _wsSendQueue = [];
+  function disconnectPartyKit(clearQueue) {
+    if (clearQueue) {
+      _wsSendQueue = [];
+      _wsReconnectDelay = 1000;
+    } else {
+      flushWsQueueOverHttp(_wsCurrentPin || gameState.pin);
+    }
     if (_wsReconnectTimer) {
       clearTimeout(_wsReconnectTimer);
       _wsReconnectTimer = null;
@@ -398,6 +576,8 @@
     var cleanPin = normalizePin(pin);
     if (!cleanPin) return;
     // Thử kết nối WebSocket PartyKit trước; tự động fallback sang HTTP Polling nếu chưa có
+    ensureSyncPinTracker(cleanPin);
+    // Thử kết nối WebSocket trước; tự động fallback sang HTTP Polling nếu chưa có
     connectPartyKit(cleanPin);
   }
 
@@ -407,24 +587,53 @@
     var cleanPin = normalizePin(pin);
     if (!cleanPin) return;
     _lastSyncMsgId = 0;
+    ensureSyncPinTracker(cleanPin);
 
     _cloudPollInterval = setInterval(function () {
       if (!gameState.pin || normalizePin(gameState.pin) !== cleanPin) return;
       if (typeof document !== 'undefined' && document.hidden) return; // Tiết kiệm request khi ẩn tab / khóa màn hình
 
       fetch(CLOUD_API_BASE + '/api/arena/sync?pin=' + encodeURIComponent(cleanPin) + '&since=' + _lastSyncMsgId)
+      // Nếu chưa có seq (ví dụ vừa F5), lần poll đầu tiên chỉ lấy mốc seq mới nhất, không phát lại tin cũ!
+      var isFastForward = (_lastSyncMsgId === 0 && !_hasInitialPollSynced);
+      var url = CLOUD_API_BASE + '/api/arena/sync?pin=' + encodeURIComponent(cleanPin) +
+        '&since=' + _lastSyncMsgId + (isFastForward ? '&latest=1' : '');
+
+      fetch(url)
         .then(function (r) { return r.json(); })
         .then(function (res) {
           if (!res || !Array.isArray(res.data)) return;
+          if (!res) return;
+          if (typeof res.seq === 'number' && isFastForward) {
+            _lastSyncMsgId = Math.max(_lastSyncMsgId, res.seq);
+            _hasInitialPollSynced = true;
+            return;
+          }
+          if (!Array.isArray(res.data)) return;
+          if (isFastForward) {
+            res.data.forEach(function (item) {
+              var itemSeq = Number(item && (item.seq || item.id)) || 0;
+              if (itemSeq > _lastSyncMsgId) _lastSyncMsgId = itemSeq;
+            });
+            _hasInitialPollSynced = true;
+            return;
+          }
           res.data.forEach(function (item) {
             if (!item) return;
             if (item.id && item.id > _lastSyncMsgId) {
               _lastSyncMsgId = item.id;
+            var itemSeq = Number(item.seq || item.id) || 0;
+            if (itemSeq > _lastSyncMsgId) {
+              _lastSyncMsgId = itemSeq;
             }
             try {
               var raw = item.msg || item.name;
               var msg = typeof raw === 'string' ? JSON.parse(raw) : raw;
               if (msg && msg.msgId && !_processedMsgIds[msg.msgId]) {
+              if (msg && msg.msg && typeof msg.msg === 'object' && msg.msg.action) {
+                msg = msg.msg;
+              }
+              if (msg && msg.action) {
                 handleIncomingSyncMessage(msg);
               }
             } catch (e) { }
@@ -432,6 +641,7 @@
         })
         .catch(function () { });
     }, 1000); // 1.000ms: mượt mà, giảm hơn 55% lượng request so với 450ms
+    }, 1000);
   }
 
   function stopCloudPolling() {
@@ -518,9 +728,13 @@
       var rawName = (p.name || '').trim();
       if (!rawName) return;
       var key = rawName.toLowerCase();
+      var pid = (p.id || '').trim();
+      if (!pid && !rawName) return;
+      var key = pid ? ('id:' + pid) : ('name:' + rawName.toLowerCase());
       var existing = map.get(key);
       if (!existing) {
         map.set(key, Object.assign({}, p, { name: rawName }));
+        map.set(key, Object.assign({}, p, { name: rawName || 'Người chơi' }));
       } else {
         var bestScore = Math.max(Number(existing.score) || 0, Number(p.score) || 0);
         var bestStreak = Math.max(Number(existing.streak) || 0, Number(p.streak) || 0);
@@ -532,20 +746,39 @@
 
         existing.id = chosenId;
         existing.name = rawName;
+        existing.id = pid || existing.id;
+        existing.name = rawName || existing.name;
         existing.avatar = latestAvatar;
         existing.score = bestScore;
         existing.streak = bestStreak;
         existing.isReady = !!isReady;
+        if (p.hasLeft !== undefined) existing.hasLeft = !!p.hasLeft;
         if (p.isBot !== undefined) existing.isBot = !!p.isBot;
       }
     });
     return Array.from(map.values());
   }
 
+  function computeCompetitionRanks(sortedPlayers) {
+    if (!Array.isArray(sortedPlayers)) return [];
+    var ranks = [];
+    for (var i = 0; i < sortedPlayers.length; i++) {
+      var curScore = Number(sortedPlayers[i] && sortedPlayers[i].score) || 0;
+      if (i === 0) {
+        ranks.push(1);
+      } else {
+        var prevScore = Number(sortedPlayers[i - 1] && sortedPlayers[i - 1].score) || 0;
+        ranks.push(curScore === prevScore ? ranks[i - 1] : (i + 1));
+      }
+    }
+    return ranks;
+  }
+
   // ==================== GAME STATE ====================
   var gameState = {
     role: 'player', // Mặc định mở trang là 'player' (Người chơi). Chọn tab Admin mới đăng nhập 'host'.
     pin: '',
+    hostToken: '',
     accessMode: 'public', // 'public' (Công khai - Bảng xếp hạng trực tiếp) | 'private' (Riêng tư - Nhập mã PIN)
     status: 'config', // 'config' | 'lobby' | 'phase1' | 'phase2' | 'phase4' | 'phase5' | 'podium'
     phase: 0, // 1..5
@@ -563,6 +796,9 @@
     currentQuestionIndex: 0,
     questions: [],
     players: [], // [{ id, name, avatar, score, prevRank, streak, lives, lastAnswerIndex, answeredAt, lastPointsEarned, isBot }]
+    players: [], // [{ id, name, avatar, score, prevRank, streak, lives, lastAnswerIndex, answeredAt, lastPointsEarned, isBot, hasLeft }]
+    answeredPlayerIdsForCurrentQ: {},
+    kickedPlayerIds: {},
     phase1Timer: null,
     timerInterval: null,
     botTimers: [],
@@ -582,6 +818,7 @@
     soloQuestionEndTime: 0,
     playerTimerInterval: null,
     playerLastChoice: -1,
+    playerLastAnsweredQIndex: -1,
     playerLocalScore: 0,
     playerLocalStreak: 0,
     playerLastPhaseAction: '',
@@ -962,6 +1199,7 @@
     gameState.players = deduplicatePlayers(gameState.players);
     var snapshot = {
       pin: cleanP,
+      hostToken: gameState.hostToken || getOrCreateHostToken(cleanP),
       accessMode: gameState.accessMode || 'public',
       createdAt: gameState.roomCreatedAt || Date.now(),
       expiresAt: gameState.roomExpiresAt,
@@ -978,6 +1216,7 @@
       currentQuestionIndex: gameState.currentQuestionIndex,
       questions: gameState.questions,
       players: gameState.players,
+      kickedPlayerIds: gameState.kickedPlayerIds || {},
       questionStartTime: gameState.questionStartTime,
       questionEndTime: gameState.questionEndTime,
       wasEarlyCutoff: gameState.wasEarlyCutoff,
@@ -999,6 +1238,7 @@
     if (!cleanP) return;
     try {
       localStorage.removeItem('wq_arena_host_room_' + cleanP);
+      localStorage.removeItem('wq_arena_host_token_' + cleanP);
       localStorage.removeItem('wq_arena_roster_' + cleanP);
       localStorage.removeItem('wq_arena_player_session_' + cleanP);
       var pins = getSavedRoomPins().filter(function (x) { return normalizePin(x) !== cleanP; });
@@ -1010,14 +1250,20 @@
 
     unpublishPublicRoom(cleanP);
     unpublishRoomMeta(cleanP);
+    fetch(CLOUD_API_BASE + '/api/arena/rooms/' + encodeURIComponent(cleanP), { method: 'DELETE' }).catch(function () { });
+    fetch(CLOUD_API_BASE + '/api/arena/sync?pin=' + encodeURIComponent(cleanP), { method: 'DELETE' }).catch(function () { });
 
     if (normalizePin(gameState.pin) === cleanP) {
       clearAllRoundTimers();
       stopCloudPolling();
       disconnectPartyKit();
+      disconnectPartyKit(true);
       cleanupCloudRoomMessages();
       gameState.pin = '';
+      gameState.hostToken = '';
       gameState.players = [];
+      gameState.kickedPlayerIds = {};
+      gameState.answeredPlayerIdsForCurrentQ = {};
       gameState.status = 'config';
       syncBrowserUrl('', '');
       var tabCountEl = document.getElementById('adminTabPlayerCount');
@@ -1112,6 +1358,9 @@
       clearAllRoundTimers();
       gameState.role = 'host';
       gameState.pin = cleanP;
+      gameState.hostToken = saved.hostToken || getOrCreateHostToken(cleanP);
+      gameState.kickedPlayerIds = saved.kickedPlayerIds || {};
+      gameState.answeredPlayerIdsForCurrentQ = {};
       gameState.roomCreatedAt = saved.createdAt || Date.now();
       gameState.roomExpiresAt = saved.expiresAt || null;
       gameState.roomDurationKey = saved.durationKey || '30m';
@@ -1318,6 +1567,19 @@
         gameState.status = 'player_lobby';
         showView('playerLobbyView');
       }
+
+      // Kiểm tra với server xem phòng còn tồn tại hay đã bị đóng
+      verifyRoomExists(cleanP).then(function (checkRes) {
+        if (!checkRes || !checkRes.valid) {
+          if (normalizePin(gameState.pin) === cleanP && gameState.role === 'player') {
+            playerLeaveRoom(true);
+            if (typeof showToast === 'function') {
+              showToast('Phòng #' + formatPinCode(cleanP) + ' đã đóng hoặc hết thời hạn lưu trữ.', 'error');
+            }
+          }
+        }
+      }).catch(function () { });
+
       return true;
     } catch (e) {
       return false;
@@ -1325,9 +1587,29 @@
   }
 
   function playerLeaveRoom(silent) {
+    var oldPin = normalizePin(gameState.pin);
+    var leavingPlayerId = gameState.myPlayerId;
+    if (oldPin && leavingPlayerId) {
+      broadcastMsg('player_leave', {
+        pin: oldPin,
+        playerId: leavingPlayerId
+      });
+    }
+
     stopPlayerJoinHeartbeat();
     stopCloudPolling();
     disconnectPartyKit();
+    disconnectPartyKit(true);
+
+    ['soloAutoAdvanceTimer', 'soloPhaseTimer', 'soloTimeoutTimer'].forEach(function (k) {
+      if (gameState[k]) {
+        clearTimeout(gameState[k]);
+        clearInterval(gameState[k]);
+        gameState[k] = null;
+      }
+    });
+    gameState.isSoloRunner = false;
+
     if (gameState.playerTimerInterval) {
       clearInterval(gameState.playerTimerInterval);
       gameState.playerTimerInterval = null;
@@ -1360,6 +1642,7 @@
     gameState.myPlayerId = '';
     gameState.status = 'config';
     gameState.playerLastChoice = -1;
+    gameState.playerLastAnsweredQIndex = -1;
     gameState.playerLastPhaseAction = '';
     gameState.playerLastPhasePayload = null;
     syncBrowserUrl('', '');
@@ -1639,6 +1922,9 @@
     gameState.roomExpiresAt = durConfig.ms > 0 ? (nowMs + durConfig.ms) : null;
 
     gameState.pin = String(Math.floor(100000 + Math.random() * 900000));
+    gameState.hostToken = getOrCreateHostToken(gameState.pin);
+    gameState.kickedPlayerIds = {};
+    gameState.answeredPlayerIdsForCurrentQ = {};
     gameState.players = [];
     gameState.status = 'lobby';
     gameState.phase = 0;
@@ -1680,6 +1966,7 @@
 
     if (gameState.accessMode === 'public') {
       publishPublicRoom(roomPayload);
+      publishPublicRoom(roomPayload, true);
     }
   }
 
@@ -1824,6 +2111,8 @@
       fetch(CLOUD_API_BASE + '/api/decks/' + cloudId, { method: 'DELETE' }).catch(function () { });
       delete _cloudRoomMetaDeckMap[cleanP];
     }
+    delete _cloudRoomMetaDeckMap[cleanP];
+    fetch(CLOUD_API_BASE + '/api/arena/rooms/' + encodeURIComponent(cleanP), { method: 'DELETE' }).catch(function () { });
   }
 
   async function verifyRoomExists(pin) {
@@ -1833,6 +2122,7 @@
     }
 
     // 1. Kiểm tra trên bộ nhớ cục bộ máy hiện tại (0ms)
+    // 1. Kiểm tra trực tiếp trên Cloudflare Worker / D1 (nguồn sự thật duy nhất, không dùng cache máy khách đã đóng)
     try {
       var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + cleanPin);
       if (hostRoomRaw) {
@@ -1861,24 +2151,39 @@
     // 3. Kiểm tra trên Cloudflare D1 (Cross-device, 4G / mạng khác)
     try {
       var metaPromise = fetch(CLOUD_API_BASE + '/api/decks?user_id=' + encodeURIComponent('arena_meta_' + cleanPin))
+      var roomApiPromise = fetch(CLOUD_API_BASE + '/api/arena/rooms?pin=' + encodeURIComponent(cleanPin))
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; });
 
       var pubPromise = fetch(CLOUD_API_BASE + '/api/decks?user_id=arena_public_rooms')
+      var metaPromise = fetch(CLOUD_API_BASE + '/api/decks?user_id=' + encodeURIComponent('arena_meta_' + cleanPin))
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; });
 
       var syncPromise = fetch(CLOUD_API_BASE + '/api/decks?user_id=' + encodeURIComponent('arena_sync_' + cleanPin))
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function () { return null; });
+      var results = await Promise.all([roomApiPromise, metaPromise]);
+      var roomApiJson = results[0];
+      var metaJson = results[1];
 
       var results = await Promise.all([metaPromise, pubPromise, syncPromise]);
       var metaJson = results[0];
       var pubJson = results[1];
       var syncJson = results[2];
+      var cloudRoom = null;
+      if (roomApiJson && roomApiJson.data) {
+        var rData = roomApiJson.data;
+        if (rData.meta_json) {
+          try { cloudRoom = JSON.parse(rData.meta_json); } catch (e) { }
+        } else if (rData.pin) {
+          cloudRoom = rData;
+        }
+      }
 
       // Xét 3A: arena_meta_PIN
       if (metaJson && Array.isArray(metaJson.data) && metaJson.data.length > 0) {
+      if (!cloudRoom && metaJson && Array.isArray(metaJson.data) && metaJson.data.length > 0) {
         for (var m = metaJson.data.length - 1; m >= 0; m--) {
           var mDeck = metaJson.data[m];
           if (mDeck && mDeck.name) {
@@ -1889,6 +2194,10 @@
                   return { valid: false, error: 'expired', room: cloudRoom };
                 }
                 return { valid: true, room: cloudRoom, source: 'cloud_meta' };
+              var parsedMeta = JSON.parse(mDeck.name);
+              if (parsedMeta && normalizePin(parsedMeta.pin) === cleanPin) {
+                cloudRoom = parsedMeta;
+                break;
               }
             } catch (eMeta) { }
           }
@@ -1907,7 +2216,12 @@
               return { valid: true, room: pData, source: 'cloud_public' };
             }
           } catch (ePub) { }
+      if (cloudRoom && normalizePin(cloudRoom.pin) === cleanPin) {
+        if (cloudRoom.expiresAt && Number(cloudRoom.expiresAt) > 0 && Date.now() >= Number(cloudRoom.expiresAt)) {
+          fetch(CLOUD_API_BASE + '/api/arena/rooms/' + encodeURIComponent(cleanPin), { method: 'DELETE' }).catch(function () { });
+          return { valid: false, error: 'expired', room: cloudRoom };
         }
+        return { valid: true, room: cloudRoom, source: 'cloud_meta' };
       }
 
       // Xét 3C: arena_sync_PIN
@@ -1924,9 +2238,26 @@
             }
           } catch (eSync) { }
         }
+      // Nếu Cloud phản hồi bình thường nhưng không có phòng này -> Xóa luôn khỏi cache local nếu còn sót
+      if (roomApiJson !== null || metaJson !== null) {
+        var filteredLocal = getSavedPublicRooms().filter(function (r) { return normalizePin(r.pin) !== cleanPin; });
+        saveSavedPublicRooms(filteredLocal);
       }
     } catch (errNet) {
       console.warn('Lỗi kiểm tra phòng từ Cloud:', errNet);
+      // Dự phòng duy nhất khi mất mạng: phòng do chính máy này đang làm Host mở
+      try {
+        var hostRoomRaw = localStorage.getItem('wq_arena_host_room_' + cleanPin);
+        if (hostRoomRaw) {
+          var hostRoom = JSON.parse(hostRoomRaw);
+          if (hostRoom) {
+            if (hostRoom.expiresAt && Number(hostRoom.expiresAt) > 0 && Date.now() >= Number(hostRoom.expiresAt)) {
+              return { valid: false, error: 'expired', room: hostRoom };
+            }
+            return { valid: true, room: hostRoom, source: 'local_host' };
+          }
+        }
+      } catch (e) { }
     }
 
     return { valid: false, error: 'not_found' };
@@ -1935,6 +2266,9 @@
   // ==================== QUẢN LÝ PHÒNG THI ĐẤU CÔNG KHAI (PUBLIC ROOMS) ====================
   var _publicRoomsPollInterval = null;
   var _publicRoomCloudDeckMap = {};
+  var _publicRoomLastPublishAt = {};
+  var _publicRoomLastSignature = {};
+  var _publicRoomThrottleTimers = {};
 
   function getSavedPublicRooms() {
     try {
@@ -1979,6 +2313,8 @@
     broadcastMsg('public_room_sync', cleanSummary);
 
     // Lưu vào Cloudflare Worker D1 để điện thoại 4G / máy khác thấy ngay
+  function _doCloudPublishPublicRoom(pin, cleanSummary) {
+    _publicRoomLastPublishAt[pin] = Date.now();
     fetch(CLOUD_API_BASE + '/api/decks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1994,18 +2330,74 @@
     }).catch(function () { });
   }
 
+  function publishPublicRoom(roomSummary, forceImmediate) {
+    if (!roomSummary || !roomSummary.pin) return;
+    var pin = normalizePin(roomSummary.pin);
+    var list = getSavedPublicRooms().filter(function (r) { return normalizePin(r.pin) !== pin; });
+    var cleanSummary = Object.assign({}, roomSummary, { pin: pin, accessMode: 'public', updatedAt: Date.now() });
+    if (Array.isArray(cleanSummary.players)) {
+      cleanSummary.players = deduplicatePlayers(cleanSummary.players);
+      cleanSummary.playerCount = cleanSummary.players.length;
+    }
+    list.unshift(cleanSummary);
+    saveSavedPublicRooms(list);
+
+    // Phát tín hiệu đồng bộ qua BroadcastChannel & Storage event (chỉ nội bộ, không đẩy thêm sync HTTP)
+    broadcastMsg('public_room_sync', cleanSummary, false);
+
+    // Chỉ đẩy lên Cloud khi tạo phòng, đổi trạng thái, số người thay đổi hoặc điểm thay đổi, và throttle 5 giây
+    var topScore = 0;
+    if (Array.isArray(cleanSummary.players)) {
+      cleanSummary.players.forEach(function (p) {
+        if ((p.score || 0) > topScore) topScore = p.score || 0;
+      });
+    }
+    var sig = (cleanSummary.status || 'lobby') + '|' + (cleanSummary.playerCount || 0) + '|' + topScore;
+    if (!forceImmediate && _publicRoomLastSignature[pin] === sig) {
+      return;
+    }
+    _publicRoomLastSignature[pin] = sig;
+
+    var now = Date.now();
+    var lastAt = _publicRoomLastPublishAt[pin] || 0;
+    var elapsed = now - lastAt;
+
+    if (forceImmediate || elapsed >= 5000) {
+      if (_publicRoomThrottleTimers[pin]) {
+        clearTimeout(_publicRoomThrottleTimers[pin]);
+        delete _publicRoomThrottleTimers[pin];
+      }
+      _doCloudPublishPublicRoom(pin, cleanSummary);
+    } else if (!_publicRoomThrottleTimers[pin]) {
+      _publicRoomThrottleTimers[pin] = setTimeout(function () {
+        delete _publicRoomThrottleTimers[pin];
+        _doCloudPublishPublicRoom(pin, cleanSummary);
+      }, 5000 - elapsed);
+    }
+  }
+
   function unpublishPublicRoom(pin) {
     var cleanP = normalizePin(pin);
     if (!cleanP) return;
+    if (_publicRoomThrottleTimers[cleanP]) {
+      clearTimeout(_publicRoomThrottleTimers[cleanP]);
+      delete _publicRoomThrottleTimers[cleanP];
+    }
+    delete _publicRoomLastSignature[cleanP];
+    delete _publicRoomLastPublishAt[cleanP];
+    delete _publicRoomCloudDeckMap[cleanP];
+
     var list = getSavedPublicRooms().filter(function (r) { return normalizePin(r.pin) !== cleanP; });
     saveSavedPublicRooms(list);
     broadcastMsg('public_room_removed', { pin: cleanP });
+    broadcastMsg('public_room_removed', { pin: cleanP }, false);
 
     var cloudId = _publicRoomCloudDeckMap[cleanP];
     if (cloudId) {
       fetch(CLOUD_API_BASE + '/api/decks/' + cloudId, { method: 'DELETE' }).catch(function () { });
       delete _publicRoomCloudDeckMap[cleanP];
     }
+    fetch(CLOUD_API_BASE + '/api/arena/rooms/' + encodeURIComponent(cleanP), { method: 'DELETE' }).catch(function () { });
   }
 
   function fetchPublicRooms(onDone) {
@@ -2021,16 +2413,23 @@
         }
         var now = Date.now();
         var cloudRooms = [];
+        var cloudRoomsMap = {};
         res.data.forEach(function (d) {
           if (!d || !d.name) return;
           try {
             var rObj = JSON.parse(d.name);
             if (rObj && rObj.pin && rObj.accessMode === 'public') {
+              var cleanP = normalizePin(rObj.pin);
               if (!rObj.expiresAt || Number(rObj.expiresAt) <= 0 || now < Number(rObj.expiresAt)) {
                 _publicRoomCloudDeckMap[normalizePin(rObj.pin)] = d.id;
                 cloudRooms.push(rObj);
+                _publicRoomCloudDeckMap[cleanP] = cleanP;
+                if (!cloudRoomsMap[cleanP] || (rObj.updatedAt || 0) >= (cloudRoomsMap[cleanP].updatedAt || 0)) {
+                  cloudRoomsMap[cleanP] = rObj;
+                }
               } else {
                 fetch(CLOUD_API_BASE + '/api/decks/' + d.id, { method: 'DELETE' }).catch(function () { });
+                fetch(CLOUD_API_BASE + '/api/arena/rooms/' + encodeURIComponent(cleanP), { method: 'DELETE' }).catch(function () { });
               }
             }
           } catch (e) { }
@@ -2046,12 +2445,17 @@
         });
 
         var merged = Object.values(map).sort(function (a, b) {
+        // Khi Cloud trả về thành công: chỉ dùng danh sách từ Cloud (không gộp phòng cũ đã đóng từ local cache)
+        var cloudList = Object.values(cloudRoomsMap).sort(function (a, b) {
           return (b.updatedAt || 0) - (a.updatedAt || 0);
         });
 
         saveSavedPublicRooms(merged);
         renderPublicRoomsList(merged);
         if (typeof onDone === 'function') onDone(merged);
+        saveSavedPublicRooms(cloudList);
+        renderPublicRoomsList(cloudList);
+        if (typeof onDone === 'function') onDone(cloudList);
       })
       .catch(function () {
         if (typeof onDone === 'function') onDone(localRooms);
@@ -2156,12 +2560,14 @@
     var pin = normalizePin(r.pin);
     if (badge) badge.textContent = 'Phòng công khai #' + formatPinCode(pin);
     if (title) title.textContent = 'Bảng xếp hạng đấu thủ (' + (r.deckName || 'HSK 1') + ')';
+    if (title) title.textContent = 'Bảng xếp hạng đấu thủ (' + (r.deckName || 'HSK 1') + ' • Tự chấm)';
     if (meta) {
       meta.textContent = (GAMEMODE_NAMES[r.gameMode] || 'Tranh tài') + ' • ' + (r.totalQuestions || 10) + ' câu • ' + formatRemainingExpiry(r.expiresAt, r.durationLabel);
     }
 
     var players = Array.isArray(r.players) ? r.players.slice() : [];
     players.sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+    var ranks = computeCompetitionRanks(players);
 
     if (listEl) {
       if (players.length === 0) {
@@ -2170,10 +2576,12 @@
         listEl.innerHTML = '';
         players.forEach(function (p, idx) {
           var rank = idx + 1;
+          var rank = ranks[idx] || (idx + 1);
           var row = document.createElement('div');
           row.className = 'leaderboard-row' + (rank <= 3 ? (' top-' + rank) : '');
           var rankBadge = '#' + rank;
           var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Sẵn sàng</span>');
+          var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Tự chấm</span>');
           row.innerHTML =
             '<div class="lb-rank">' + rankBadge + '</div>' +
             '<div class="lb-avatar">' + (p.avatar || '🐼') + '</div>' +
@@ -2409,14 +2817,17 @@
       var sorted = gameState.players.slice().sort(function (a, b) {
         return (b.score || 0) - (a.score || 0);
       });
+      var ranks = computeCompetitionRanks(sorted);
 
       publicLbList.innerHTML = '';
       sorted.forEach(function (p, idx) {
         var rank = idx + 1;
+        var rank = ranks[idx] || (idx + 1);
         var row = document.createElement('div');
         row.className = 'leaderboard-row' + (rank <= 3 ? (' top-' + rank) : '');
         var rankBadge = '#' + rank;
         var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Sẵn sàng</span>');
+        var streakBadge = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Tự chấm</span>');
         row.innerHTML =
           '<div class="lb-rank">' + rankBadge + '</div>' +
           '<div class="lb-avatar">' + (p.avatar || '🐼') + '</div>' +
@@ -2432,6 +2843,7 @@
           var id = btn.dataset.id;
           gameState.players = gameState.players.filter(function (p) { return p.id !== id; });
           renderPlayerList();
+          kickPlayerFromHost(id);
         };
       });
     } else {
@@ -2466,9 +2878,26 @@
           var id = btn.dataset.id;
           gameState.players = gameState.players.filter(function (p) { return p.id !== id; });
           renderPlayerList();
+          kickPlayerFromHost(id);
         };
       });
     }
+  }
+
+  function kickPlayerFromHost(playerId) {
+    if (!playerId) return;
+    if (!gameState.kickedPlayerIds) gameState.kickedPlayerIds = {};
+    var targetP = gameState.players.find(function (p) { return p.id === playerId; });
+    if (targetP && !targetP.isBot) {
+      gameState.kickedPlayerIds[playerId] = true;
+      broadcastMsg('player_kick', {
+        pin: gameState.pin,
+        playerId: playerId,
+        targetId: playerId
+      });
+    }
+    gameState.players = gameState.players.filter(function (p) { return p.id !== playerId; });
+    renderPlayerList();
   }
 
   function addMockBot() {
@@ -2572,12 +3001,30 @@
     gameState.status = 'phase1';
     gameState.phase = 1;
     gameState.wasEarlyCutoff = false;
+    gameState.answeredPlayerIdsForCurrentQ = {};
 
     gameState.players.forEach(function (p) {
       p.lastAnswerIndex = -1;
       p.answeredAt = 0;
       p.lastPointsEarned = 0;
     });
+
+    if (qIdx === 0 && gameState.accessMode === 'public') {
+      publishPublicRoom({
+        pin: gameState.pin,
+        accessMode: 'public',
+        gameMode: gameState.gameMode,
+        deckName: gameState.deckName,
+        totalQuestions: gameState.totalQuestions,
+        timePerQuestion: gameState.timePerQuestion,
+        expiresAt: gameState.roomExpiresAt,
+        durationLabel: gameState.roomDurationLabel,
+        playerCount: gameState.players.length,
+        players: gameState.players,
+        status: 'phase1',
+        updatedAt: Date.now()
+      }, true);
+    }
 
     showView('hostGameView');
 
@@ -2811,10 +3258,13 @@
   }
 
   function getActivePlayers() {
+    var baseList = gameState.players.filter(function (p) { return !p.hasLeft; });
     if (gameState.gameMode === 'survival') {
       return gameState.players.filter(function (p) { return p.lives > 0; });
+      return baseList.filter(function (p) { return p.lives > 0; });
     }
     return gameState.players;
+    return baseList;
   }
 
   function runBotSimulation(q) {
@@ -2822,26 +3272,55 @@
       if (!p.isBot) return;
       var maxDelay = Math.max(2500, (gameState.timePerQuestion - 3) * 1000);
       var delay = 1800 + Math.random() * (maxDelay - 1800);
+      var qIdx = gameState.currentQuestionIndex;
       var t = setTimeout(function () {
         if (gameState.status !== 'phase2') return;
         var acc = p.acc || 0.78;
         var isCorrect = Math.random() < acc;
         var chosenIndex = isCorrect ? q.correctIndex : (q.correctIndex + 1 + Math.floor(Math.random() * 3)) % 4;
         recordPlayerAnswerOnHost(p.id, chosenIndex);
+        recordPlayerAnswerOnHost(p.id, chosenIndex, qIdx);
       }, delay);
       gameState.botTimers.push(t);
     });
   }
 
+  function checkAndTriggerEarlyCutoffOnHost() {
+    if (gameState.status !== 'phase2') return;
+    var activeList = getActivePlayers();
+    var answeredCount = activeList.filter(function (x) { return x.lastAnswerIndex !== -1; }).length;
+    var answeredEl = document.getElementById('answeredCount');
+    var totalPlayingEl = document.getElementById('totalPlayersPlaying');
+    if (answeredEl) answeredEl.textContent = answeredCount;
+    if (totalPlayingEl) totalPlayingEl.textContent = activeList.length;
+
+    if (activeList.length > 0 && answeredCount >= activeList.length) {
+      var hadTimeLeft = gameState.timerRemaining > 1;
+      clearAllRoundTimers();
+      gameState.wasEarlyCutoff = hadTimeLeft;
+      setTimeout(function () {
+        startPhase4AnswerReveal();
+      }, 250);
+    }
+  }
+
   // ==================== PHA 3: GHI NHẬN ĐÁP ÁN & KIỂM TRA NGẮT SỚM (EARLY CUT-OFF) ====================
   function recordPlayerAnswerOnHost(playerId, answerIndex) {
+  function recordPlayerAnswerOnHost(playerId, answerIndex, questionIndex) {
     if (gameState.status !== 'phase2') return;
     var p = gameState.players.find(function (x) { return x.id === playerId; });
+    if (typeof questionIndex === 'number' && questionIndex !== gameState.currentQuestionIndex) return;
+    if (gameState.questionEndTime && Date.now() > (gameState.questionEndTime + 500)) return;
+    if (!gameState.answeredPlayerIdsForCurrentQ) gameState.answeredPlayerIdsForCurrentQ = {};
+    if (gameState.answeredPlayerIdsForCurrentQ[playerId]) return;
+
+    var p = gameState.players.find(function (x) { return x.id === playerId && !x.hasLeft; });
     if (!p || p.lastAnswerIndex !== -1) return;
 
     var numericChoice = parseInt(answerIndex, 10);
     if (isNaN(numericChoice) || numericChoice < 0 || numericChoice > 3) return;
 
+    gameState.answeredPlayerIdsForCurrentQ[playerId] = true;
     p.lastAnswerIndex = numericChoice;
     p.answeredAt = Date.now();
 
@@ -2884,6 +3363,7 @@
 
     // ĐIỀU KIỆN 2 (NGẮT SỚM THÔNG MINH - EARLY CUT-OFF):
     // Ngay khi cả N / N người trong phòng đều đã bấm chọn xong, lập tức ngắt đồng hồ và chuyển thẳng sang Pha 4!
+    // Ngay khi cả N / N người đang thi trong phòng đều đã bấm chọn xong, lập tức ngắt đồng hồ và chuyển thẳng sang Pha 4!
     if (answeredCount >= activeList.length) {
       var hadTimeLeft = gameState.timerRemaining > 1;
       clearAllRoundTimers();
@@ -2893,11 +3373,13 @@
       }, 250);
     } else if (allHumansAnswered) {
       clearAllRoundTimers();
+      var curQIdx = gameState.currentQuestionIndex;
       getActivePlayers().forEach(function (bot) {
         if (bot.isBot && bot.lastAnswerIndex === -1) {
           var isCorrect = Math.random() < (bot.acc || 0.78);
           var idx = isCorrect ? q.correctIndex : (q.correctIndex + 1 + Math.floor(Math.random() * 3)) % 4;
           recordPlayerAnswerOnHost(bot.id, idx);
+          recordPlayerAnswerOnHost(bot.id, idx, curQIdx);
         }
       });
     }
@@ -2935,8 +3417,12 @@
     var prevSorted = gameState.players.slice().sort(function (a, b) {
       return (b.score - (b.lastPointsEarned || 0)) - (a.score - (a.lastPointsEarned || 0));
     });
+    var prevRanks = computeCompetitionRanks(prevSorted.map(function (p) {
+      return { score: (p.score || 0) - (p.lastPointsEarned || 0) };
+    }));
     prevSorted.forEach(function (p, idx) {
       p.prevRank = idx + 1;
+      p.prevRank = prevRanks[idx] || (idx + 1);
     });
 
     // Chế độ Sinh tồn: trừ 1 tim nếu chọn sai hoặc không trả lời
@@ -3030,6 +3516,7 @@
 
     // Sắp xếp thứ hạng mới để gửi kết quả chấm điểm riêng cho từng điện thoại
     var sorted = gameState.players.slice().sort(function (a, b) { return b.score - a.score; });
+    var p4Ranks = computeCompetitionRanks(sorted);
     var leaderScore = sorted[0] ? sorted[0].score : 0;
 
     saveHostRoomState();
@@ -3045,6 +3532,7 @@
       expiresAt: gameState.roomExpiresAt,
       durationLabel: gameState.roomDurationLabel,
       scores: sorted.map(function (p, idx) {
+        var r = p4Ranks[idx] || (idx + 1);
         return {
           id: p.id,
           name: p.name,
@@ -3053,6 +3541,8 @@
           streak: p.streak,
           rank: idx + 1,
           prevRank: p.prevRank || (idx + 1),
+          rank: r,
+          prevRank: p.prevRank || r,
           gapToLeader: Math.max(0, leaderScore - p.score),
           lastAnswerIndex: p.lastAnswerIndex,
           lastEarned: p.lastPointsEarned || 0
@@ -3110,6 +3600,7 @@
     var sorted = gameState.players.slice().sort(function (a, b) {
       return b.score - a.score;
     });
+    var p5Ranks = computeCompetitionRanks(sorted);
     var leaderScore = sorted[0] ? sorted[0].score : 0;
 
     var listEl = document.getElementById('hostLeaderboardList');
@@ -3143,6 +3634,7 @@
       listEl.innerHTML = '';
       sorted.forEach(function (p, idx) {
         var rank = idx + 1;
+        var rank = p5Ranks[idx] || (idx + 1);
         var rankDelta = (p.prevRank || rank) - rank;
         var deltaHtml = '';
         if (rankDelta > 0) {
@@ -3182,12 +3674,14 @@
       expiresAt: gameState.roomExpiresAt,
       durationLabel: gameState.roomDurationLabel,
       rankings: sorted.map(function (p, idx) {
+        var r = p5Ranks[idx] || (idx + 1);
         return {
           id: p.id,
           name: p.name,
           score: p.score,
           streak: p.streak,
           rank: idx + 1,
+          rank: r,
           gapToLeader: Math.max(0, leaderScore - p.score)
         };
       })
@@ -3300,6 +3794,7 @@
       } catch (e) { }
     }
 
+    var podiumRanks = computeCompetitionRanks(sorted);
     broadcastMsg('game_over', {
       pin: gameState.pin,
       rankings: sorted.map(function (p, idx) {
@@ -3308,9 +3803,27 @@
           name: p.name,
           score: p.score,
           rank: idx + 1
+          rank: podiumRanks[idx] || (idx + 1)
         };
       })
     });
+
+    if (gameState.accessMode === 'public') {
+      publishPublicRoom({
+        pin: gameState.pin,
+        accessMode: 'public',
+        gameMode: gameState.gameMode,
+        deckName: gameState.deckName,
+        totalQuestions: gameState.totalQuestions,
+        timePerQuestion: gameState.timePerQuestion,
+        expiresAt: gameState.roomExpiresAt,
+        durationLabel: gameState.roomDurationLabel,
+        playerCount: gameState.players.length,
+        players: gameState.players,
+        status: 'podium',
+        updatedAt: Date.now()
+      }, true);
+    }
   }
 
   // ==================== PLAYER: THAM GIA PHÒNG & XỬ LÝ 5 PHA TRÊN ĐIỆN THOẠI ====================
@@ -3426,9 +3939,14 @@
     var myNormName = normalizePlayerName(myName);
 
     // Đảm bảo bản thân luôn có mặt trong danh sách và không bao giờ bị nhân bản 2 dòng cùng tên
+    // Đảm bảo bản thân luôn có mặt trong danh sách (khớp theo myPlayerId để không bị trộn với người khác trùng tên)
     var myEntry = list.find(function (x) {
       return (gameState.myPlayerId && x.id === gameState.myPlayerId) ||
         (x.name && normalizePlayerName(x.name) === myNormName);
+      if (gameState.myPlayerId && x.id) {
+        return x.id === gameState.myPlayerId;
+      }
+      return x.name && normalizePlayerName(x.name) === myNormName;
     });
 
     if (myEntry) {
@@ -3470,16 +3988,24 @@
       var myRankBadge = document.getElementById('playerLobbyMyRankBadge');
 
       // Sắp xếp theo điểm số giảm dần
+      // Sắp xếp theo điểm số giảm dần và tính đồng hạng (1, 1, 3)
       var sorted = list.slice().sort(function (a, b) {
         return (b.score || 0) - (a.score || 0);
       });
+      var ranks = computeCompetitionRanks(sorted);
 
       var myRank = sorted.findIndex(function (p) {
         return (p.id === gameState.myPlayerId) ||
           (p.name && normalizePlayerName(p.name) === myNormName);
       }) + 1;
+      var mySortedIdx = sorted.findIndex(function (p) {
+        if (gameState.myPlayerId && p.id) return p.id === gameState.myPlayerId;
+        return p.name && normalizePlayerName(p.name) === myNormName;
+      });
+      var myRank = mySortedIdx !== -1 ? (ranks[mySortedIdx] || (mySortedIdx + 1)) : 1;
       if (myRankBadge) {
         myRankBadge.textContent = 'Hạng ' + (myRank || 1) + ' / ' + sorted.length;
+        myRankBadge.textContent = 'Hạng ' + myRank + ' / ' + sorted.length + ' (Tự chấm)';
       }
 
       if (lbListEl) {
@@ -3488,11 +4014,14 @@
           var rank = idx + 1;
           var isMe = (p.id === gameState.myPlayerId) ||
             (p.name && normalizePlayerName(p.name) === myNormName);
+          var rank = ranks[idx] || (idx + 1);
+          var isMe = (gameState.myPlayerId && p.id) ? (p.id === gameState.myPlayerId) : (p.name && normalizePlayerName(p.name) === myNormName);
           var row = document.createElement('div');
           row.className = 'leaderboard-row' + (rank <= 3 ? (' top-' + rank) : '') + (isMe ? ' is-self' : '');
 
           var rankBadge = '#' + rank;
           var streakOrStatus = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Sẵn sàng</span>');
+          var streakOrStatus = (p.streak >= 2 ? ('<span class="lb-streak">Chuỗi ' + p.streak + '</span>') : '<span class="lb-ready-badge">Tự chấm</span>');
 
           row.innerHTML =
             '<div class="lb-rank">' + rankBadge + '</div>' +
@@ -3612,6 +4141,17 @@
     var cleanName = name.trim();
     var cleanAvatar = avatar || gameState.playerProfile.avatar || '🐼';
 
+    // Chặn vào lại nếu người chơi đã bị Host kick khỏi phòng này trong phiên hiện tại
+    try {
+      if (sessionStorage.getItem('wq_arena_kicked_' + cleanPin) === '1') {
+        SFX.wrong();
+        if (typeof showToast === 'function') {
+          showToast('Bạn đã bị Quản trị viên mời ra khỏi phòng #' + formatPinCode(cleanPin) + '.', 'error');
+        }
+        return;
+      }
+    } catch (eKick) { }
+
     // 1. Áp dụng thông tin từ phòng đã được xác thực (verifiedRoom)
     var targetRoom = verifiedRoom || null;
 
@@ -3683,10 +4223,12 @@
     savePlayerProfile(cleanName, cleanAvatar);
 
     // 1 phòng chỉ 1 tên xuất hiện: Tìm bản ghi cũ theo Tên (case-insensitive) để khôi phục mốc điểm & ID, không nhân bản
+    // Chỉ khôi phục myPlayerId từ session hoặc bản ghi cá nhân trên CHÍNH trình duyệt này (không lấy ID của người khác trùng tên trên roster)
     var existingRecord = null;
     var normName = normalizePlayerName(cleanName);
 
     // A. Kiểm tra session gần nhất
+    // A. Kiểm tra session gần nhất trên máy này
     try {
       var prevSessRaw = localStorage.getItem('wq_arena_player_session_' + cleanPin);
       if (prevSessRaw) {
@@ -3698,6 +4240,7 @@
     } catch (e) { }
 
     // B. Kiểm tra bản ghi đã lưu khi rời phòng
+    // B. Kiểm tra bản ghi cá nhân đã lưu khi rời phòng trên máy này
     if (!existingRecord) {
       try {
         var recRaw = localStorage.getItem('wq_arena_player_rec_' + cleanPin + '_' + normName);
@@ -3747,6 +4290,7 @@
       ('player_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
     gameState.playerJoinAcked = false;
     gameState.playerLastChoice = -1;
+    gameState.playerLastAnsweredQIndex = -1;
     gameState.playerLocalScore = (existingRecord && Number(existingRecord.score || existingRecord.playerLocalScore)) || 0;
     gameState.playerLocalStreak = (existingRecord && Number(existingRecord.streak || existingRecord.playerLocalStreak)) || 0;
     gameState.playerLastPhaseAction = '';
@@ -3929,6 +4473,11 @@
   // Pha 2 trên điện thoại: Bung 4 nút A, B, C, D cùng lúc và đếm ngược theo endTime đồng bộ
   function onPlayerReceivePhase2(p, isRestore) {
     if (!isRestore) {
+    var effectiveRestore = Boolean(isRestore || (p && p.restore));
+    var incomingQIdx = (p && typeof p.questionIndex === 'number') ? p.questionIndex : -1;
+    var alreadyAnsweredThisQ = (incomingQIdx !== -1 && gameState.playerLastAnsweredQIndex === incomingQIdx && gameState.playerLastChoice !== -1);
+
+    if (!effectiveRestore && !alreadyAnsweredThisQ) {
       gameState.playerLastChoice = -1;
     }
     var wasAlreadyInPhase2 = (gameState.status === 'player_game' && gameState.playerLastPhaseAction === 'phase_2_active');
@@ -3962,6 +4511,23 @@
     if (p2Wrap) p2Wrap.style.display = 'block';
     if (!isRestore && !wasAlreadyInPhase2) {
       SFX.revealPop();
+    // Nếu là gói tin khôi phục hoặc người chơi đã chọn đáp án cho câu này rồi -> Giữ nguyên màn hình đã khóa đáp án
+    if ((effectiveRestore || alreadyAnsweredThisQ) && gameState.playerLastChoice !== -1) {
+      var submittedState = document.getElementById('playerSubmittedState');
+      var submittedDesc = document.getElementById('playerSubmittedDesc');
+      var chosenLetter = OPTION_LETTERS[gameState.playerLastChoice] || 'A';
+      if (submittedDesc) {
+        submittedDesc.textContent = 'Bạn đã chọn phương án ' + chosenLetter + '. Đang chờ kết quả câu hỏi...';
+      }
+      if (submittedState) submittedState.style.display = 'block';
+    } else {
+      document.querySelectorAll('.player-pad-btn').forEach(function (btn) {
+        btn.disabled = false;
+      });
+      if (p2Wrap) p2Wrap.style.display = 'block';
+      if (!effectiveRestore && !wasAlreadyInPhase2) {
+        SFX.revealPop();
+      }
     }
 
     var durationSec = p.durationSec || 15;
@@ -3989,6 +4555,9 @@
       if (barFill) barFill.style.width = pct + '%';
 
       if (remainingMs <= 0) {
+        document.querySelectorAll('.player-pad-btn').forEach(function (btn) {
+          btn.disabled = true;
+        });
         if (gameState.playerTimerInterval) {
           clearInterval(gameState.playerTimerInterval);
           gameState.playerTimerInterval = null;
@@ -4005,7 +4574,22 @@
     var numericChoice = parseInt(choiceIndex, 10);
     if (isNaN(numericChoice) || gameState.playerLastChoice !== -1) return;
 
+    // Kiểm tra thời hạn nộp đáp án
+    if (gameState.isSoloRunner) {
+      if (gameState.soloQuestionEndTime && Date.now() > gameState.soloQuestionEndTime) return;
+    } else {
+      var endTime = (gameState.playerLastPhasePayload && gameState.playerLastPhasePayload.endTime) || 0;
+      if (endTime && getHostNow() > endTime) return;
+    }
+
+    var curQIdx = gameState.isSoloRunner
+      ? gameState.currentQuestionIndex
+      : ((gameState.playerLastPhasePayload && typeof gameState.playerLastPhasePayload.questionIndex === 'number')
+          ? gameState.playerLastPhasePayload.questionIndex
+          : gameState.currentQuestionIndex);
+
     gameState.playerLastChoice = numericChoice;
+    gameState.playerLastAnsweredQIndex = curQIdx;
     savePlayerSessionState();
     hideAllPlayerSubCards();
 
@@ -4023,6 +4607,7 @@
     broadcastMsg('player_answer', {
       playerId: gameState.myPlayerId,
       answerIndex: numericChoice,
+      questionIndex: curQIdx,
       pin: gameState.pin
     });
 
@@ -4062,6 +4647,7 @@
     var myScoreObj = (p.scores || []).find(function (x) { return x.id === gameState.myPlayerId; });
     var isCorrect = (gameState.playerLastChoice !== -1 && Number(gameState.playerLastChoice) === Number(p.correctIndex));
     var earned = (myScoreObj && myScoreObj.lastEarned > 0) ? myScoreObj.lastEarned : (isCorrect ? 850 : 0);
+    var earned = (myScoreObj && typeof myScoreObj.lastEarned === 'number') ? myScoreObj.lastEarned : null;
 
     if (myScoreObj) {
       gameState.playerLocalScore = myScoreObj.score;
@@ -4073,6 +4659,8 @@
       } else {
         gameState.playerLocalStreak = 0;
       }
+    } else if (!isRestore && !isCorrect) {
+      gameState.playerLocalStreak = 0;
     }
     savePlayerSessionState();
 
@@ -4098,6 +4686,9 @@
       }
       if (resultText) resultText.textContent = 'Chính xác';
       if (scorePlus) scorePlus.textContent = '+' + earned + ' điểm';
+      if (scorePlus) {
+        scorePlus.textContent = (earned !== null && earned > 0) ? ('+' + earned + ' điểm') : '—';
+      }
       if (streakPill) {
         if (gameState.playerLocalStreak >= 2) {
           streakPill.style.display = 'inline-block';
@@ -4432,9 +5023,11 @@
     var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === normalizePin(gameState.pin); });
     if (matchPub && Array.isArray(matchPub.players)) {
       var sorted = matchPub.players.slice().sort(function (a, b) { return (b.score || 0) - (a.score || 0); });
+      var soloRanks = computeCompetitionRanks(sorted);
       totalPlayers = sorted.length;
       var foundIdx = sorted.findIndex(function (p) { return p.id === gameState.myPlayerId; });
       if (foundIdx !== -1) myRank = foundIdx + 1;
+      if (foundIdx !== -1) myRank = soloRanks[foundIdx] || (foundIdx + 1);
     }
 
     var p5Card = document.getElementById('playerPhase5Card');
@@ -4453,9 +5046,12 @@
       p5Gap.textContent = (myRank === 1)
         ? 'Bạn đang giữ vị trí Top 1 của phòng'
         : ('Đã ghi danh vào bảng xếp hạng phòng #' + formatPinCode(gameState.pin));
+        ? 'Bạn đang giữ vị trí Top 1 của phòng (Chế độ tự chấm)'
+        : ('Đã ghi danh vào bảng xếp hạng phòng #' + formatPinCode(gameState.pin) + ' (Tự chấm)');
     }
     if (p5Total) {
       p5Total.textContent = 'Tổng điểm đạt được: ' + (gameState.playerLocalScore || 0).toLocaleString() + ' đ';
+      p5Total.textContent = 'Tổng điểm đạt được: ' + (gameState.playerLocalScore || 0).toLocaleString() + ' đ (Tự chấm)';
     }
 
     var p5Wait = document.getElementById('playerPhase5WaitHint') || document.querySelector('#playerPhase5Card .phase5-wait-hint');
@@ -4595,9 +5191,15 @@
     } catch (e) { }
 
     broadcastMsg('lobby_roster_sync', {
+    broadcastMsg('player_score_update', {
       pin: cleanPin,
       accessMode: 'public',
       players: (matchPub && matchPub.players) || []
+      playerId: playerId,
+      name: playerName,
+      avatar: playerAvatar,
+      score: score,
+      streak: streak
     }, true);
   }
 
@@ -4607,6 +5209,7 @@
     if (data.msgId) {
       if (_processedMsgIds[data.msgId]) return;
       _processedMsgIds[data.msgId] = true;
+      if (markMsgProcessed(data.msgId)) return;
     }
 
     var action = data.action;
@@ -4624,6 +5227,7 @@
 
       if (action === 'player_ready') {
         var targetP = gameState.players.find(function (x) { return x.id === p.playerId; });
+        var targetP = gameState.players.find(function (x) { return x.id === p.playerId && !x.hasLeft; });
         if (targetP) {
           targetP.isReady = !!p.isReady;
           renderPlayerList();
@@ -4631,24 +5235,58 @@
           saveHostRoomState();
         }
       } else if (action === 'player_join') {
+        if (!p.id) return;
+        // 1. Kiểm tra nếu người chơi đã bị kick khỏi phòng này
+        if (gameState.kickedPlayerIds && gameState.kickedPlayerIds[p.id]) {
+          broadcastMsg('player_kick', {
+            pin: gameState.pin,
+            playerId: p.id,
+            targetId: p.id
+          });
+          return;
+        }
+
+        // 2. Kiểm tra trùng tên với người chơi khác (khác ID) đang ở trong phòng
         var pNameNorm = normalizePlayerName(p.name);
+        if (pNameNorm) {
+          var nameConflict = gameState.players.find(function (x) {
+            return x.id !== p.id && !x.hasLeft && normalizePlayerName(x.name) === pNameNorm;
+          });
+          if (nameConflict) {
+            broadcastMsg('join_rejected', {
+              pin: gameState.pin,
+              playerId: p.id,
+              targetId: p.id,
+              reason: 'name_taken',
+              name: p.name
+            });
+            return;
+          }
+        }
+
+        // 3. Khớp người chơi chỉ theo ID; chủ phòng giữ quyền quyết định điểm số (bỏ qua score do client tự gửi trong player_join)
         var existingPlayer = gameState.players.find(function (x) {
           return x.id === p.id || (pNameNorm && normalizePlayerName(x.name) === pNameNorm);
+          return x.id === p.id;
         });
 
         if (!existingPlayer) {
           gameState.players.push({
             id: p.id,
             name: p.name,
+            name: p.name || 'Người chơi',
             avatar: p.avatar || '🐼',
             score: Number(p.score) || 0,
+            score: 0,
             prevRank: gameState.players.length + 1,
             streak: Number(p.streak) || 0,
+            streak: 0,
             lives: 3,
             lastAnswerIndex: -1,
             answeredAt: 0,
             lastPointsEarned: 0,
             isBot: false,
+            hasLeft: false,
             isReady: !!p.isReady
           });
           SFX.pop();
@@ -4661,6 +5299,8 @@
         } else {
           // Người chơi đã từng có trong phòng (thoát ra vào lại) -> Cập nhật thông tin, GIỮ NGUYÊN ĐIỂM SỐ & THỨ HẠNG!
           existingPlayer.id = p.id;
+          // Người chơi đã từng có trong phòng (thoát ra vào lại) -> Cập nhật thông tin, GIỮ NGUYÊN ĐIỂM SỐ CỦA HOST!
+          existingPlayer.hasLeft = false;
           existingPlayer.name = p.name || existingPlayer.name;
           existingPlayer.avatar = p.avatar || existingPlayer.avatar;
           if (typeof p.score === 'number' && p.score > (existingPlayer.score || 0)) {
@@ -4678,19 +5318,24 @@
         }
 
         // Nếu trận đấu đang diễn ra ở Pha 2 mà người chơi vừa tải lại trang / vào lại, gửi lại câu hỏi hiện tại cho họ
+        // Nếu trận đấu đang diễn ra ở Pha 2 mà người chơi vừa tải lại trang / vào lại, chỉ gửi riêng cho người đó (targetId + restore: true)
         var curQ = gameState.questions[gameState.currentQuestionIndex];
         if (curQ && gameState.status === 'phase2') {
           broadcastMsg('phase_2_active', {
             pin: gameState.pin,
+            targetId: p.id,
+            restore: true,
             questionIndex: gameState.currentQuestionIndex,
             totalQuestions: gameState.totalQuestions,
             prompt: curQ.prompt,
             options: curQ.options,
             durationSec: gameState.timePerQuestion,
+            startTime: gameState.questionStartTime,
             endTime: gameState.questionEndTime,
             expiresAt: gameState.roomExpiresAt,
             durationLabel: gameState.roomDurationLabel
           }, false);
+          });
         }
       } else if (action === 'player_answer') {
         var existingP = gameState.players.find(function (x) { return x.id === p.playerId; });
@@ -4708,31 +5353,65 @@
             lastPointsEarned: 0,
             isBot: false
           });
+        var existingP = gameState.players.find(function (x) { return x.id === p.playerId && !x.hasLeft; });
+        if (!existingP) return;
+        recordPlayerAnswerOnHost(p.playerId, p.answerIndex, p.questionIndex);
+      } else if (action === 'player_leave') {
+        if (!p.playerId) return;
+        if (gameState.status === 'lobby') {
+          gameState.players = gameState.players.filter(function (x) { return x.id !== p.playerId; });
+          renderPlayerList();
+        } else {
+          var leavingP = gameState.players.find(function (x) { return x.id === p.playerId; });
+          if (leavingP) {
+            leavingP.hasLeft = true;
+            saveHostRoomState();
+            checkAndTriggerEarlyCutoffOnHost();
+          }
         }
         recordPlayerAnswerOnHost(p.playerId, p.answerIndex);
       } else if (action === 'player_score_update') {
         var pScoreName = normalizePlayerName(p.name);
+        // Chỉ chấp nhận điểm tự chấm khi phòng ở chế độ Công khai (Solo) và đang ở sảnh chờ
+        if (gameState.accessMode !== 'public' || gameState.status !== 'lobby') return;
+        if (!p.playerId) return;
+        if (gameState.kickedPlayerIds && gameState.kickedPlayerIds[p.playerId]) return;
+
         var existingPS = gameState.players.find(function (x) {
           return x.id === p.playerId || (pScoreName && normalizePlayerName(x.name) === pScoreName);
+          return x.id === p.playerId;
         });
         if (!existingPS && p.playerId) {
+        if (!existingPS) {
+          var psNameNorm = normalizePlayerName(p.name);
+          var conflictPS = psNameNorm && gameState.players.find(function (x) {
+            return x.id !== p.playerId && !x.hasLeft && normalizePlayerName(x.name) === psNameNorm;
+          });
+          if (conflictPS) return;
           gameState.players.push({
             id: p.playerId,
             name: p.name || 'Người chơi',
             avatar: p.avatar || '🐼',
             score: p.score || 0,
+            score: Number(p.score) || 0,
             prevRank: gameState.players.length + 1,
             streak: p.streak || 0,
+            streak: Number(p.streak) || 0,
             lives: 3,
             lastAnswerIndex: -1,
             answeredAt: Date.now(),
             lastPointsEarned: p.earned || 0,
             isBot: false
+            isBot: false,
+            hasLeft: false
           });
         } else if (existingPS) {
           existingPS.id = p.playerId || existingPS.id;
           existingPS.score = Math.max(existingPS.score || 0, p.score || 0);
           existingPS.streak = Math.max(existingPS.streak || 0, p.streak || 0);
+        } else {
+          existingPS.score = Math.max(existingPS.score || 0, Number(p.score) || 0);
+          existingPS.streak = Math.max(existingPS.streak || 0, Number(p.streak) || 0);
           existingPS.lastPointsEarned = p.earned || 0;
         }
         gameState.players = deduplicatePlayers(gameState.players);
@@ -4782,6 +5461,8 @@
     // --- XỬ LÝ PHÍA NGƯỜI CHƠI (PLAYER) ---
     if (gameState.role === 'player') {
       if (normalizePin(p.pin) !== normalizePin(gameState.pin)) return;
+      var targetId = data.targetId || p.targetId || '';
+      if (targetId && gameState.myPlayerId && targetId !== gameState.myPlayerId) return;
 
       // Đồng bộ đồng hồ mốc thời gian máy Host (Host Clock Offset compensation)
       if (data.timestamp && typeof data.timestamp === 'number') {
@@ -4790,6 +5471,16 @@
           gameState.clockOffset = sampleOffset;
         } else {
           gameState.clockOffset = Math.round(gameState.clockOffset * 0.7 + sampleOffset * 0.3);
+      // Chỉ tính chênh lệch đồng hồ từ tin phase_* của chủ phòng có timestamp trong vòng 10 giây gần nhất
+      if (action.indexOf('phase_') === 0 && data.timestamp && typeof data.timestamp === 'number') {
+        var ageMs = Math.abs(Date.now() - data.timestamp);
+        if (ageMs <= 10000) {
+          var sampleOffset = data.timestamp - Date.now();
+          if (!gameState.clockOffset) {
+            gameState.clockOffset = sampleOffset;
+          } else {
+            gameState.clockOffset = Math.round(gameState.clockOffset * 0.7 + sampleOffset * 0.3);
+          }
         }
       }
 
@@ -4798,6 +5489,36 @@
       updateExpiryBadges();
 
       if (action === 'lobby_roster_sync') {
+      if (action === 'join_rejected') {
+        if (p.playerId && gameState.myPlayerId && p.playerId !== gameState.myPlayerId) return;
+        SFX.wrong();
+        var rejectedPin = normalizePin(gameState.pin);
+        var rejectedName = p.name || gameState.playerProfile.name || '';
+        playerLeaveRoom(true);
+        var pinInput = document.getElementById('playerInputPin');
+        if (pinInput && rejectedPin) pinInput.value = rejectedPin;
+        var nameInput = document.getElementById('playerInputName');
+        if (nameInput) {
+          nameInput.value = '';
+          nameInput.focus();
+        }
+        if (typeof showToast === 'function') {
+          showToast('Tên "' + rejectedName + '" đã có người khác dùng trong phòng này. Vui lòng chọn tên khác!', 'error');
+        }
+        return;
+      } else if (action === 'player_kick') {
+        if (p.playerId && gameState.myPlayerId && p.playerId !== gameState.myPlayerId) return;
+        SFX.wrong();
+        var kickedPin = normalizePin(gameState.pin);
+        try {
+          if (kickedPin) sessionStorage.setItem('wq_arena_kicked_' + kickedPin, '1');
+        } catch (eK) { }
+        playerLeaveRoom(true);
+        if (typeof showToast === 'function') {
+          showToast('Bạn đã bị Quản trị viên mời ra khỏi phòng thi đấu.', 'error');
+        }
+        return;
+      } else if (action === 'lobby_roster_sync') {
         if (p.accessMode) {
           gameState.accessMode = p.accessMode;
         }
@@ -4810,10 +5531,35 @@
         if (gameState.status === 'player_lobby') {
           renderPlayerWaitingRoster(incomingPlayers);
         }
+      } else if (action === 'player_score_update') {
+        if (gameState.accessMode === 'public' && gameState.status === 'player_lobby' && p.playerId) {
+          var pubRooms = getSavedPublicRooms();
+          var matchPub = pubRooms.find(function (pr) { return normalizePin(pr.pin) === normalizePin(gameState.pin); });
+          if (matchPub) {
+            if (!Array.isArray(matchPub.players)) matchPub.players = [];
+            var exP = matchPub.players.find(function (x) { return x.id === p.playerId; });
+            if (exP) {
+              exP.score = Math.max(exP.score || 0, Number(p.score) || 0);
+              exP.streak = Math.max(exP.streak || 0, Number(p.streak) || 0);
+            } else {
+              matchPub.players.push({
+                id: p.playerId,
+                name: p.name || 'Người chơi',
+                avatar: p.avatar || '🐼',
+                score: Number(p.score) || 0,
+                streak: Number(p.streak) || 0,
+                isBot: false
+              });
+            }
+            saveSavedPublicRooms(pubRooms);
+            renderPlayerWaitingRoster(matchPub.players);
+          }
+        }
       } else if (action === 'phase_1_getready') {
         onPlayerReceivePhase1(p);
       } else if (action === 'phase_2_active') {
         onPlayerReceivePhase2(p);
+        onPlayerReceivePhase2(p, !!p.restore);
       } else if (action === 'phase_4_reveal') {
         onPlayerReceivePhase4(p);
       } else if (action === 'phase_5_leaderboard') {

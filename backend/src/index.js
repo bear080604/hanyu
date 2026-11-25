@@ -31,6 +31,31 @@ function errorResponse(message, status = 400) {
   return jsonResponse({ error: message }, status);
 }
 
+function normalizeArenaPin(rawPin) {
+  const s = String(rawPin || '').replace(/^arena_(sync|meta)_/, '').trim();
+  return s.replace(/\D/g, '') || s;
+}
+
+function getArenaRoomStub(env, rawPin) {
+  if (!env || !env.ARENA_ROOM) return null;
+  const cleanPin = normalizeArenaPin(rawPin);
+  if (!cleanPin) return null;
+  const id = env.ARENA_ROOM.idFromName(cleanPin.toUpperCase());
+  return env.ARENA_ROOM.get(id);
+}
+
+const HOST_ONLY_ACTIONS = new Set([
+  'room_created',
+  'phase_1_getready',
+  'phase_2_active',
+  'phase_4_reveal',
+  'phase_5_leaderboard',
+  'game_over',
+  'player_kick',
+  'lobby_roster_sync',
+  'join_rejected',
+]);
+
 export default {
   async fetch(request, env, ctx) {
     // Handle CORS preflight
@@ -308,139 +333,94 @@ export default {
       }
 
       // ==================== ARENA REALTIME SYNC ENDPOINTS ====================
+      // Mọi tin nhắn của phòng đều đi qua Durable Object (ArenaRoom) của PIN đó để WebSocket và HTTP thấy nhau 100%
 
-      // POST /api/arena/sync - Lưu tin nhắn realtime cho phòng Arena
+      // POST /api/arena/sync - Lưu và phát tin nhắn realtime cho phòng Arena
       if (path === '/api/arena/sync' && method === 'POST') {
         const body = await request.json();
-        const pin = String(body.pin || body.user_id || '').replace(/^arena_sync_/, '').trim();
-        const msgStr = typeof body.msg === 'string' ? body.msg : JSON.stringify(body.msg || body.name || {});
+        const pin = normalizeArenaPin(body.pin || body.user_id);
+        const msgObj = typeof body.msg === 'string'
+          ? (() => { try { return JSON.parse(body.msg); } catch (e) { return {}; } })()
+          : (body.msg || body.name || {});
+        const hostToken = String(body.hostToken || '');
 
         if (!pin) {
           return errorResponse('Missing pin', 400);
         }
 
-        let msgId = ++_memMsgIdCounter;
+        const roomObj = getArenaRoomStub(env, pin);
+        if (roomObj) {
+          const doRes = await roomObj.fetch('https://arena-do/push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pin, msg: msgObj, hostToken }),
+          });
+          const data = await doRes.json();
+          return jsonResponse(data, doRes.status);
+        }
 
-        // 1. Lưu vào RAM
+        // Fallback RAM khi local không có DO binding
+        if (HOST_ONLY_ACTIONS.has(msgObj.action) && !hostToken) {
+          return errorResponse('Forbidden: host action requires hostToken', 403);
+        }
+        const msgId = ++_memMsgIdCounter;
+        const msgStr = JSON.stringify(msgObj);
         if (!MEMORY_ARENA_MESSAGES.has(pin)) {
           MEMORY_ARENA_MESSAGES.set(pin, []);
         }
         const roomMsgs = MEMORY_ARENA_MESSAGES.get(pin);
-        roomMsgs.push({ id: msgId, msg: msgStr, timestamp: Date.now() });
-        if (roomMsgs.length > 100) roomMsgs.shift();
+        roomMsgs.push({ id: msgId, seq: msgId, msg: msgStr, timestamp: Date.now() });
+        if (roomMsgs.length > 200) roomMsgs.shift();
 
-        // 2. Lưu vào Cloudflare Edge Cache (Dùng chung giữa các worker isolates, không tốn D1 quota)
-        try {
-          const cache = caches.default;
-          const cacheUrl = `https://arena-cache.internal/sync/${pin}`;
-          let allMsgs = roomMsgs;
-          const cachedRes = await cache.match(cacheUrl);
-          if (cachedRes) {
-            try {
-              const prev = await cachedRes.json();
-              if (Array.isArray(prev)) {
-                allMsgs = prev.concat(roomMsgs.filter(m => !prev.some(p => p.id === m.id)));
-                if (allMsgs.length > 100) allMsgs = allMsgs.slice(-100);
-              }
-            } catch (e) { }
-          }
-          await cache.put(cacheUrl, new Response(JSON.stringify(allMsgs), {
-            headers: {
-              'Content-Type': 'application/json',
-              'Cache-Control': 'public, max-age=600'
-            }
-          }));
-        } catch (cacheErr) { }
-
-        // 3. Đồng thời ghi vào D1 nếu DB khả dụng
-        if (env && env.DB) {
-          try {
-            const res = await env.DB.prepare(
-              'INSERT INTO arena_messages (pin, msg) VALUES (?, ?)'
-            ).bind(pin, msgStr).run();
-            if (res && res.meta && res.meta.last_row_id) {
-              msgId = res.meta.last_row_id;
-            }
-          } catch (dbErr) {
-            // D1 rate-limited -> Cache & RAM đã lưu tin nhắn
-          }
-        }
-
-        return jsonResponse({ success: true, id: msgId, deck_id: msgId }, 201);
+        return jsonResponse({ success: true, id: msgId, seq: msgId, deck_id: msgId }, 201);
       }
 
-      // GET /api/arena/sync?pin=...&since=... - Lấy tin nhắn mới của phòng
+      // GET /api/arena/sync?pin=...&since=... - Lấy tin nhắn mới của phòng từ Durable Object
       if (path === '/api/arena/sync' && method === 'GET') {
-        const pin = String(url.searchParams.get('pin') || url.searchParams.get('user_id') || '').replace(/^arena_sync_/, '').trim();
-        const sinceId = parseInt(url.searchParams.get('since')) || 0;
+        const pin = normalizeArenaPin(url.searchParams.get('pin') || url.searchParams.get('user_id'));
+        const sinceId = parseInt(url.searchParams.get('since') || url.searchParams.get('seq')) || 0;
+        const latestOnly = url.searchParams.get('latest') === '1';
 
         if (!pin) {
           return errorResponse('Missing pin', 400);
         }
 
-        let formatted = [];
-
-        // 1. Thử lấy từ D1 nếu DB khả dụng
-        if (env && env.DB) {
-          try {
-            const { results } = await env.DB.prepare(
-              'SELECT id, msg FROM arena_messages WHERE pin = ? AND id > ? ORDER BY id ASC LIMIT 100'
-            ).bind(pin, sinceId).all();
-
-            if (results && results.length > 0) {
-              formatted = results.map(r => ({
-                id: r.id,
-                msg: r.msg,
-                name: r.msg
-              }));
-            }
-          } catch (dbErr) {
-            // D1 lỗi hoặc hết quota -> tự động dùng Cache / RAM
-          }
+        const roomObj = getArenaRoomStub(env, pin);
+        if (roomObj) {
+          const doRes = await roomObj.fetch(
+            `https://arena-do/since?pin=${encodeURIComponent(pin)}&since=${sinceId}${latestOnly ? '&latest=1' : ''}`
+          );
+          const data = await doRes.json();
+          return jsonResponse(data, doRes.status);
         }
 
-        // 2. Fallback Edge Cache: Lấy tin nhắn từ Cloudflare Cache (Không tốn D1 quota)
-        if (formatted.length === 0) {
-          try {
-            const cache = caches.default;
-            const cacheUrl = `https://arena-cache.internal/sync/${pin}`;
-            const cachedRes = await cache.match(cacheUrl);
-            if (cachedRes) {
-              const msgs = await cachedRes.json();
-              if (Array.isArray(msgs)) {
-                formatted = msgs.filter(m => m.id > sinceId).map(m => ({
-                  id: m.id,
-                  msg: m.msg,
-                  name: m.msg
-                }));
-              }
-            }
-          } catch (e) { }
+        // Fallback RAM
+        const roomMsgs = MEMORY_ARENA_MESSAGES.get(pin) || [];
+        const latestSeq = roomMsgs.length > 0 ? roomMsgs[roomMsgs.length - 1].id : 0;
+        if (latestOnly) {
+          return jsonResponse({ success: true, seq: latestSeq, count: 0, data: [] });
         }
-
-        // 3. Fallback RAM: Nếu cache chưa có
-        if (formatted.length === 0 && MEMORY_ARENA_MESSAGES.has(pin)) {
-          const roomMsgs = MEMORY_ARENA_MESSAGES.get(pin);
-          const newMsgs = roomMsgs.filter(m => m.id > sinceId);
-          formatted = newMsgs.map(m => ({
-            id: m.id,
-            msg: m.msg,
-            name: m.msg
-          }));
-        }
-
-        return jsonResponse({ success: true, count: formatted.length, data: formatted });
+        const formatted = roomMsgs.filter(m => m.id > sinceId).map(m => ({
+          id: m.id,
+          seq: m.id,
+          msg: m.msg,
+          name: m.msg,
+          timestamp: m.timestamp,
+        }));
+        return jsonResponse({ success: true, seq: latestSeq, count: formatted.length, data: formatted });
       }
 
       // DELETE /api/arena/sync?pin=... - Dọn dẹp tin nhắn khi kết thúc phòng
       if (path === '/api/arena/sync' && method === 'DELETE') {
-        const pin = String(url.searchParams.get('pin') || '').trim();
+        const pin = normalizeArenaPin(url.searchParams.get('pin'));
         if (pin) {
           MEMORY_ARENA_MESSAGES.delete(pin);
-          try {
-            const cache = caches.default;
-            await cache.delete(`https://arena-cache.internal/sync/${pin}`);
-          } catch (e) { }
+          const roomObj = getArenaRoomStub(env, pin);
+          if (roomObj) {
+            try {
+              await roomObj.fetch(`https://arena-do/delete?pin=${encodeURIComponent(pin)}`, { method: 'DELETE' });
+            } catch (e) { }
+          }
           if (env && env.DB) {
             try {
               await env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pin).run();
@@ -453,14 +433,13 @@ export default {
       // POST /api/arena/rooms - Đăng ký / cập nhật phòng Arena
       if (path === '/api/arena/rooms' && method === 'POST') {
         const body = await request.json();
-        const pin = String(body.pin || '').trim();
+        const pin = normalizeArenaPin(body.pin);
         const name = String(body.name || '').trim();
         const isPublic = body.is_public ? 1 : 0;
         const metaJson = typeof body.meta === 'string' ? body.meta : JSON.stringify(body.meta || body);
 
         if (!pin) return errorResponse('Missing pin', 400);
 
-        // Lưu RAM
         MEMORY_ARENA_ROOMS.set(pin, { pin, name, is_public: isPublic, meta_json: metaJson, updated_at: Date.now() });
 
         if (env && env.DB) {
@@ -477,8 +456,9 @@ export default {
 
       // GET /api/arena/rooms - Lấy danh sách phòng công khai hoặc chi tiết phòng
       if (path === '/api/arena/rooms' && method === 'GET') {
-        const pin = url.searchParams.get('pin');
-        if (pin) {
+        const rawPin = url.searchParams.get('pin');
+        if (rawPin) {
+          const pin = normalizeArenaPin(rawPin);
           if (env && env.DB) {
             try {
               const { results } = await env.DB.prepare(
@@ -534,10 +514,16 @@ export default {
 
       // DELETE /api/arena/rooms/:pin - Xóa phòng
       if (path.startsWith('/api/arena/rooms/') && method === 'DELETE') {
-        const pin = path.split('/').pop();
+        const pin = normalizeArenaPin(path.split('/').pop());
         if (pin) {
           MEMORY_ARENA_ROOMS.delete(pin);
           MEMORY_ARENA_MESSAGES.delete(pin);
+          const roomObj = getArenaRoomStub(env, pin);
+          if (roomObj) {
+            try {
+              await roomObj.fetch(`https://arena-do/delete?pin=${encodeURIComponent(pin)}`, { method: 'DELETE' });
+            } catch (e) { }
+          }
           if (env && env.DB) {
             try {
               await env.DB.prepare('DELETE FROM arena_rooms WHERE pin = ?').bind(pin).run();
@@ -557,20 +543,16 @@ export default {
           return errorResponse('Missing user_id');
         }
 
-        // Fast-path bypass for legacy arena callers (loại bỏ hoàn toàn LEFT JOIN):
+        // Fast-path bypass for legacy arena callers:
         if (userId.startsWith('arena_sync_')) {
-          const pin = userId.replace('arena_sync_', '');
-          if (env && env.DB) {
-            try {
-              const { results } = await env.DB.prepare(
-                'SELECT id, msg as name FROM arena_messages WHERE pin = ? ORDER BY id ASC LIMIT 100'
-              ).bind(pin).all();
-              return jsonResponse({ success: true, count: results.length, data: results });
-            } catch (e) {
-              return jsonResponse({ success: true, count: 0, data: [] });
-            }
+          const pin = normalizeArenaPin(userId);
+          const roomObj = getArenaRoomStub(env, pin);
+          if (roomObj) {
+            const doRes = await roomObj.fetch(`https://arena-do/since?pin=${encodeURIComponent(pin)}&since=0`);
+            const data = await doRes.json();
+            return jsonResponse(data, doRes.status);
           }
-          return jsonResponse({ success: true, data: [] });
+          return jsonResponse({ success: true, count: 0, data: [] });
         }
 
         if (userId === 'arena_public_rooms') {
@@ -636,24 +618,35 @@ export default {
 
         // Fast-path bypass for legacy arena callers:
         if (user_id && user_id.startsWith('arena_sync_')) {
-          const pin = user_id.replace('arena_sync_', '');
-          const msgStr = typeof name === 'string' ? name : JSON.stringify(name || {});
-          let msgId = Date.now();
-          if (env && env.DB) {
-            try {
-              const res = await env.DB.prepare('INSERT INTO arena_messages (pin, msg) VALUES (?, ?)').bind(pin, msgStr).run();
-              msgId = res.meta.last_row_id;
-            } catch (e) { }
+          const pin = normalizeArenaPin(user_id);
+          const msgObj = typeof name === 'string'
+            ? (() => { try { return JSON.parse(name); } catch (e) { return {}; } })()
+            : (name || {});
+          const roomObj = getArenaRoomStub(env, pin);
+          if (roomObj) {
+            const doRes = await roomObj.fetch('https://arena-do/push', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pin, msg: msgObj, hostToken: body.hostToken || '' }),
+            });
+            const data = await doRes.json();
+            return jsonResponse(data, doRes.status);
           }
-          return jsonResponse({ success: true, deck_id: msgId, id: msgId }, 201);
+          return jsonResponse({ success: true, deck_id: 0, id: 0 }, 201);
         }
 
         if (user_id && user_id.startsWith('arena_meta_')) {
-          const pin = user_id.replace('arena_meta_', '');
+          const pin = normalizeArenaPin(user_id);
           const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
+          let isPub = 0;
+          try {
+            const parsed = typeof name === 'string' ? JSON.parse(name) : name;
+            if (parsed && parsed.accessMode === 'public') isPub = 1;
+          } catch (e) { }
+          MEMORY_ARENA_ROOMS.set(pin, { pin, name: pin, is_public: isPub, meta_json: metaStr, updated_at: Date.now() });
           if (env && env.DB) {
             try {
-              await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, 0, ?)').bind(pin, pin, metaStr).run();
+              await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, ?, ?)').bind(pin, pin, isPub, metaStr).run();
             } catch (e) { }
           }
           return jsonResponse({ success: true, deck_id: pin }, 201);
@@ -663,9 +656,12 @@ export default {
           let pin = '';
           try {
             const parsed = typeof name === 'string' ? JSON.parse(name) : name;
-            pin = parsed.pin || '';
+            pin = normalizeArenaPin(parsed.pin || '');
           } catch (e) { }
           const metaStr = typeof name === 'string' ? name : JSON.stringify(name || {});
+          if (pin) {
+            MEMORY_ARENA_ROOMS.set(pin, { pin, name: pin, is_public: 1, meta_json: metaStr, updated_at: Date.now() });
+          }
           if (pin && env && env.DB) {
             try {
               await env.DB.prepare('INSERT OR REPLACE INTO arena_rooms (pin, name, is_public, meta_json) VALUES (?, ?, 1, ?)').bind(pin, pin, metaStr).run();
@@ -826,9 +822,6 @@ export default {
         }
         const deckId = path.split('/').pop();
         await env.DB.prepare('DELETE FROM custom_decks WHERE id = ?').bind(deckId).run();
-        try {
-          await env.DB.prepare('DELETE FROM arena_messages WHERE id = ?').bind(deckId).run();
-        } catch (e) { }
         return jsonResponse({ success: true, message: 'Deck deleted' });
       }
 
@@ -865,49 +858,349 @@ export default {
 
 // ==================== DURABLE OBJECT: ARENA ROOM ====================
 // Mỗi phòng Arena (mã PIN) tương ứng với 1 Durable Object instance duy nhất trên toàn cầu
-// Sử dụng WebSocket Hibernation API giúp 0% CPU khi idle, kết nối cực nhanh (<20ms), 0 HTTP requests
+// Giữ toàn bộ nhật ký tin nhắn (200 tin gần nhất), seq tăng dần, xác thực hostToken và tự dọn phòng qua alarm()
+const MAX_DO_LOG_SIZE = 200;
+const INACTIVITY_TTL_MS = 2 * 60 * 60 * 1000; // 2 giờ không hoạt động
+
 export class ArenaRoom {
   constructor(state, env) {
     this.state = state;
     this.env = env;
+    this.seq = 0;
+    this.log = [];
+    this.hostToken = '';
+    this.expiresAt = 0;
+    this.lastActivity = Date.now();
+    this.pin = '';
+    this._loaded = false;
   }
 
-  async fetch(request) {
-    const webSocketPair = new WebSocketPair();
-    const [client, server] = Object.values(webSocketPair);
-
-    // Bật Cloudflare WebSocket Hibernation API
-    this.state.acceptWebSocket(server);
-
-    return new Response(null, {
-      status: 101,
-      webSocket: client,
+  async _ensureLoaded() {
+    if (this._loaded) return;
+    await this.state.blockConcurrencyWhile(async () => {
+      if (this._loaded) return;
+      const stored = await this.state.storage.get(['seq', 'log', 'hostToken', 'expiresAt', 'lastActivity', 'pin']);
+      this.seq = Number(stored.get('seq')) || 0;
+      this.log = Array.isArray(stored.get('log')) ? stored.get('log') : [];
+      this.hostToken = String(stored.get('hostToken') || '');
+      this.expiresAt = Number(stored.get('expiresAt')) || 0;
+      this.lastActivity = Number(stored.get('lastActivity')) || Date.now();
+      this.pin = String(stored.get('pin') || '');
+      this._loaded = true;
     });
   }
 
-  async webSocketMessage(ws, message) {
-    // Broadcast tin nhắn tới tất cả người chơi khác trong cùng phòng PIN
+  async _saveState() {
+    this.lastActivity = Date.now();
+    await this.state.storage.put({
+      seq: this.seq,
+      log: this.log,
+      hostToken: this.hostToken,
+      expiresAt: this.expiresAt,
+      lastActivity: this.lastActivity,
+      pin: this.pin,
+    });
+    await this._scheduleAlarm();
+  }
+
+  async _scheduleAlarm() {
+    try {
+      const inactivityDeadline = (this.lastActivity || Date.now()) + INACTIVITY_TTL_MS;
+      const targetTime = (this.expiresAt && this.expiresAt > 0)
+        ? Math.min(this.expiresAt, inactivityDeadline)
+        : inactivityDeadline;
+      if (targetTime > Date.now()) {
+        await this.state.storage.setAlarm(targetTime);
+      } else {
+        await this.state.storage.setAlarm(Date.now() + 1000);
+      }
+    } catch (e) { }
+  }
+
+  _verifyOrBindHost(token) {
+    const cleanToken = String(token || '').trim();
+    if (!cleanToken) return false;
+    if (!this.hostToken) {
+      this.hostToken = cleanToken;
+      return true;
+    }
+    return this.hostToken === cleanToken;
+  }
+
+  async _appendAndBroadcast(msgObj, senderWs = null) {
+    if (!msgObj || typeof msgObj !== 'object') return null;
+
+    this.seq += 1;
+    const now = Date.now();
+    if (msgObj.payload && msgObj.payload.expiresAt && Number(msgObj.payload.expiresAt) > 0) {
+      this.expiresAt = Number(msgObj.payload.expiresAt);
+    }
+    if (msgObj.payload && msgObj.payload.pin && !this.pin) {
+      this.pin = normalizeArenaPin(msgObj.payload.pin);
+    }
+
+    const entry = {
+      seq: this.seq,
+      msg: msgObj,
+      timestamp: now,
+    };
+    this.log.push(entry);
+    if (this.log.length > MAX_DO_LOG_SIZE) {
+      this.log.splice(0, this.log.length - MAX_DO_LOG_SIZE);
+    }
+
+    await this._saveState();
+
+    const targetId = (msgObj.targetId || (msgObj.payload && msgObj.payload.targetId) || '').trim();
+    const wireStr = JSON.stringify({ seq: entry.seq, msg: entry.msg });
     const sockets = this.state.getWebSockets();
+
     for (const client of sockets) {
-      if (client !== ws) {
+      if (senderWs && client === senderWs) continue;
+      if (targetId) {
         try {
-          client.send(message);
-        } catch (e) {
-          try { client.close(1011, 'Send error'); } catch (err) {}
-        }
+          const att = client.deserializeAttachment() || {};
+          if (att.playerId && att.playerId !== targetId && att.role !== 'host') {
+            continue;
+          }
+        } catch (e) { }
+      }
+      try {
+        client.send(wireStr);
+      } catch (e) {
+        try { client.close(1011, 'Send error'); } catch (err) { }
       }
     }
+
+    return entry;
+  }
+
+  async fetch(request) {
+    await this._ensureLoaded();
+
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const method = request.method;
+    const upgradeHeader = request.headers.get('Upgrade');
+
+    const match = path.match(/^\/parties\/[^\/]+\/([^\/\?]+)/);
+    const pinFromUrl = match ? decodeURIComponent(match[1]) : (url.searchParams.get('pin') || '');
+    if (pinFromUrl && !this.pin) {
+      this.pin = normalizeArenaPin(pinFromUrl);
+    }
+
+    // 1. WebSocket Upgrade
+    if (upgradeHeader && upgradeHeader.toLowerCase() === 'websocket') {
+      const roleParam = (url.searchParams.get('role') || 'player').toLowerCase();
+      const tokenParam = url.searchParams.get('token') || '';
+      const playerIdParam = url.searchParams.get('playerId') || '';
+      const sinceSeq = parseInt(url.searchParams.get('since')) || 0;
+
+      let isHost = false;
+      if (roleParam === 'host') {
+        isHost = this._verifyOrBindHost(tokenParam);
+        if (isHost) {
+          await this._saveState();
+        }
+      }
+
+      const webSocketPair = new WebSocketPair();
+      const [client, server] = Object.values(webSocketPair);
+
+      this.state.acceptWebSocket(server);
+      try {
+        server.serializeAttachment({
+          role: isHost ? 'host' : 'player',
+          playerId: playerIdParam,
+        });
+      } catch (e) { }
+
+      // Gửi ack kèm seq hiện tại của phòng
+      try {
+        server.send(JSON.stringify({ type: 'pk_ack', seq: this.seq, isHost }));
+        if (sinceSeq > 0 && this.log.length > 0) {
+          for (const entry of this.log) {
+            if (entry.seq > sinceSeq) {
+              const targetId = (entry.msg && (entry.msg.targetId || (entry.msg.payload && entry.msg.payload.targetId))) || '';
+              if (targetId && playerIdParam && targetId !== playerIdParam && !isHost) {
+                continue;
+              }
+              server.send(JSON.stringify({ seq: entry.seq, msg: entry.msg }));
+            }
+          }
+        }
+      } catch (e) { }
+
+      return new Response(null, {
+        status: 101,
+        webSocket: client,
+      });
+    }
+
+    // 2. HTTP POST /init - Khởi tạo / xác thực hostToken
+    if (path === '/init' && method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      const requestedToken = body.hostToken || ('ht_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10));
+      const isHost = this._verifyOrBindHost(requestedToken);
+      if (body.pin && !this.pin) this.pin = normalizeArenaPin(body.pin);
+      if (body.expiresAt) this.expiresAt = Number(body.expiresAt) || 0;
+      await this._saveState();
+      return jsonResponse({ success: isHost, hostToken: isHost ? this.hostToken : '', seq: this.seq }, isHost ? 200 : 403);
+    }
+
+    // 3. HTTP POST /push - Gửi tin nhắn qua HTTP và broadcast tới toàn bộ WebSocket trong phòng
+    if (path === '/push' && method === 'POST') {
+      const body = await request.json().catch(() => ({}));
+      if (body.pin && !this.pin) {
+        this.pin = normalizeArenaPin(body.pin);
+      }
+      const msgObj = typeof body.msg === 'string'
+        ? (() => { try { return JSON.parse(body.msg); } catch (e) { return {}; } })()
+        : (body.msg || {});
+      const action = msgObj && msgObj.action;
+
+      if (HOST_ONLY_ACTIONS.has(action)) {
+        const isHost = this._verifyOrBindHost(body.hostToken);
+        if (!isHost) {
+          return jsonResponse({ error: 'Forbidden: invalid hostToken' }, 403);
+        }
+      }
+
+      const entry = await this._appendAndBroadcast(msgObj, null);
+      const seq = entry ? entry.seq : this.seq;
+      return jsonResponse({ success: true, id: seq, seq, deck_id: seq }, 201);
+    }
+
+    // 4. HTTP GET /since - Đọc tin nhắn từ seq > since
+    if (path === '/since' && method === 'GET') {
+      const sinceSeq = parseInt(url.searchParams.get('since') || url.searchParams.get('seq')) || 0;
+      const latestOnly = url.searchParams.get('latest') === '1';
+
+      if (latestOnly) {
+        return jsonResponse({ success: true, seq: this.seq, count: 0, data: [] });
+      }
+
+      const items = this.log.filter(e => e.seq > sinceSeq).map(e => ({
+        id: e.seq,
+        seq: e.seq,
+        msg: e.msg,
+        name: JSON.stringify(e.msg),
+        timestamp: e.timestamp,
+      }));
+      return jsonResponse({
+        success: true,
+        seq: this.seq,
+        count: items.length,
+        data: items,
+      });
+    }
+
+    // 5. HTTP DELETE / hoặc /delete - Xóa phòng & đóng toàn bộ kết nối
+    if (method === 'DELETE') {
+      await this._cleanupRoom();
+      return jsonResponse({ success: true, message: 'Room deleted' });
+    }
+
+    return jsonResponse({ success: true, seq: this.seq });
+  }
+
+  async webSocketMessage(ws, message) {
+    await this._ensureLoaded();
+
+    let msgObj = null;
+    try {
+      const parsed = typeof message === 'string' ? JSON.parse(message) : null;
+      msgObj = (parsed && parsed.msg && typeof parsed.msg === 'object' && parsed.msg.action) ? parsed.msg : parsed;
+    } catch (e) {
+      return;
+    }
+
+    if (!msgObj || !msgObj.action) return;
+
+    let att = {};
+    try {
+      att = ws.deserializeAttachment() || {};
+    } catch (e) { }
+
+    // Nếu client gửi kèm hostToken trong message để nâng cấp quyền host
+    if (msgObj.hostToken && att.role !== 'host') {
+      if (this._verifyOrBindHost(msgObj.hostToken)) {
+        att = { ...att, role: 'host' };
+        try { ws.serializeAttachment(att); } catch (e) { }
+      }
+    }
+
+    const isHost = att.role === 'host';
+    if (HOST_ONLY_ACTIONS.has(msgObj.action) && !isHost) {
+      // Chặn người chơi giả mạo lệnh của chủ phòng
+      return;
+    }
+
+    // Ghi nhận playerId vào attachment khi người chơi join để lọc targetId chính xác
+    if (msgObj.action === 'player_join' && msgObj.payload && msgObj.payload.id) {
+      const pid = String(msgObj.payload.id);
+      if (att.playerId !== pid) {
+        att = { ...att, playerId: pid };
+        try { ws.serializeAttachment(att); } catch (e) { }
+      }
+    }
+
+    // Xóa trường hostToken nội bộ trước khi lưu/broadcast cho các máy khác
+    if (msgObj.hostToken) {
+      delete msgObj.hostToken;
+    }
+
+    await this._appendAndBroadcast(msgObj, ws);
   }
 
   async webSocketClose(ws, code, reason, wasClean) {
     try {
       ws.close(code, reason);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   async webSocketError(ws, error) {
     try {
       ws.close(1011, 'WebSocket error');
-    } catch (e) {}
+    } catch (e) { }
+  }
+
+  async _cleanupRoom() {
+    const pinToClean = this.pin;
+    this.seq = 0;
+    this.log = [];
+    this.hostToken = '';
+    this.expiresAt = 0;
+
+    const sockets = this.state.getWebSockets();
+    for (const client of sockets) {
+      try {
+        client.close(1000, 'Room closed');
+      } catch (e) { }
+    }
+
+    try {
+      await this.state.storage.deleteAll();
+    } catch (e) { }
+
+    if (pinToClean && this.env && this.env.DB) {
+      try {
+        await this.env.DB.prepare('DELETE FROM arena_rooms WHERE pin = ?').bind(pinToClean).run();
+        await this.env.DB.prepare('DELETE FROM arena_messages WHERE pin = ?').bind(pinToClean).run();
+      } catch (e) { }
+    }
+  }
+
+  async alarm() {
+    await this._ensureLoaded();
+    const now = Date.now();
+    const isExpired = this.expiresAt && this.expiresAt > 0 && now >= this.expiresAt;
+    const isInactive = (now - (this.lastActivity || 0)) >= INACTIVITY_TTL_MS;
+
+    if (isExpired || isInactive) {
+      await this._cleanupRoom();
+    } else {
+      await this._scheduleAlarm();
+    }
   }
 }
