@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WenQing Chinese � Gh�p c�u & Ho�n thi?n c�u</title>
+  <title>WenQing Chinese — Ghép câu & Hoàn thiện câu</title>
   <link rel="stylesheet" href="../styles.css?v=38">
 </head>
 
@@ -12,27 +12,27 @@
 
   <div id="page-main-content">
     <section class="app-section active panel" id="sentence">
-      <!-- M�n h�nh ch?n b? t? -->
+      <!-- Màn hình chọn bộ từ -->
       <div id="sentenceDeckSelection" class="quiz-deck-selection">
         <div class="welcome-banner" style="margin-bottom: 28px;">
-          <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">?? Gh�p c�u &
-            Ho�n thi?n c�u</h2>
-          <p style="font-size: 0.95rem; color: var(--text-secondary);">Ch?n c?p d? HSK ho?c b? t? t? t?o d? luy?n s?p
-            x?p t? th�nh c�u v� di?n t? v�o ch? tr?ng</p>
+          <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;">🧩 Ghép câu &
+            Hoàn thiện câu</h2>
+          <p style="font-size: 0.95rem; color: var(--text-secondary);">Chọn cấp độ HSK hoặc bộ từ tự tạo để luyện sắp
+            xếp từ thành câu và điền từ vào chỗ trống</p>
         </div>
-        <h3 class="section-subtitle">Chuong tr�nh HSK</h3>
+        <h3 class="section-subtitle">Chương trình HSK</h3>
         <div class="hsk-grid" id="sentenceHskGrid"></div>
         <div id="sentenceCustomDecksSection" style="margin-top: 36px;">
-          <h3 class="section-subtitle">?? B? t? t? t?o</h3>
+          <h3 class="section-subtitle">📚 Bộ từ tự tạo</h3>
           <div id="sentenceCustomDecksList"
             style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
-            <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">�ang t?i b?
-              t? t? t?o...</div>
+            <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1 / -1;">Đang tải bộ
+              từ tự tạo...</div>
           </div>
         </div>
       </div>
 
-      <!-- M�n h�nh choi Gh�p c�u / �i?n t? -->
+      <!-- Màn hình chơi Ghép câu / Điền từ -->
       <div id="sentenceGameSection" style="display: none;">
         <div class="statbar" style="flex-wrap: wrap; gap: 10px;">
           <button class="btn" id="sBackBtn"
@@ -41,70 +41,70 @@
               stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
-            Ch?n b? t?
+            Chọn bộ từ
           </button>
-          <span id="sProgress">C�u: 1 / 1</span>
-          <span id="sScore">�i?m: 0 / 0</span>
+          <span id="sProgress">Câu: 1 / 1</span>
+          <span id="sScore">Điểm: 0 / 0</span>
           <span id="sLevel"></span>
         </div>
 
         <div class="quiz-modes">
-          <button class="quiz-mode-btn sentence-mode-btn active" data-mode="arrange">?? S?p x?p c�u</button>
-          <button class="quiz-mode-btn sentence-mode-btn" data-mode="fill">?? Ho�n thi?n c�u</button>
-          <button class="quiz-mode-btn sentence-mode-btn" data-mode="mix">?? K?t h?p c? hai</button>
+          <button class="quiz-mode-btn sentence-mode-btn active" data-mode="arrange">🧩 Sắp xếp câu</button>
+          <button class="quiz-mode-btn sentence-mode-btn" data-mode="fill">✍️ Hoàn thiện câu</button>
+          <button class="quiz-mode-btn sentence-mode-btn" data-mode="mix">🔀 Kết hợp cả hai</button>
         </div>
 
         <div class="q-box s-box">
           <div class="s-prompt-header">
-            <span class="s-task-badge" id="sTaskBadge">?? S?p x?p c�c t? th�nh c�u d�ng</span>
+            <span class="s-task-badge" id="sTaskBadge">🧩 Sắp xếp các từ thành câu đúng</span>
             <div class="s-tools">
-              <button class="btn s-tool-btn" id="sAudioBtn" title="Nghe ph�t �m c�u">
-                ?? Nghe c�u
+              <button class="btn s-tool-btn" id="sAudioBtn" title="Nghe phát âm câu">
+                🔊 Nghe câu
               </button>
-              <button class="btn s-tool-btn" id="sHintBtn" title="G?i �">
-                ?? G?i �
+              <button class="btn s-tool-btn" id="sHintBtn" title="Gợi ý">
+                💡 Gợi ý
               </button>
             </div>
           </div>
 
           <div class="s-meaning-box">
-            <div class="s-meaning-label">Nghia ti?ng Vi?t:</div>
+            <div class="s-meaning-label">Nghĩa tiếng Việt:</div>
             <div class="s-meaning-text" id="sMeaningPrompt"></div>
             <div class="s-word-focus" id="sWordHint"></div>
           </div>
 
-          <!-- Ch? d? 1: S?p x?p c�u (Word Order) -->
+          <!-- Chế độ 1: Sắp xếp câu (Word Order) -->
           <div id="sArrangeArea" class="s-arrange-area">
-            <div class="s-zone-label">C�u c?a b?n (b?m v�o t? d? b? ra):</div>
+            <div class="s-zone-label">Câu của bạn (bấm vào từ để bỏ ra):</div>
             <div id="sAnswerZone" class="s-answer-zone">
-              <span class="s-zone-placeholder">B?m ch?n c�c t? b�n du?i theo d�ng th? t?...</span>
+              <span class="s-zone-placeholder">Bấm chọn các từ bên dưới theo đúng thứ tự...</span>
             </div>
 
-            <div class="s-zone-label" style="margin-top: 18px;">C�c t? cho s?n:</div>
+            <div class="s-zone-label" style="margin-top: 18px;">Các từ cho sẵn:</div>
             <div id="sWordBank" class="s-word-bank"></div>
 
             <div class="s-arrange-actions" id="sArrangeActions">
               <button class="btn" id="sResetBtn" style="padding: 10px 18px; border-radius: 14px;">
-                ?? X?p l?i
+                🔄 Xếp lại
               </button>
               <button class="btn s-check-btn" id="sCheckBtn"
                 style="padding: 10px 26px; border-radius: 14px; background: var(--accent-gradient); color: #fff; border: none; font-weight: 700;">
-                ? Ki?m tra
+                ✅ Kiểm tra
               </button>
             </div>
           </div>
 
-          <!-- Ch? d? 2: Ho�n thi?n c�u / �i?n t? v�o ch? tr?ng (Cloze) -->
+          <!-- Chế độ 2: Hoàn thiện câu / Điền từ vào chỗ trống (Cloze) -->
           <div id="sFillArea" class="s-fill-area" style="display: none;">
             <div class="s-cloze-card">
               <div class="s-cloze-sentence" id="sClozeSentence"></div>
               <div class="s-cloze-pinyin" id="sClozePinyin" style="display: none;"></div>
             </div>
-            <div class="s-zone-label" style="margin-top: 18px;">Ch?n t? d�ng d? di?n v�o ch? tr?ng:</div>
+            <div class="s-zone-label" style="margin-top: 18px;">Chọn từ đúng để điền vào chỗ trống:</div>
             <div class="q-opts" id="sFillOpts"></div>
           </div>
 
-          <!-- Khung gi?i th�ch d�p �n sau khi tr? l?i -->
+          <!-- Khung giải thích đáp án sau khi trả lời -->
           <div id="sFeedback" class="s-feedback" style="display: none;">
             <div class="s-feedback-title" id="sResultTitle"></div>
             <div class="s-feedback-hanzi" id="sFullHanzi"></div>
@@ -115,7 +115,7 @@
 
         <div class="fc-nav">
           <button class="btn" id="sNextBtn">
-            C�u ti?p
+            Câu tiếp
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
               stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -127,11 +127,11 @@
     </section>
   </div>
 
-  <div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="H? so c� nh�n">
+  <div id="profileModal" class="modal" aria-modal="true" role="dialog" aria-label="Hồ sơ cá nhân">
     <div class="modal-content glass-card"
       style="max-width:480px; width:90%; max-height:85vh; overflow-y:auto; border-radius:16px; padding:28px; position:relative;">
       <button id="closeProfileModalBtn" class="icon-btn" style="position:absolute; top:16px; right:16px;"
-        aria-label="��ng">
+        aria-label="Đóng">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18" />
@@ -140,7 +140,7 @@
       </button>
       <h2
         style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:600; color:var(--text-primary); margin-bottom:20px;">
-        H? so c� nh�n</h2>
+        Hồ sơ cá nhân</h2>
       <div id="profileModalBody"></div>
     </div>
   </div>
@@ -153,7 +153,7 @@
           <line x1="12" y1="16" x2="12" y2="12"></line>
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
         </svg></div>
-      <h3 id="wqPopupTitle" class="wq-popup-title">Th�ng b�o</h3>
+      <h3 id="wqPopupTitle" class="wq-popup-title">Thông báo</h3>
       <div id="wqPopupMessage" class="wq-popup-message"></div>
       <input type="text" id="wqPopupInput" class="auth-input wq-popup-input" style="display: none;"
         autocomplete="off" />
