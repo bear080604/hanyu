@@ -5,8 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WenQing Chinese — Flashcard</title>
-  <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
-  <link rel="stylesheet" href="../styles.css?v=38">
+  <link rel="stylesheet" href="../styles.css?v=39">
 </head>
 
 <body>
@@ -18,6 +17,15 @@
         <button class="btn" id="autoplayBtn" style="padding: 8px 16px; font-size: 0.85rem; border-radius: 12px;">
           <span id="autoplayBtnText">Tự động phát</span>
         </button>
+        <button class="btn fc-pinyin-toggle-btn" id="fcTogglePinyinBtn" type="button" aria-pressed="false"
+          title="Ẩn hoặc hiện Pinyin (Phím P)">
+          <svg id="fcPinyinEyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span id="fcTogglePinyinText">Ẩn Pinyin</span>
+        </button>
         <div class="autoplay-speed" style="display: none;">
           <label for="autoplaySpeed">Thời gian:</label>
           <select id="autoplaySpeed">
@@ -28,20 +36,47 @@
         </div>
         <div id="autoplayProgress" class="autoplay-progress"></div>
       </div>
+
+      <div class="fc-session-bar" id="fcSessionBar">
+        <span class="fc-stat-pill fc-stat-known" id="fcKnownBadge">✓ Đã thuộc: 0</span>
+        <button type="button" class="fc-stat-pill fc-stat-unknown" id="fcUnknownBadge"
+          title="Bấm để ôn nhanh các từ chưa thuộc">✗ Chưa thuộc: 0</button>
+        <span class="fc-mode-pill" id="fcReviewModeBadge" style="display: none;">
+          🔁 Đang ôn từ chưa thuộc
+          <button type="button" class="fc-mode-reset-btn" id="fcBackToFullBtn">Về toàn bộ</button>
+        </span>
+      </div>
+
       <div class="fc-wrap">
         <div class="fc" id="fcCard">
           <div class="fc-face fc-front">
+            <div class="fc-status-tag" id="fcCardStatusTag" style="display: none;"></div>
             <div class="fc-hanzi" id="fcHanzi"></div>
             <div class="fc-pinyin" id="fcPinyin"></div>
             <div class="fc-hint">Bấm để lật thẻ</div>
           </div>
           <div class="fc-face fc-back">
+            <div class="fc-back-pinyin" id="fcBackPinyin"></div>
             <div class="fc-mean" id="fcMean"></div>
             <div class="fc-ex" id="fcEx"></div>
             <div class="fc-hint">Bấm để lật lại</div>
           </div>
         </div>
       </div>
+
+      <div class="fc-review-bar">
+        <button type="button" class="fc-review-btn fc-review-unknown" id="fcMarkUnknownBtn"
+          title="Đánh dấu chưa thuộc (Phím 1)">
+          <span class="fc-review-icon">✗</span>
+          <span>Chưa thuộc</span>
+        </button>
+        <button type="button" class="fc-review-btn fc-review-known" id="fcMarkKnownBtn"
+          title="Đánh dấu đã thuộc (Phím 2)">
+          <span class="fc-review-icon">✓</span>
+          <span>Đã thuộc</span>
+        </button>
+      </div>
+
       <div class="fc-nav">
         <button class="icon-btn" id="fcPrev" aria-label="Previous">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -89,6 +124,28 @@
         style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.3rem; font-weight:600; color:var(--text-primary); margin-bottom:20px;">
         Hồ sơ cá nhân</h2>
       <div id="profileModalBody"></div>
+    </div>
+  </div>
+
+  <div id="fcCompleteModal" class="wq-popup-overlay" style="display: none;" aria-modal="true" role="dialog"
+    aria-labelledby="fcCompleteTitle">
+    <div class="wq-popup-card fc-complete-card">
+      <div id="fcCompleteIcon" class="wq-popup-icon">🎉</div>
+      <h3 id="fcCompleteTitle" class="wq-popup-title">Hoàn thành vòng Flashcard!</h3>
+      <div id="fcCompleteSummary" class="fc-complete-summary"></div>
+      <div id="fcCompleteMessage" class="wq-popup-message"></div>
+      <div class="fc-complete-actions">
+        <button type="button" class="wq-popup-btn wq-popup-btn-primary" id="fcStudyUnknownBtn" style="display: none;">
+          🔁 Học lại từ chưa thuộc
+        </button>
+        <button type="button" class="wq-popup-btn wq-popup-btn-secondary" id="fcStudyFullBtn">
+          📚 Học lại toàn bộ (Full)
+        </button>
+        <button type="button" class="wq-popup-btn wq-popup-btn-secondary" id="fcGoQuizBtn" style="display: none;">
+          ✏️ Chuyển sang Trắc nghiệm
+        </button>
+        <button type="button" class="fc-complete-close-link" id="fcCloseCompleteBtn">Đóng</button>
+      </div>
     </div>
   </div>
 

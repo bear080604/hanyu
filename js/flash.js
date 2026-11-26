@@ -21,11 +21,306 @@ function recordLearnedWord(wordStr) {
 
 var _fcLastSentenceByWord = {};
 
+// ---------- Study review state (Chưa thuộc / Đã thuộc) & Pinyin visibility ----------
+var FC_UNKNOWN_STORAGE_KEY = 'wq_fc_unknown_map';
+var FC_HIDE_PINYIN_KEY = 'wq_fc_hide_pinyin';
+var _fcFullDeck = [];
+var _fcActiveDeckRef = null;
+var _fcInternalDeckUpdate = false;
+var _fcReviewingUnknownOnly = false;
+var _fcCurrentDeckKey = '';
+var _fcUnknownSet = new Set();
+var _fcKnownSet = new Set();
+var _fcHidePinyin = localStorage.getItem(FC_HIDE_PINYIN_KEY) === '1';
+
+function getFlashDeckKey() {
+  var lvl = (window.AppState && window.AppState.level) || (typeof level !== 'undefined' ? level : 'default');
+  var rangeSel = document.getElementById('rangeSel');
+  var rangeVal = rangeSel ? rangeSel.value : 'all';
+  return String(lvl) + '::' + String(rangeVal);
+}
+
+function readUnknownMap() {
+  try {
+    return JSON.parse(localStorage.getItem(FC_UNKNOWN_STORAGE_KEY) || '{}') || {};
+  } catch (e) {
+    return {};
+  }
+}
+
+function saveUnknownSet(deckKey, set) {
+  if (!deckKey) return;
+  try {
+    var map = readUnknownMap();
+    var arr = Array.from(set);
+    if (arr.length > 0) {
+      map[deckKey] = arr;
+    } else {
+      delete map[deckKey];
+    }
+    localStorage.setItem(FC_UNKNOWN_STORAGE_KEY, JSON.stringify(map));
+  } catch (e) {
+    console.warn('Could not save unknown flashcards:', e);
+  }
+}
+
+function loadUnknownSet(deckKey, fullDeck) {
+  var map = readUnknownMap();
+  var saved = Array.isArray(map[deckKey]) ? map[deckKey] : [];
+  if (!saved.length || !Array.isArray(fullDeck) || !fullDeck.length) return new Set();
+  var validWords = new Set(fullDeck.map(function (w) { return w && w.h; }));
+  return new Set(saved.filter(function (h) { return validWords.has(h); }));
+}
+
+function syncFlashSessionDeck() {
+  var curDeck = window.AppState && window.AppState.deck;
+  if (!Array.isArray(curDeck)) return;
+
+  if (_fcInternalDeckUpdate) {
+    _fcActiveDeckRef = curDeck;
+    _fcInternalDeckUpdate = false;
+    return;
+  }
+
+  var deckKey = getFlashDeckKey();
+  if (curDeck !== _fcActiveDeckRef || deckKey !== _fcCurrentDeckKey) {
+    _fcActiveDeckRef = curDeck;
+    _fcCurrentDeckKey = deckKey;
+    _fcFullDeck = curDeck.slice();
+    _fcReviewingUnknownOnly = false;
+    _fcUnknownSet = loadUnknownSet(deckKey, _fcFullDeck);
+    _fcKnownSet = new Set();
+  }
+}
+
+function applyPinyinVisibilityUI() {
+  var flashSection = document.getElementById('flash');
+  var toggleBtn = document.getElementById('fcTogglePinyinBtn');
+  var toggleText = document.getElementById('fcTogglePinyinText');
+  var eyeIcon = document.getElementById('fcPinyinEyeIcon');
+
+  if (flashSection) {
+    flashSection.classList.toggle('fc-hide-pinyin', _fcHidePinyin);
+  }
+  if (toggleBtn) {
+    toggleBtn.classList.toggle('is-hidden-pinyin', _fcHidePinyin);
+    toggleBtn.setAttribute('aria-pressed', _fcHidePinyin ? 'true' : 'false');
+  }
+  if (toggleText) {
+    toggleText.textContent = _fcHidePinyin ? 'Hiện Pinyin' : 'Ẩn Pinyin';
+  }
+  if (eyeIcon) {
+    eyeIcon.innerHTML = _fcHidePinyin
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+  }
+}
+
+function toggleFlashPinyin() {
+  _fcHidePinyin = !_fcHidePinyin;
+  try {
+    localStorage.setItem(FC_HIDE_PINYIN_KEY, _fcHidePinyin ? '1' : '0');
+  } catch (e) { }
+  applyPinyinVisibilityUI();
+}
+
+function renderReviewStatus() {
+  var knownBadge = document.getElementById('fcKnownBadge');
+  var unknownBadge = document.getElementById('fcUnknownBadge');
+  var modeBadge = document.getElementById('fcReviewModeBadge');
+  var unknownBtn = document.getElementById('fcMarkUnknownBtn');
+  var knownBtn = document.getElementById('fcMarkKnownBtn');
+  var cardStatusTag = document.getElementById('fcCardStatusTag');
+
+  if (knownBadge) knownBadge.textContent = '✓ Đã thuộc: ' + _fcKnownSet.size;
+  if (unknownBadge) {
+    unknownBadge.textContent = '✗ Chưa thuộc: ' + _fcUnknownSet.size;
+    unknownBadge.classList.toggle('has-items', _fcUnknownSet.size > 0);
+  }
+  if (modeBadge) {
+    modeBadge.style.display = _fcReviewingUnknownOnly ? 'inline-flex' : 'none';
+  }
+
+  var curDeck = window.AppState && window.AppState.deck;
+  var curIdx = window.AppState ? window.AppState.fcIdx : 0;
+  var curWord = (curDeck && curDeck.length && curDeck[curIdx]) ? curDeck[curIdx] : null;
+  var isUnknown = Boolean(curWord && _fcUnknownSet.has(curWord.h));
+  var isKnown = Boolean(curWord && _fcKnownSet.has(curWord.h));
+
+  if (unknownBtn) {
+    unknownBtn.classList.toggle('is-active', isUnknown);
+    unknownBtn.disabled = !curWord;
+  }
+  if (knownBtn) {
+    knownBtn.classList.toggle('is-active', isKnown);
+    knownBtn.disabled = !curWord;
+  }
+  if (cardStatusTag) {
+    if (isUnknown) {
+      cardStatusTag.textContent = '✗ Chưa thuộc';
+      cardStatusTag.className = 'fc-status-tag is-unknown';
+      cardStatusTag.style.display = 'inline-flex';
+    } else if (isKnown) {
+      cardStatusTag.textContent = '✓ Đã thuộc';
+      cardStatusTag.className = 'fc-status-tag is-known';
+      cardStatusTag.style.display = 'inline-flex';
+    } else {
+      cardStatusTag.style.display = 'none';
+    }
+  }
+}
+
+function startUnknownOnlyReview() {
+  var unknownWords = _fcFullDeck.filter(function (w) {
+    return w && _fcUnknownSet.has(w.h);
+  });
+  if (!unknownWords.length) {
+    if (typeof showToast === 'function') showToast('Không có từ nào trong danh sách chưa thuộc!', 'info');
+    return;
+  }
+  stopAutoplay();
+  closeFlashCompleteModal();
+  _fcReviewingUnknownOnly = true;
+  _fcInternalDeckUpdate = true;
+  window.AppState.deck = unknownWords.slice();
+  if (typeof deck !== 'undefined') deck = window.AppState.deck;
+  window.AppState.fcIdx = 0;
+  if (typeof fcIdx !== 'undefined') fcIdx = 0;
+  renderFlash();
+  if (typeof showToast === 'function') {
+    showToast('🔁 Đang ôn lại ' + unknownWords.length + ' từ chưa thuộc', 'info');
+  }
+}
+
+function restartFullFlashDeck(clearUnknown) {
+  var sourceDeck = (_fcFullDeck && _fcFullDeck.length)
+    ? _fcFullDeck.slice()
+    : ((window.AppState && window.AppState.deck) ? window.AppState.deck.slice() : []);
+  if (!sourceDeck.length) return;
+  stopAutoplay();
+  closeFlashCompleteModal();
+  _fcReviewingUnknownOnly = false;
+  if (clearUnknown) {
+    _fcUnknownSet.clear();
+    _fcKnownSet.clear();
+    saveUnknownSet(_fcCurrentDeckKey, _fcUnknownSet);
+  }
+  _fcInternalDeckUpdate = true;
+  window.AppState.deck = sourceDeck;
+  if (typeof deck !== 'undefined') deck = window.AppState.deck;
+  window.AppState.fcIdx = 0;
+  if (typeof fcIdx !== 'undefined') fcIdx = 0;
+  renderFlash();
+  if (typeof saveProgress === 'function') saveProgress();
+  if (typeof showToast === 'function') {
+    showToast('📚 Học lại toàn bộ ' + sourceDeck.length + ' từ!', 'info');
+  }
+}
+
+function closeFlashCompleteModal() {
+  var modal = document.getElementById('fcCompleteModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function openFlashCompleteModal() {
+  stopAutoplay();
+  var modal = document.getElementById('fcCompleteModal');
+  if (!modal) {
+    promptFlashcardComplete();
+    return;
+  }
+
+  var fullCount = (_fcFullDeck && _fcFullDeck.length) ? _fcFullDeck.length : ((window.AppState.deck && window.AppState.deck.length) || 0);
+  var unknownCount = _fcUnknownSet.size;
+  var knownCount = _fcKnownSet.size;
+  var pendingMode = localStorage.getItem('wq_pending_mode');
+
+  var iconEl = document.getElementById('fcCompleteIcon');
+  var titleEl = document.getElementById('fcCompleteTitle');
+  var summaryEl = document.getElementById('fcCompleteSummary');
+  var msgEl = document.getElementById('fcCompleteMessage');
+  var unknownBtn = document.getElementById('fcStudyUnknownBtn');
+  var fullBtn = document.getElementById('fcStudyFullBtn');
+  var quizBtn = document.getElementById('fcGoQuizBtn');
+
+  if (iconEl) iconEl.textContent = unknownCount === 0 ? '🏆' : '🎉';
+  if (titleEl) {
+    titleEl.textContent = unknownCount === 0
+      ? 'Tuyệt vời! Đã hoàn thành bộ thẻ!'
+      : 'Hoàn thành vòng Flashcard!';
+  }
+  if (summaryEl) {
+    summaryEl.innerHTML =
+      '<div class="fc-sum-item fc-sum-known"><strong>' + knownCount + '</strong><span>Đã thuộc</span></div>' +
+      '<div class="fc-sum-item fc-sum-unknown"><strong>' + unknownCount + '</strong><span>Chưa thuộc</span></div>' +
+      '<div class="fc-sum-item fc-sum-total"><strong>' + fullCount + '</strong><span>Tổng bộ từ</span></div>';
+  }
+  if (msgEl) {
+    msgEl.textContent = unknownCount > 0
+      ? 'Bạn còn ' + unknownCount + ' từ chưa thuộc. Bạn muốn ôn tập trung những từ chưa thuộc hay học lại toàn bộ?'
+      : 'Bạn không còn từ nào bị đánh dấu chưa thuộc. Chọn bước tiếp theo bên dưới nhé!';
+  }
+  if (unknownBtn) {
+    if (unknownCount > 0) {
+      unknownBtn.style.display = 'inline-flex';
+      unknownBtn.textContent = '🔁 Học lại từ chưa thuộc (' + unknownCount + ' từ)';
+    } else {
+      unknownBtn.style.display = 'none';
+    }
+  }
+  if (fullBtn) {
+    fullBtn.textContent = '📚 Học lại toàn bộ (Full ' + fullCount + ' từ)';
+    fullBtn.className = unknownCount > 0
+      ? 'wq-popup-btn wq-popup-btn-secondary'
+      : 'wq-popup-btn wq-popup-btn-primary';
+  }
+  if (quizBtn) {
+    quizBtn.style.display = pendingMode === 'both' ? 'inline-flex' : 'none';
+  }
+
+  modal.style.display = 'flex';
+}
+
+function markCurrentFlashcard(isKnown) {
+  stopAutoplay();
+  var curDeck = window.AppState && window.AppState.deck;
+  if (!curDeck || !curDeck.length) return;
+  var curIdx = window.AppState.fcIdx;
+  var w = curDeck[curIdx];
+  if (!w || !w.h) return;
+
+  if (isKnown) {
+    _fcKnownSet.add(w.h);
+    _fcUnknownSet.delete(w.h);
+    recordLearnedWord(w.h);
+  } else {
+    _fcUnknownSet.add(w.h);
+    _fcKnownSet.delete(w.h);
+  }
+  saveUnknownSet(_fcCurrentDeckKey, _fcUnknownSet);
+  renderReviewStatus();
+
+  var isAtLastCard = curIdx >= curDeck.length - 1;
+  if (isAtLastCard) {
+    openFlashCompleteModal();
+    return;
+  }
+
+  window.AppState.fcIdx = curIdx + 1;
+  if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
+  renderFlash();
+  if (typeof saveProgress === 'function') saveProgress();
+}
+
 // ---------- renderFlash ----------
 function renderFlash() {
+  syncFlashSessionDeck();
+  applyPinyinVisibilityUI();
+
   const fcCard = document.getElementById('fcCard');
   const fcHanzi = document.getElementById('fcHanzi');
   const fcPinyin = document.getElementById('fcPinyin');
+  const fcBackPinyin = document.getElementById('fcBackPinyin');
   const fcMean = document.getElementById('fcMean');
   const fcEx = document.getElementById('fcEx');
   const fcCount = document.getElementById('fcCount');
@@ -39,11 +334,13 @@ function renderFlash() {
   if (!deck || !deck.length) {
     fcHanzi.textContent = 'Trống';
     fcPinyin.textContent = '';
+    if (fcBackPinyin) fcBackPinyin.textContent = '';
     fcMean.textContent = 'Chưa có từ nào trong danh sách';
     fcEx.textContent = '';
     if (fcCount) fcCount.textContent = '0 / 0';
     if (fcLevel) fcLevel.textContent = level === 'favorites' ? 'Yêu thích' : '';
     renderFavIcon();
+    renderReviewStatus();
     return;
   }
 
@@ -60,7 +357,8 @@ function renderFlash() {
   }
 
   fcHanzi.textContent = w.h;
-  fcPinyin.textContent = w.p;
+  fcPinyin.textContent = w.p || '';
+  if (fcBackPinyin) fcBackPinyin.textContent = w.p || '';
   fcMean.textContent = w.m;
   const exStr = w.ex || w.e || '';
   const multiBadge = (Array.isArray(w.examples) && w.examples.length > 1)
@@ -70,6 +368,7 @@ function renderFlash() {
   if (fcCount) fcCount.textContent = (fcIdx + 1) + ' / ' + deck.length;
   if (fcLevel) fcLevel.textContent = level === 'favorites' ? 'Yêu thích' : level;
   renderFavIcon();
+  renderReviewStatus();
 }
 
 // ---------- renderFavIcon ----------
@@ -204,21 +503,21 @@ function runAutoplayCycle() {
       var isAtLastCard = deck && window.AppState.fcIdx === deck.length - 1;
       var pendingMode = localStorage.getItem('wq_pending_mode');
 
-      // Nếu đang phát tự động đến từ cuối cùng và ở chế độ 'both':
-      // Chờ người dùng xem xong cả 2 mặt của từ cuối rồi mới dừng và hỏi chuyển sang trắc nghiệm
-      if (isAtLastCard && pendingMode === 'both') {
-        stopAutoplay();
-        promptFlashcardComplete();
-        return;
-      }
+        // Nếu đang phát tự động đến từ cuối cùng:
+        // Mở modal tổng kết nếu đang ở chế độ 'both', đang ôn chưa thuộc, hoặc có từ chưa thuộc
+        if (isAtLastCard && (pendingMode === 'both' || _fcReviewingUnknownOnly || _fcUnknownSet.size > 0)) {
+          stopAutoplay();
+          openFlashCompleteModal();
+          return;
+        }
 
-      window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
-      if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
-      renderFlash();
-      if (typeof saveProgress === 'function') saveProgress();
-      _apTimer = setTimeout(runAutoplayCycle, 300);
-    }
-  }, updateInterval);
+        window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
+        if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
+        renderFlash();
+        if (typeof saveProgress === 'function') saveProgress();
+        _apTimer = setTimeout(runAutoplayCycle, 300);
+      }
+    }, updateInterval);
 }
 
 // ---------- promptFlashcardComplete ----------
@@ -418,16 +717,106 @@ document.addEventListener('DOMContentLoaded', function () {
       var pendingMode = localStorage.getItem('wq_pending_mode');
 
       // Nếu đang ở thẻ cuối cùng và bấm Next:
-      // Nghĩa là người dùng đã xem xong thẻ cuối cùng và chủ động muốn đi tiếp!
-      if (isAtLastCard && pendingMode === 'both') {
-        promptFlashcardComplete();
-        return;
-      }
+        // Luôn mở hộp thoại tổng kết để chọn Học lại từ chưa thuộc / Học lại toàn bộ (Full) / Trắc nghiệm
+        if (isAtLastCard) {
+          openFlashCompleteModal();
+          return;
+        }
 
-      window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
-      if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
-      renderFlash();
-      if (typeof saveProgress === 'function') saveProgress();
+        window.AppState.fcIdx = (window.AppState.fcIdx + 1) % deck.length;
+        if (typeof fcIdx !== 'undefined') fcIdx = window.AppState.fcIdx;
+        renderFlash();
+        if (typeof saveProgress === 'function') saveProgress();
+      });
+  }
+
+  // ---------- Known / Unknown review buttons ----------
+  var fcMarkUnknownBtn = document.getElementById('fcMarkUnknownBtn');
+  if (fcMarkUnknownBtn) {
+    fcMarkUnknownBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      markCurrentFlashcard(false);
+    });
+  }
+
+  var fcMarkKnownBtn = document.getElementById('fcMarkKnownBtn');
+  if (fcMarkKnownBtn) {
+    fcMarkKnownBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      markCurrentFlashcard(true);
+    });
+  }
+
+  // ---------- Quick review unknown badge & back-to-full button ----------
+  var fcUnknownBadge = document.getElementById('fcUnknownBadge');
+  if (fcUnknownBadge) {
+    fcUnknownBadge.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (_fcUnknownSet.size > 0) {
+        startUnknownOnlyReview();
+      } else if (typeof showToast === 'function') {
+        showToast('Chưa có từ nào được đánh dấu chưa thuộc', 'info');
+      }
+    });
+  }
+
+  var fcBackToFullBtn = document.getElementById('fcBackToFullBtn');
+  if (fcBackToFullBtn) {
+    fcBackToFullBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      restartFullFlashDeck(false);
+    });
+  }
+
+  // ---------- Hide / Show Pinyin toggle ----------
+  applyPinyinVisibilityUI();
+  var fcTogglePinyinBtn = document.getElementById('fcTogglePinyinBtn');
+  if (fcTogglePinyinBtn) {
+    fcTogglePinyinBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      toggleFlashPinyin();
+    });
+  }
+
+  // ---------- Complete modal actions ----------
+  var fcCompleteModal = document.getElementById('fcCompleteModal');
+  if (fcCompleteModal) {
+    fcCompleteModal.addEventListener('click', function (e) {
+      if (e.target === fcCompleteModal) closeFlashCompleteModal();
+    });
+  }
+
+  var fcStudyUnknownBtn = document.getElementById('fcStudyUnknownBtn');
+  if (fcStudyUnknownBtn) {
+    fcStudyUnknownBtn.addEventListener('click', function () {
+      startUnknownOnlyReview();
+    });
+  }
+
+  var fcStudyFullBtn = document.getElementById('fcStudyFullBtn');
+  if (fcStudyFullBtn) {
+    fcStudyFullBtn.addEventListener('click', function () {
+      restartFullFlashDeck(true);
+    });
+  }
+
+  var fcGoQuizBtn = document.getElementById('fcGoQuizBtn');
+  if (fcGoQuizBtn) {
+    fcGoQuizBtn.addEventListener('click', function () {
+      var fullSource = (_fcFullDeck && _fcFullDeck.length) ? _fcFullDeck : window.AppState.deck;
+      var deckName = window.AppState.level || 'Custom';
+      localStorage.setItem('wq_pending_deck', JSON.stringify({ name: deckName, words: fullSource }));
+      localStorage.setItem('wq_pending_mode', 'both');
+      closeFlashCompleteModal();
+      if (typeof showToast === 'function') showToast('✏️ Chuyển sang Trắc nghiệm!', 'info');
+      window.location.href = '../pages/quiz.html';
+    });
+  }
+
+  var fcCloseCompleteBtn = document.getElementById('fcCloseCompleteBtn');
+  if (fcCloseCompleteBtn) {
+    fcCloseCompleteBtn.addEventListener('click', function () {
+      closeFlashCompleteModal();
     });
   }
 
@@ -501,6 +890,13 @@ document.addEventListener('DOMContentLoaded', function () {
     )) {
       return;
     }
+    if (e.key === 'Escape') {
+      closeFlashCompleteModal();
+      return;
+    }
+    var completeModalEl = document.getElementById('fcCompleteModal');
+    if (completeModalEl && completeModalEl.style.display !== 'none') return;
+
     if (e.key === 'ArrowRight') {
       var fcNextEl = document.getElementById('fcNext');
       if (fcNextEl) fcNextEl.click();
@@ -511,6 +907,12 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       var card = document.getElementById('fcCard');
       if (card) card.click();
+    } else if (e.key === '1') {
+      markCurrentFlashcard(false);
+    } else if (e.key === '2') {
+      markCurrentFlashcard(true);
+    } else if (e.key === 'p' || e.key === 'P') {
+      toggleFlashPinyin();
     }
   });
 });
